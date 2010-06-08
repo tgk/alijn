@@ -22,17 +22,24 @@
 (todo 
  "This function generates a new query-tool every time.
 Can they be cached in a nice manner?"
- (defn find-pharmacophore 
-   "Result is a coll of atom collections, even though some pharmacophores
+
+(defn find-pharmacophore 
+  "Result is a coll of atom collections, even though some pharmacophores
 only match a single atom."
-   [smarts-string molecule]
-   (let [query-tool (SMARTSQueryTool. smarts-string)
-	 status (.matches query-tool molecule)]
-     (if status
-       (map (fn [indices] 
-	      (map #(.getAtom molecule %) indices))
-	    (.getUniqueMatchingAtoms query-tool))
-       []))))
+  [smarts-string molecule]
+  (let [query-tool (SMARTSQueryTool. smarts-string)
+	status (.matches query-tool molecule)]
+    (if status
+      (map (fn [indices] 
+	     (map #(.getAtom molecule %) indices))
+	   (.getUniqueMatchingAtoms query-tool))
+      [])))
+)
+
+(todo
+"It smells wrong that this generates a dummy atom.
+It would probably be cleaner if it returned the Point3d
+and Kabsch was the one that wrapped stuff in Point3ds."
 
 (defn get-center [atom & more]
   "Returns the center of the atoms as a new atom."
@@ -42,10 +49,23 @@ only match a single atom."
     (doall (map #(.add result %) points))
     (.scale result (/ 1 (count atoms)))
     (dummy-atom result)))
+)
 
-(defn pharmacopohore-groups 
+(defn pharmacophore-groups 
   "Extract the phamacophores defined in a {name smarts-string} map
-from the molecule. Returns collection of {:name :atoms :center} structs."
+from the molecule. Returns collection of {:name :atoms :center} structs.
+The center is a dummy carbon atom."
   [pharmacophores molecule]
-  nil)
+  (apply concat
+   (map (fn [[name smarts-string]] 
+	  (let [groups (find-pharmacophore smarts-string molecule)]
+	    (map 
+	     (fn [atoms]
+	       {:name name
+		;:atoms atoms
+		:count (count atoms)
+		:center (apply get-center atoms)
+		})
+	     groups)))
+	pharmacophores)))
 

@@ -103,9 +103,24 @@
    (same-position? (dummy-atom 1 1 1) 
 		   (get-center (dummy-atom 0 0 0) 
 			       (dummy-atom 2 2 2))))
+  (is
+   (same-position? (dummy-atom 1 1 1) 
+		   (apply get-center [(dummy-atom 0 0 0) 
+				      (dummy-atom 2 2 2)])))
 )
 
 ;;; Unimplemented tests
 (comment deftest test-pharmacophore-groups-types
   (is false))
+
+;;; Ugly ugly println statements
+(todo
+ "Can't use SMILES strings for this, as they do not have 3D information.
+Running this results in a null pointer exception."
+
+(comment
+  (println (pharmacophore-groups example-pharmacophores pyrethrin))
+  (println (pharmacophore-groups example-pharmacophores flavopereirin))
+  (println (pharmacophore-groups example-pharmacophores oenanthotoxin)))
+)
 
