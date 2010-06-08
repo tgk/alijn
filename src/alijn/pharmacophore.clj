@@ -2,8 +2,7 @@
   (:use [clj-todo.todo])
   (:import 
    [org.openscience.cdk.smiles.smarts SMARTSQueryTool]
-   [org.openscience.cdk Atom DefaultChemObjectBuilder]
-   [org.openscience.cdk.smiles SmilesParser]
+   [org.openscience.cdk Atom]
    [javax.vecmath Point3d]))
 
 (defn dummy-atom 
@@ -39,7 +38,7 @@ only match a single atom."
 (todo
 "It smells wrong that this generates a dummy atom.
 It would probably be cleaner if it returned the Point3d
-and Kabsch was the one that wrapped stuff in Point3ds."
+and Kabsch was the one that wrapped stuff in atoms."
 
 (defn get-center [atom & more]
   "Returns the center of the atoms as a new atom."
@@ -62,10 +61,8 @@ The center is a dummy carbon atom."
 	    (map 
 	     (fn [atoms]
 	       {:name name
-		;:atoms atoms
-		:count (count atoms)
-		:center (apply get-center atoms)
-		})
+		:atoms atoms
+		:center (apply get-center atoms)})
 	     groups)))
 	pharmacophores)))
 

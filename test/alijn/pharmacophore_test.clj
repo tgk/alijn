@@ -3,9 +3,8 @@
   (:use [clojure.test])
   (:use [clj-todo.todo])
   (:import 
-   [org.openscience.cdk Atom DefaultChemObjectBuilder]
-   [org.openscience.cdk.smiles SmilesParser]
-   [javax.vecmath Point3d]))
+   [org.openscience.cdk DefaultChemObjectBuilder]
+   [org.openscience.cdk.smiles SmilesParser]))
 
 ;;; All tests uses the example-pharmacopohores from alijn.pharmacophore
 
