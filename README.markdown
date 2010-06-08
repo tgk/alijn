@@ -1,15 +1,15 @@
 # alijn
 
-FIXME: write description
+A program for extracting and aligning molecular pharmacophores.
 
 ## Usage
 
-FIXME: write
+Not implemented yet
 
 ## Installation
 
-FIXME: write
+Not implemented yet
 
 ## License
 
-FIXME: write
+Not added yet
