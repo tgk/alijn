@@ -2,12 +2,7 @@
   (:use [clj-todo.todo])
   (:import 
    [org.openscience.cdk.smiles.smarts SMARTSQueryTool]
-   [org.openscience.cdk Atom]
    [javax.vecmath Point3d]))
-
-(defn dummy-atom 
-  ([point] (Atom. "C" point))
-  ([x y z] (dummy-atom (Point3d. x y z))))
 
 ; Taken from 
 ; http://www.daylight.com/dayhtml_tutorials/languages/smarts/smarts_examples.html
@@ -35,25 +30,19 @@ only match a single atom."
       [])))
 )
 
-(todo
-"It smells wrong that this generates a dummy atom.
-It would probably be cleaner if it returned the Point3d
-and Kabsch was the one that wrapped stuff in atoms."
-
 (defn get-center [atom & more]
-  "Returns the center of the atoms as a new atom."
+  "Returns the center of the atoms as a Point3d."
   (let [atoms (cons atom more)
 	points (map #(.getPoint3d %) atoms)
 	result (Point3d. 0 0 0)]
     (doall (map #(.add result %) points))
     (.scale result (/ 1 (count atoms)))
-    (dummy-atom result)))
-)
+    result))
 
 (defn pharmacophore-groups 
   "Extract the phamacophores defined in a {name smarts-string} map
 from the molecule. Returns collection of {:name :atoms :center} structs.
-The center is a dummy carbon atom."
+The center is a Point3d."
   [pharmacophores molecule]
   (apply concat
    (map (fn [[name smarts-string]] 

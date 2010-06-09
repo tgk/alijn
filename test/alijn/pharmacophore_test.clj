@@ -3,16 +3,20 @@
   (:use [clojure.test])
   (:use [clj-todo.todo])
   (:import 
-   [org.openscience.cdk DefaultChemObjectBuilder]
-   [org.openscience.cdk.smiles SmilesParser]))
+   [org.openscience.cdk Atom DefaultChemObjectBuilder]
+   [org.openscience.cdk.smiles SmilesParser]
+   [javax.vecmath Point3d]))
+
+(defn dummy-atom 
+  ([point] (Atom. "C" point))
+  ([x y z] (dummy-atom (Point3d. x y z))))
 
 ;;; All tests uses the example-pharmacopohores from alijn.pharmacophore
 
+;;; Test structures ;;;
 (def smiles-parser (new SmilesParser (DefaultChemObjectBuilder/getInstance)))
 (defn molecule-from-smiles [smiles-string] 
   (.parseSmiles smiles-parser smiles-string))
-
-;;; Test structures ;;;
 
 ; Has three hydrogen acceptors and one 5-ring
 (def pyrethrin 
@@ -54,59 +58,34 @@
 ;;; Test of get-center
 (def epsilon 0.00001)
 
-(defn atom-dist [a1 a2]
-  (let [p1 (.getPoint3d a1)
-	p2 (.getPoint3d a2)]
-    (.distance p1 p2)))
-
-(defn same-position? [a1 a2]
-  (if (< (atom-dist a1 a2) epsilon) true false))
+(defn same-position? [u v] (< (.distance u v) epsilon))
 
 (deftest test-get-center
   ; Test same-position?
-  (is 
-   (same-position? (dummy-atom 0 0 0)
-		   (dummy-atom 0 0 0)))
-  (is 
-   (same-position? (dummy-atom (- epsilon 0.000001) 0 0)
-		   (dummy-atom 0 0 0)))
-  (is (not
-       (same-position? (dummy-atom (+ 0.000001 epsilon) 0 0)
-		       (dummy-atom 0 0 0))))
+  (is (same-position? (Point3d. 0 0 0) (Point3d. 0 0 0)))
+  (is (same-position? (Point3d. (- epsilon 0.000001) 0 0) (Point3d. 0 0 0)))
+  (is (not (same-position? (Point3d. (+ 0.000001 epsilon) 0 0) (Point3d. 0 0 0))))
   ; 1D
-  (is
-   (same-position? (dummy-atom 1 2 3) 
-		   (get-center (dummy-atom 1 2 3))))
-  (is
-   (same-position? (dummy-atom 1 0 0) 
-		   (get-center (dummy-atom 0 0 0) (dummy-atom 2 0 0))))
-  (is (not
-       (same-position? (dummy-atom 10 0 0) 
-		       (get-center (dummy-atom 0 0 0) (dummy-atom 2 0 0)))))
-  (is
-   (same-position? (dummy-atom 1 0 0) 
-		   (get-center (dummy-atom 0 0 0)
-			       (dummy-atom 1 0 0)
-			       (dummy-atom 2 0 0))))
+  (is (same-position? (Point3d. 1 2 3) (get-center (dummy-atom 1 2 3))))
+  (is (same-position? (Point3d. 1 0 0) (get-center (dummy-atom 0 0 0) (dummy-atom 2 0 0))))
+  (is (not (same-position? (Point3d. 10 0 0) (get-center (dummy-atom 0 0 0) (dummy-atom 2 0 0)))))
+  (is (same-position? (Point3d. 1 0 0) 
+		      (get-center (dummy-atom 0 0 0)
+				  (dummy-atom 1 0 0)
+				  (dummy-atom 2 0 0))))
   ; 2D
-  (is
-   (same-position? (dummy-atom 1 1 0) 
-		   (get-center (dummy-atom 0 0 0) (dummy-atom 2 2 0))))
+  (is (same-position? (Point3d. 1 1 0) (get-center (dummy-atom 0 0 0) (dummy-atom 2 2 0))))
   ; 3D
-  (is
-   (same-position? (dummy-atom 1 1 1) 
-		   (get-center (dummy-atom 3 0 0) 
-			       (dummy-atom 0 3 0)
-			       (dummy-atom 0 0 3))))
-  (is
-   (same-position? (dummy-atom 1 1 1) 
-		   (get-center (dummy-atom 0 0 0) 
-			       (dummy-atom 2 2 2))))
-  (is
-   (same-position? (dummy-atom 1 1 1) 
-		   (apply get-center [(dummy-atom 0 0 0) 
-				      (dummy-atom 2 2 2)])))
-)
+  (is (same-position? (Point3d. 1 1 1) 
+		      (get-center (dummy-atom 3 0 0) 
+				  (dummy-atom 0 3 0)
+				  (dummy-atom 0 0 3))))
+  (is (same-position? (Point3d. 1 1 1) 
+		      (get-center (dummy-atom 0 0 0) 
+				  (dummy-atom 2 2 2))))
+  (is (same-position? (Point3d. 1 1 1) 
+		      (apply get-center [(dummy-atom 0 0 0) 
+					 (dummy-atom 2 2 2)]))))
 
 ;;; Unimplemented tests
 (comment deftest test-pharmacophore-groups-types
