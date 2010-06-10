@@ -39,7 +39,19 @@ only match a single atom."
     (.scale result (/ 1 (count atoms)))
     result))
 
-(defn pharmacophore-groups 
+(defn pharmacophore-groups
+  "Extract the phamacophores defined in a {name smarts-string} map
+from the molecule. Returns collection of {:name :centers}.
+The centers are Point3d objects."
+  [pharmacophores molecule]
+  (map (fn [[name smarts-string]]
+	 (let [groups (find-pharmacophore smarts-string molecule)
+	       centers (map get-center groups)]
+	   {:name name
+	    :centers centers})
+	 pharmacophores)))
+
+(comment defn pharmacophore-groups 
   "Extract the phamacophores defined in a {name smarts-string} map
 from the molecule. Returns collection of {:name :atoms :center} structs.
 The center is a Point3d."
