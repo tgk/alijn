@@ -4,6 +4,8 @@
   (:use [alijn.pharmacophore]
 	[alijn.kabsch]))
 
+; Pairing of elements
+
 (todo
  "Should this be pushed to clojure.contrib?"
 
@@ -12,10 +14,11 @@
    only n items in returned sequences.
    Assumes n is smaller or equal to the number of items."
   [items n]
-  (assert (<= n (count items)))
-  (apply concat 
-    (map permutations 
-      (combinations items n))))
+  (let [n (min n (count items))]
+    (apply 
+     concat 
+     (map permutations 
+	  (combinations items n)))))
 )
 
 (todo 
@@ -36,9 +39,3 @@ Might start with submitting it to mailing list"
         (shorter-permutations seq-2 n)))))
 )
 
-(println (shorter-permutations [1 2 3 4] 2))
-(println (shorter-permutations [1 2] 2))
-(println (all-pairs [1 2 3 6] [4 5]))
-(println (all-pairs [4 5] [1 2 3 6]))
-;; Proof of lazyness: the following pice of code terminates very fast
-(println (take 10 (all-pairs (range 10) (range 10))))
