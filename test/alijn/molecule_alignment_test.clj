@@ -22,4 +22,35 @@
   (is (= '(()) (all-pairs [] [1 2 3])))
   (is (= '(()) (all-pairs [1 2 3] []))))
 
+(deftest test-all-grouped-pairs
+  (is (= [[[:f1 :f3] [:b1 :b2]] 
+	  [[:f1 :f3] [:b1 :b3]] 
+	  [[:f2 :f3] [:b1 :b2]] 
+	  [[:f2 :f3] [:b1 :b3]]]
+	 (grouped-all-pairs [[:f1 :f2] [:b1]] 
+			    [[:f3] [:b2 :b3]]))))
 
+(deftest test-pharmacophore-pairings
+  (is (= '(())
+	 (pharmacophore-pairings [{:name "foo" :centers nil} 
+				  {:name "bar" :centers nil}]
+				 [{:name "foo" :centers nil} 
+				  {:name "bar" :centers nil}])))
+  (is (= '(([:f1 :f3] [:f2 :f4] [:b1 :b2])
+	   ([:f1 :f3] [:f2 :f4] [:b1 :b3])
+	   ([:f1 :f4] [:f2 :f3] [:b1 :b2])
+	   ([:f1 :f4] [:f2 :f3] [:b1 :b3]))
+	 (pharmacophore-pairings [{:name "foo" :centers [:f1 :f2]} 
+				  {:name "bar" :centers [:b1]}]
+				 [{:name "foo" :centers [:f3 :f4]} 
+				  {:name "bar" :centers [:b2 :b3]}])))
+  (is (= '(([:f1 :f3] [:f2 :f4] [:b1 :b2] [:c1 :c2])
+	   ([:f1 :f3] [:f2 :f4] [:b1 :b3] [:c1 :c2])
+	   ([:f1 :f4] [:f2 :f3] [:b1 :b2] [:c1 :c2])
+	   ([:f1 :f4] [:f2 :f3] [:b1 :b3] [:c1 :c2]))
+	 (pharmacophore-pairings [{:name "foo" :centers [:f1 :f2]} 
+				  {:name "bar" :centers [:b1]}
+				  {:name "baz" :centers [:c1]}]
+				 [{:name "foo" :centers [:f3 :f4]} 
+				  {:name "bar" :centers [:b2 :b3]}
+				  {:name "baz" :centers [:c2]}]))))
