@@ -52,6 +52,10 @@ The centers are Point3d objects."
 	    :centers centers})
 	 pharmacophores)))
 
+(todo
+ "I moved pairing of pharmacophores away from it's own namespace 
+to limit the number of namespaces, but now I can't figure out if that was overkill."
+nil)
 ; Pairing of elements
 (defn shorter-permutations 
   "Lazy seq of all permutations of elements in items with
@@ -81,18 +85,45 @@ Might start with submitting it to mailing list"
 )
 
 (defn grouped-all-pairs 
-  "Generates all grouped pairs as in
-[[:f1 :f2] [:b1]] [[:f3] [:b2 :b3]] => 
-[[[:f1 :f3] [:b1 :b2]] [[:f1 :f3] [:b1 :b3]] [[:f2 :f3] [:b1 :b2]] [[:f2 :f3] [:b1 :b3]]]"
-  [target-groups subject-groups]
-  (->> (map all-pairs target-groups subject-groups)
+  "Generates all grouped pairs as in [[:f1 :f2] [:b1]] [[:f3] [:b2 :b3]] => 
+  [[[:f1 :f3] [:b1 :b2]] [[:f1 :f3] [:b1 :b3]] [[:f2 :f3] [:b1 :b2]] [[:f2 :f3] [:b1 :b3]]]"
+  [reference-groups subject-groups]
+  (->> (map all-pairs reference-groups subject-groups)
        (apply cartesian-product)
        (map (partial apply concat))))
 
 ; Pairing of pharmacopohores
+(defn center-to-pharmacophore-map
+  "Constructs a map from Point3d centers to pharmacophore types.
+Input is a seq of {:name :centers}."
+  [pharmacophores]
+  (reduce 
+   (fn [m {name :name centers :centers}]
+     (reduce (fn [m center] (assoc m center name)) m centers)) 
+   {} pharmacophores))
+
+(todo
+ "Problem with using maps for retaining pharmacophore type is that Point3d are
+bad keys in the sense that two different objects that reference the same position
+maps to the same. A problem if several pharmacophores are colocated.
+The following pice of code demonstrates the problem."
+ (comment
+   (def origo (Point3d. 0 0 0))
+   (def fake-origo (Point3d. 0 0 0))
+   (def t (assoc (hash-map) origo :origo))
+   (println (t origo))
+   (println (t fake-origo))))
+
 (defn pharmacophore-pairings
   "Returns all point pairings from two seqs of {:name :centers}.
 Assumes the names arrives in same order in both seqeunces.
-Result is (([target-point subject-point] [t-point s-point] ...) ...)."
-  [target subject]
-  (grouped-all-pairs (map :centers target) (map :centers subject)))
+Result is (([reference-point subject-point] [t-point s-point] ...) ...)."
+  [reference subject]
+  (let [ref-center-map (center-to-pharmacophore-map reference)]
+    (map 
+     (partial 
+      map
+      (fn [[ref-point sub-point]] [(ref-center-map ref-point) [ref-point sub-point]]))
+     (grouped-all-pairs 
+      (map :centers reference) 
+      (map :centers subject)))))
