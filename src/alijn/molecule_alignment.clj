@@ -16,7 +16,7 @@
   [points]
   (let [result (Point3d. 0 0 0)]
     (doseq [point points] (.add result point))
-    (.scale result (count points))
+    (.scale result (/ 1 (count points)))
     result))
   
 (defn center-points
@@ -38,6 +38,7 @@
      :rmsd deviation}))
 
 (defn optimal-pharmacophore-alignment
+  "Assumes pharmacophores arrive in same order, and that they are the same!"
   [reference-pharmacophores subject-pharmacophores]
   (let [pairings (pharmacophore-pairings 
 		  reference-pharmacophores 
