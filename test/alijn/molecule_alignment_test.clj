@@ -34,10 +34,6 @@
 			     ["bar" [(Point3d.  1  1  0) (Point3d.  1  0  0)]]
 			     ["bar" [(Point3d.  1 -1  0) (Point3d. -1  0  0)]]]))))
 
-(todo
-"More testing needed. Both on something that gets translated, but also on data
-that has no pairings."
-
 (deftest test-optimal-pharmacophore-alignment
   (is (= {:rmsd 0.0
 	  :result [["foo" (Point3d.  1  0  0)] 
@@ -73,4 +69,3 @@ that has no pairings."
 	   {:name "bar" :centers [(Point3d.  1  0  0) 
 				  (Point3d. -1  0  0)]}
 	   {:name "baz" :centers []}]))))
-)
