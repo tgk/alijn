@@ -69,3 +69,15 @@
 	   {:name "bar" :centers [(Point3d.  1  0  0) 
 				  (Point3d. -1  0  0)]}
 	   {:name "baz" :centers []}]))))
+
+(deftest test-group-by
+  (is (= {:foo [{:key :foo :elm 1} {:key :foo :elm 2}] :bar [{:key :bar :elm 3}]}
+	 (group-by :key [{:key :foo :elm 1}
+			 {:key :bar :elm 3}
+			 {:key :foo :elm 2}])))
+  (is (= {true [2 4 6] false [1 3 5]}
+	 (group-by even? [1 2 3 4 5 6]))))
+
+(deftest test-map-on-values
+  (is (= {:foo 3 :bar 4 :baz 42}
+	 (map-on-values inc {:foo 2 :bar 3 :baz 41}))))

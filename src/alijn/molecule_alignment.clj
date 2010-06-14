@@ -1,8 +1,13 @@
 (ns alijn.molecule-alignment
   (:use clj-todo.todo)
-  (:use [alijn.pharmacophore]
-	[alijn.kabsch])
-  (:import [javax.vecmath Point3d]))
+  (:use [alijn pharmacophore kabsch combinatorics])
+  (:import [javax.vecmath Point3d])
+  (:import 
+   [java.io File FileInputStream]
+   [org.openscience.cdk DefaultChemObjectBuilder]
+   [org.openscience.cdk.io.iterator IteratingMDLReader]))
+
+; Bottom up code
 
 (defn vec-sub 
   "u - v, where u and v are Point3d vectors."
@@ -48,3 +53,57 @@
       sorted-set-by 
       (fn [{rmsd-1 :rmsd} {rmsd-2 :rmsd}] (compare rmsd-1 rmsd-2))
       (map kabsch-on-pairing pairings)))))
+
+; Top down code
+
+(defn read-sdf-file [filename]
+  (let [file (File. filename)
+        stream (FileInputStream. file)
+        reader 
+          (IteratingMDLReader. stream (DefaultChemObjectBuilder/getInstance))]
+    (iterator-seq reader)))
+	
+(defn group-by
+  "Groups the seq by the keys generated from group-fn."
+  [group-fn seq]
+  (apply
+   merge-with
+   concat
+   (map (fn [elm] {(group-fn elm) [elm]}) seq)))
+
+(defn group-conformations-by-name
+  [conformations]
+  (group-by (fn [molecule] (.getName molecule)) conformations))
+
+(defn map-on-values
+  "Applies f to the values in the map m."
+  [f m]
+  (apply merge (map (fn [[k v]] {k (f v)}) m)))
+
+(defn generate-pharmacophores
+  [grouped-conformations]
+  (map-on-values
+   (fn [conformations] (map find-pharmacophore conformations))
+   grouped-conformations))
+
+(todo
+ "I have the feeling this belongs further up, in the bottom up code.
+Maybe even in alijn.pharmacophore."
+
+(defn alignments-with-different-reference-pharmacophores
+  "Iteratively keeps one set of pharmacophores as a reference while
+aligningen the remaining N - 1 sets of pharmacophores to it.
+Result is a seq of maps with :rmsd and :result, :result being a list of 
+list of optimally aligned points."
+  [pharmacophores]
+  (map
+   (fn [[reference subjects]]
+     (let [result (map (partial optimal-pharmacophore-alignment reference) subjects)
+	   rmsd-sum (reduce + (map :rmsd result))]
+       {:rmsd-sum rmsd-sum
+	:result result
+	}))
+   (leave-one-out pharmacophores)
+  ))
+)
+  
