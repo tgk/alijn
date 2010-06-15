@@ -108,7 +108,7 @@ Running this results in a null pointer exception."
 					{:name "bar" :centers [:c3]}
 					{:name "baz" :centers []}]))))
 
-(deftest test-pharmacophore-pairings
+(comment deftest test-pharmacophore-pairings
   (is (= '(())
 	 (pharmacophore-pairings [{:name "foo" :centers nil} 
 				  {:name "bar" :centers nil}]

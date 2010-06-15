@@ -23,12 +23,23 @@
   (is (= '(()) (all-pairs [1 2 3] []))))
 
 (deftest test-all-grouped-pairs
-  (is (= [[[:f1 :f3] [:b1 :b2]] 
-	  [[:f1 :f3] [:b1 :b3]] 
-	  [[:f2 :f3] [:b1 :b2]] 
-	  [[:f2 :f3] [:b1 :b3]]]
-	 (grouped-all-pairs [[:f1 :f2] [:b1]] 
-			    [[:f3] [:b2 :b3]]))))
+  (is (= [
+	  [["ab" "d"] ["fg" "h"]]
+	  [["ab" "e"] ["fg" "h"]]
+	  [["ba" "d"] ["fg" "h"]]
+	  [["ba" "e"] ["fg" "h"]]
+	  [["ac" "d"] ["fg" "h"]]
+	  [["ac" "e"] ["fg" "h"]]
+	  [["ca" "d"] ["fg" "h"]]
+	  [["ca" "e"] ["fg" "h"]]
+	  [["bc" "d"] ["fg" "h"]]
+	  [["bc" "e"] ["fg" "h"]]
+	  [["cb" "d"] ["fg" "h"]]
+	  [["cb" "e"] ["fg" "h"]]
+	  ]
+	 (map 
+	  (partial map (partial map (partial apply str)))
+	  (all-grouped-pairs ["abc" "de"] ["fg" "h"])))))
 
 (deftest test-leave-one-out
   (is (= [[:a [:b :c :d]]

@@ -40,6 +40,9 @@ only match a single atom."
     (.scale result (/ 1 (count atoms)))
     result))
 
+(todo
+ "Weird output, should just be {name centers} map instead"
+
 (defn pharmacophore-groups
   "Extract the phamacophores defined in a {name smarts-string} map
 from the molecule. Returns collection of {:name :centers}.
@@ -51,6 +54,7 @@ The centers are Point3d objects."
 	   {:name name
 	    :centers centers})
 	 pharmacophores)))
+)
 
 ; Pairing of pharmacopohores
 (defn center-to-pharmacophore-map
@@ -74,16 +78,3 @@ The following pice of code demonstrates the problem."
    (println (t origo))
    (println (t fake-origo))))
 
-(defn pharmacophore-pairings
-  "Returns all point pairings from two seqs of {:name :centers}.
-Assumes the names arrives in same order in both seqeunces.
-Result is (([reference-point subject-point] [t-point s-point] ...) ...)."
-  [reference subject]
-  (let [ref-center-map (center-to-pharmacophore-map reference)]
-    (map 
-     (partial 
-      map
-      (fn [[ref-point sub-point]] [(ref-center-map ref-point) [ref-point sub-point]]))
-     (grouped-all-pairs 
-      (map :centers reference) 
-      (map :centers subject)))))

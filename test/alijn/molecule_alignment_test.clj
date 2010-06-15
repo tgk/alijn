@@ -4,16 +4,6 @@
 	[clj-todo.todo])
   (:import [javax.vecmath Point3d]))
 
-(deftest test-vec-center
-  (is (= (Point3d. 1 0 2)
-	 (vec-center [(Point3d. 0 -10 0)
-		      (Point3d. 2  10 4)]))))
-
-(deftest test-center-points
-  (is (= [(Point3d. -5 0 0) (Point3d. 5 0 0)]
-	 (center-points [(Point3d. 10 0 0)
-			 (Point3d. 20 0 0)]))))
-	 
 (deftest test-kabsch-on-pairing
   (is (= {:rmsd 0.0
 	  :result [["foo" (Point3d.  1  0  0)] 
@@ -34,7 +24,7 @@
 			     ["bar" [(Point3d.  1  1  0) (Point3d.  1  0  0)]]
 			     ["bar" [(Point3d.  1 -1  0) (Point3d. -1  0  0)]]]))))
 
-(deftest test-optimal-pharmacophore-alignment
+(comment deftest test-optimal-pharmacophore-alignment
   (is (= {:rmsd 0.0
 	  :result [["foo" (Point3d.  1  0  0)] 
 		   ["foo" (Point3d. -1  0  0)]
