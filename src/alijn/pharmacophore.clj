@@ -9,8 +9,9 @@
 ; http://www.daylight.com/dayhtml_tutorials/languages/smarts/smarts_examples.html
 ; More advanced definitions available from same site.
 (def example-pharmacophores
-     {"hydrogen-bond acceptor" 
-      "[!$([#6,F,Cl,Br,I,o,s,nX3,#7v5,#15v5,#16v4,#16v6,*+1,*+2,*+3])]",
+     {
+      ;"hydrogen-bond acceptor" 
+      ;"[!$([#6,F,Cl,Br,I,o,s,nX3,#7v5,#15v5,#16v4,#16v6,*+1,*+2,*+3])]",
       "hydrogen-bond donor" "[!$([#6,H0,-,-2,-3])]",
       "aromatic-5-ring" "C1CCCC1"})
 
@@ -48,33 +49,12 @@ only match a single atom."
 from the molecule. Returns collection of {:name :centers}.
 The centers are Point3d objects."
   [pharmacophores molecule]
-  (map (fn [[name smarts-string]]
-	 (let [groups (find-pharmacophore smarts-string molecule)
-	       centers (map get-center groups)]
-	   {:name name
-	    :centers centers})
-	 pharmacophores)))
+  (apply
+   merge
+   (map (fn [[name smarts-string]]
+	  (let [groups (find-pharmacophore smarts-string molecule)
+		centers (map (partial apply get-center) groups)
+		]
+	    {name centers}))
+	pharmacophores)))
 )
-
-; Pairing of pharmacopohores
-(defn center-to-pharmacophore-map
-  "Constructs a map from Point3d centers to pharmacophore types.
-Input is a seq of {:name :centers}."
-  [pharmacophores]
-  (reduce 
-   (fn [m {name :name centers :centers}]
-     (reduce (fn [m center] (assoc m center name)) m centers)) 
-   {} pharmacophores))
-
-(todo
- "Problem with using maps for retaining pharmacophore type is that Point3d are
-bad keys in the sense that two different objects that reference the same position
-maps to the same. A problem if several pharmacophores are colocated.
-The following pice of code demonstrates the problem."
- (comment
-   (def origo (Point3d. 0 0 0))
-   (def fake-origo (Point3d. 0 0 0))
-   (def t (assoc (hash-map) origo :origo))
-   (println (t origo))
-   (println (t fake-origo))))
-
