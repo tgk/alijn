@@ -72,18 +72,6 @@ Also, this is a huge chunk of code, but I don't feel like splitting it up."
      pairs-of-flat-ref-and-target)))
 )
 
-(def p1 (Point3d. 0 0 0))
-(def p2 (Point3d. 1 1 1))
-(def p3 (Point3d. 1 2 3))
-(def q1 (Point3d. -1 -1 -1))
-(def q2 (Point3d. 3 4 5))
-(def q3 (Point3d. -1 1 -1))
-
-(println 
- (alignments-on-groups-pair
-  {"foo" [p1 p2], "bar" [p3]   }
-  {"bar" [q1]   , "foo" [q2 q3]}))
-
 (defn select-optimal
   "Can be used for both alignment-on-group-pairs and optimal alignment over all groups."
   [results]
@@ -92,28 +80,12 @@ Also, this is a huge chunk of code, but I don't feel like splitting it up."
 	  (fn [{rmsd-1 :rmsd} {rmsd-2 :rmsd}] (compare rmsd-1 rmsd-2))
 	  results)))
 
-(println)
-(println 
- (select-optimal
-  (alignments-on-groups-pair
-   {"foo" [p1 p2], "bar" [p3]   }
-   {"bar" [q1]   , "foo" [q2 q3]})))
-
 (defn optimal-alignment-on-all
   [reference-groups target-groups-groups]
   (map
    (fn [target-groups]
      (select-optimal (alignments-on-groups-pair reference-groups target-groups)))
    target-groups-groups))
-
-(println "Little bang test")
-(println 
- (optimal-alignment-on-all
-  {"foo" [p1 p2], "bar" [p3]   }
-  [
-   {"bar" [q1]   , "foo" [q2 q3]}
-   {"foo" [u1]   , "bar" [u2]   }
-   ]))
 
 (defn alignments-over-all-groups
   "Input: {name-1 {group-name-1 [a1 a2], group-name-2 [b2]}, ... }
@@ -133,21 +105,55 @@ Output: {:reference name-k, :rmsds [42.367, ... ],
 	  :rmsds rmsds}))
      (leave-one-out elm))))
 
-(def u1 (Point3d. 3 2 1))
-(def u2 (Point3d. 1 2 3))
-
-(println "Big bang test")
-(println (alignments-over-all-groups
-	  {"A" {"foo" [p1 p2], "bar" [p3]   },
-	   "B" {"bar" [q1]   , "foo" [q2 q3]},
-	   "C" {"foo" [u1]   , "bar" [u2]   }}))
-
 (defn optimal-alignment-over-all-groups
   [group-of-groups]
   (select-optimal
    (map 
     #(assoc % :rmsd (reduce + (:rmsds %))) 
     (alignments-over-all-groups group-of-groups))))
+
+;;;; Testing by printing :-s
+(todo
+ "All of this should become a unit test"
+(comment
+ 
+(def p1 (Point3d. 0 0 0))
+(def p2 (Point3d. 1 1 1))
+(def p3 (Point3d. 1 2 3))
+(def q1 (Point3d. -1 -1 -1))
+(def q2 (Point3d. 3 4 5))
+(def q3 (Point3d. -1 1 -1))
+(def u1 (Point3d. 3 2 1))
+(def u2 (Point3d. 1 2 3))
+
+(println 
+ (alignments-on-groups-pair
+  {"foo" [p1 p2], "bar" [p3]   }
+  {"bar" [q1]   , "foo" [q2 q3]}))
+
+
+(println)
+(println 
+ (select-optimal
+  (alignments-on-groups-pair
+   {"foo" [p1 p2], "bar" [p3]   }
+   {"bar" [q1]   , "foo" [q2 q3]})))
+
+(println "Little bang test")
+(println 
+ (optimal-alignment-on-all
+  {"foo" [p1 p2], "bar" [p3]   }
+  [
+   {"bar" [q1]   , "foo" [q2 q3]}
+   {"foo" [u1]   , "bar" [u2]   }
+   ]))
+
+
+(println "Big bang test")
+(println (alignments-over-all-groups
+	  {"A" {"foo" [p1 p2], "bar" [p3]   },
+	   "B" {"bar" [q1]   , "foo" [q2 q3]},
+	   "C" {"foo" [u1]   , "bar" [u2]   }}))
 
 (println)
 (println "Finding the best")
@@ -156,3 +162,6 @@ Output: {:reference name-k, :rmsds [42.367, ... ],
 	   "B" {"bar" [q1]   , "foo" [q2 q3]},
 	   "C" {"foo" [u1]   , "bar" [u2]   }}))
 
+
+)
+)
