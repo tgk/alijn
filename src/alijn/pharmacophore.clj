@@ -41,9 +41,6 @@ only match a single atom."
     (.scale result (/ 1 (count atoms)))
     result))
 
-(todo
- "Weird output, should just be {name centers} map instead"
-
 (defn pharmacophore-groups
   "Extract the phamacophores defined in a {name smarts-string} map
 from the molecule. Returns collection of {:name :centers}.
@@ -57,4 +54,3 @@ The centers are Point3d objects."
 		]
 	    {name centers}))
 	pharmacophores)))
-)

@@ -62,7 +62,7 @@
    (all-alignments-over-all-conformations
     conformations-pharmacophores)))
 
-; Test by printing
+; Test by printing, bad! :-s
 
 (defn -main [& args]
   (def filename "data/debug/g-phosphorylase-standard.sdf")

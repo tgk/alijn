@@ -72,17 +72,10 @@ Also, this is a huge chunk of code, but I don't feel like splitting it up."
      pairs-of-flat-ref-and-target)))
 )
 
-(todo
-"Must be idomatic way not using an entire sorted-set, like min."
-
 (defn select-optimal
   "Can be used for both alignment-on-group-pairs and optimal alignment over all groups."
   [results]
-  (first
-   (apply sorted-set-by
-	  (fn [{rmsd-1 :rmsd} {rmsd-2 :rmsd}] (compare rmsd-1 rmsd-2))
-	  results)))
-)
+  (min-key :rmsd results))
 
 (defn optimal-alignment-on-all
   [reference-groups target-groups-groups]
