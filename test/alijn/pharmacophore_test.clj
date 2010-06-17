@@ -40,7 +40,7 @@
 (def smarts-hydrogen-donor    (example-pharmacophores "hydrogen-bond donor"))
 (def smarts-aromatic-5-ring   (example-pharmacophores "aromatic-5-ring"))
 
-(deftest test-find-pharmacophore-by-counting
+(comment deftest test-find-pharmacophore-by-counting
   ; Hydrogen acceptor count
   (todo "I can only see three, but it might be five..."
   (is (= 5 (count (find-pharmacophore smarts-hydrogen-acceptor pyrethrin)))))
@@ -101,12 +101,6 @@ Running this results in a null pointer exception."
   (println (pharmacophore-groups example-pharmacophores flavopereirin))
   (println (pharmacophore-groups example-pharmacophores oenanthotoxin)))
 )
-
-(deftest test-center-to-pharmacophore-map
-  (is (= {:c1 "foo", :c2 "foo", :c3 "bar"}
-	 (center-to-pharmacophore-map [{:name "foo" :centers [:c1 :c2]}
-					{:name "bar" :centers [:c3]}
-					{:name "baz" :centers []}]))))
 
 (comment deftest test-pharmacophore-pairings
   (is (= '(())

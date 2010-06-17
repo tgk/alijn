@@ -1,6 +1,7 @@
 (ns alijn.pharmacophore
   (:use [clj-todo.todo]
-	[alijn.combinatorics])
+	[alijn.combinatorics]
+	[clojure.contrib.str-utils2 :only [split-lines split]])
   (:import 
    [org.openscience.cdk.smiles.smarts SMARTSQueryTool]
    [javax.vecmath Point3d]))
@@ -9,11 +10,22 @@
 ; http://www.daylight.com/dayhtml_tutorials/languages/smarts/smarts_examples.html
 ; More advanced definitions available from same site.
 (def example-pharmacophores
-     {
-      ;"hydrogen-bond acceptor" 
-      ;"[!$([#6,F,Cl,Br,I,o,s,nX3,#7v5,#15v5,#16v4,#16v6,*+1,*+2,*+3])]",
-      "hydrogen-bond donor" "[!$([#6,H0,-,-2,-3])]",
+     {"hydrogen-bond donor" "[!$([#6,H0,-,-2,-3])]",
       "aromatic-5-ring" "C1CCCC1"})
+
+(defn- not-commented? [s]
+  (not (= \; (first s))))
+
+(defn parse-pharmacophores
+  [filename]
+  (->> filename 
+       slurp 
+       split-lines
+       (filter not-commented?)
+       (map #(.split #" " %))
+       (map seq)
+       (apply concat)
+       (apply hash-map)))
 
 (todo 
  "This function generates a new query-tool every time.
@@ -37,6 +49,7 @@ only match a single atom."
   (let [atoms (cons atom more)
 	points (map #(.getPoint3d %) atoms)
 	result (Point3d. 0 0 0)]
+    (assert (> (count points) 0))
     (doall (map #(.add result %) points))
     (.scale result (/ 1 (count atoms)))
     result))
@@ -50,7 +63,6 @@ The centers are Point3d objects."
    merge
    (map (fn [[name smarts-string]]
 	  (let [groups (find-pharmacophore smarts-string molecule)
-		centers (map (partial apply get-center) groups)
-		]
+		centers (map (partial apply get-center) groups)]
 	    {name centers}))
 	pharmacophores)))

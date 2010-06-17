@@ -34,13 +34,17 @@ back to the original structure."
     (.sub result u v)
     result))
 
+(todo
+"This should b shared with alijn.pharmacophore as it needs to find the center of atoms"
 (defn vec-center 
   "Finds the vector center for a seq of Point3d."
   [points]
   (let [result (Point3d. 0 0 0)]
+    (assert (> (count points) 0))
     (doseq [point points] (.add result point))
     (.scale result (/ 1 (count points)))
     result))
+)
   
 (defn center-points
   [points]
@@ -54,28 +58,31 @@ Also, this is a huge chunk of code, but I don't feel like splitting it up."
 (defn alignments-on-groups-pair
   [reference-groups target-groups]
   (let [group-names (keys reference-groups)
-	ref-groups (map (partial get reference-groups) group-names)
-	tar-groups (map (partial get target-groups   ) group-names)
+	ref-groups (map reference-groups group-names)
+	tar-groups (map target-groups group-names)
 	pairs-of-flat-ref-and-target (map 
 				      (partial map flatten-groups)
 				      (all-grouped-pairs ref-groups tar-groups))]
     (map
      (fn [[[flat-ref-group _] [flat-target-group target-unflatten]]]
-       (let [ref-points (center-points flat-ref-group)
-	     tar-points (center-points flat-target-group)
-	     result (kabsch ref-points tar-points)
-	     rmsd (rmsd ref-points result)
-	     unflat-result (target-unflatten result)
-	     group-named-result (zipmap group-names unflat-result)]
-	 {:result group-named-result
-	  :rmsd   rmsd}))
+       (if (and (> (count flat-ref-group) 0) (> (count flat-target-group) 0))
+	 (let [ref-points (center-points flat-ref-group)
+	       tar-points (center-points flat-target-group)
+	       result (kabsch ref-points tar-points)
+	       rmsd (rmsd ref-points result)
+	       unflat-result (target-unflatten result)
+	       group-named-result (zipmap group-names unflat-result)]
+	   {:result group-named-result,
+	    :rmsd   rmsd})
+	 {:result (zipmap group-names (repeat [])),
+	  :rmsd (Double/POSITIVE_INFINITY)}))
      pairs-of-flat-ref-and-target)))
 )
 
 (defn select-optimal
   "Can be used for both alignment-on-group-pairs and optimal alignment over all groups."
   [results]
-  (min-key :rmsd results))
+  (apply min-key :rmsd results))
 
 (defn optimal-alignment-on-all
   [reference-groups target-groups-groups]
@@ -162,3 +169,4 @@ Output: {:reference name-k, :rmsds [42.367, ... ],
 
 )
 )
+
