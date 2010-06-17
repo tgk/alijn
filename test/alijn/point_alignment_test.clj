@@ -33,12 +33,6 @@
 	 (vec-center [(Point3d. 0 -10 0)
 		      (Point3d. 2  10 4)]))))
 
-(deftest test-center-points
-  (is (= [(Point3d. -5 0 0) (Point3d. 5 0 0)]
-	 (center-points [(Point3d. 10 0 0)
-			 (Point3d. 20 0 0)]))))
-	 
-
 (def p1 (Point3d. 1 2 3))
 (def p2 (Point3d. 0 1 2))
 (def p3 (Point3d. 1 1 1))

@@ -34,6 +34,13 @@ back to the original structure."
     (.sub result u v)
     result))
 
+(defn vec-add 
+  "u + v, where u and v are Point3d vectors."
+  [u v]
+  (let [result (Point3d.)]
+    (.add result u v)
+    result))
+
 (todo
 "This should b shared with alijn.pharmacophore as it needs to find the center of atoms"
 (defn vec-center 
@@ -46,11 +53,9 @@ back to the original structure."
     result))
 )
   
-(defn center-points
-  [points]
-  (let [center (vec-center points)
-	moved-points (map #(vec-sub %1 center) points)] 
-    moved-points))
+(defn move-points
+  [points translation]
+  (map #(vec-add %1 translation) points))
 
 (todo 
 "Might check that the group names are the same!
@@ -66,14 +71,15 @@ Also, this is a huge chunk of code, but I don't feel like splitting it up."
     (map
      (fn [[[flat-ref-group _] [flat-target-group target-unflatten]]]
        (if (and (> (count flat-ref-group) 0) (> (count flat-target-group) 0))
-	 (let [ref-points (center-points flat-ref-group)
-	       tar-points (center-points flat-target-group)
-	       result (kabsch ref-points tar-points)
-	       rmsd (rmsd ref-points result)
-	       unflat-result (target-unflatten result)
+	 (let [translation (vec-sub (vec-center flat-ref-group) (vec-center flat-target-group))
+	       translated-target-points (move-points flat-target-group translation)
+	       result (kabsch flat-ref-group translated-target-points)
+	       unflat-result (target-unflatten (:rotated-points result))
 	       group-named-result (zipmap group-names unflat-result)]
-	   {:result group-named-result,
-	    :rmsd   rmsd})
+	   (merge 
+	    result
+	    {:result group-named-result}
+	    {:translation translation}))
 	 {:result (zipmap group-names (repeat [])),
 	  :rmsd (Double/POSITIVE_INFINITY)}))
      pairs-of-flat-ref-and-target)))

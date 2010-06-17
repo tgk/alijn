@@ -35,10 +35,10 @@
 (def epsilon 1.0E-6)
 
 (deftest test-kabsch-on-rmsds-with-perfect-possible-rotation
-  (is (> epsilon (rmsd-of-optimal test-1-points-1 test-1-points-2)))
-  (is (> epsilon (rmsd-of-optimal test-2-points-1 test-2-points-2)))
-  (is (> epsilon (rmsd-of-optimal test-3-points-1 test-3-points-2)))
-  (is (> epsilon (rmsd-of-optimal test-4-points-1 test-4-points-2))))
+  (is (> epsilon (:rmsd (kabsch test-1-points-1 test-1-points-2))))
+  (is (> epsilon (:rmsd (kabsch test-2-points-1 test-2-points-2))))
+  (is (> epsilon (:rmsd (kabsch test-3-points-1 test-3-points-2))))
+  (is (> epsilon (:rmsd (kabsch test-4-points-1 test-4-points-2)))))
 
 (deftest test-kabsch-on-rmsds-with-non-perfect-possible-rotation
-  (is (= 1.0 (rmsd-of-optimal test-5-points-1 test-5-points-2))))
+  (is (= 1.0 (:rmsd (kabsch test-5-points-1 test-5-points-2)))))

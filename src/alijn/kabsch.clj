@@ -66,14 +66,12 @@
   (letfn [(extract-row [i] (Point3d. (.get matrix i 0) (.get matrix i 1) (.get matrix i 2)))]
     (map extract-row (range (.getRowDimension matrix)))))
 
-(def test-point-1 (Point3d. 0 0 0))
-(def test-point-2 (Point3d. 1 1 0))
-(def test-points [test-point-1 test-point-2])
-
-(comment
-(print-matrix (points-to-matrix test-points))
-(println (matrix-to-points (points-to-matrix test-points)))
-)
+(defn rmsd 
+  "Calculates the root mean square deviasion."
+  [points-1 points-2]
+  (let [distances (map #(.distance %1 %2) points-1 points-2)
+	s (reduce + distances)]
+    (Math/sqrt s)))
 
 ;;; Putting it all together
 (defn kabsch 
@@ -85,21 +83,8 @@ The points are assumed to be centered around some appropiate center of mass."
 	Q (points-to-matrix points-2)
 	rotation (optimal-rotation P Q)
 	Q-rotated (.times Q rotation)
-	points-2-transformed (matrix-to-points Q-rotated)]
-    points-2-transformed))
-
-;;; Evaluating the overlay
-(defn rmsd 
-  "Calculates the root mean square deviasion."
-  [points-1 points-2]
-  (let [distances (map #(.distance %1 %2) points-1 points-2)
-	s (reduce + distances)]
-    (Math/sqrt s)))
-
-(defn rmsd-of-optimal [points-1 points-2]
-  (rmsd points-1 (kabsch points-1 points-2)))
-
-(comment
-(println "rmsd of same set:" (rmsd test-points test-points))
-(println "rmsd of reversed set:" (rmsd test-points [test-point-2 test-point-1]))
-)
+	points-2-transformed (matrix-to-points Q-rotated)
+	rotation-rmsd (rmsd points-1 points-2-transformed)]
+    {:rotation rotation,
+     :rotated-points points-2-transformed,
+     :rmsd rotation-rmsd}))
