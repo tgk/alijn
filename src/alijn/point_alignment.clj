@@ -27,69 +27,28 @@ back to the original structure."
 	unflattener (partial partition-using-sizes sizes)]
     [flattened-groups unflattener]))
 
-(defn vec-sub 
-  "u - v, where u and v are Point3d vectors."
-  [u v]
-  (let [result (Point3d.)]
-    (.sub result u v)
-    result))
-
-(defn vec-add 
-  "u + v, where u and v are Point3d vectors."
-  [u v]
-  (let [result (Point3d.)]
-    (.add result u v)
-    result))
-
-(todo
-"This should b shared with alijn.pharmacophore as it needs to find the center of atoms"
-(defn vec-center 
-  "Finds the vector center for a seq of Point3d."
-  [points]
-  (let [result (Point3d. 0 0 0)]
-    (assert (> (count points) 0))
-    (doseq [point points] (.add result point))
-    (.scale result (/ 1 (count points)))
-    result))
-)
-  
-(defn move-points
-  [points translation]
-  (map #(vec-add %1 translation) points))
-
-(todo 
-"Might check that the group names are the same!
-Also, this is a huge chunk of code, but I don't feel like splitting it up."
-(defn alignments-on-groups-pair
-  [reference-groups target-groups]
-  (let [group-names (keys reference-groups)
-	ref-groups (map reference-groups group-names)
-	tar-groups (map target-groups group-names)
-	pairs-of-flat-ref-and-target (map 
-				      (partial map flatten-groups)
-				      (all-grouped-pairs ref-groups tar-groups))]
+(defn all-alignments-on-labelled-pairings
+  "Aligns the labelled points in reference with the labelled points in 
+labelled-points using all legal ways of pairing points from the two.
+The labelled points are maps where the keys are the labels and the
+values are the collections of Point3d's."
+  [reference labelled-points]
+  (let [labels (keys reference)
+	grouped-points (all-grouped-pairs (map reference labels) (map labelled-points labels))
+	flat-grouped-labels (map (partial map flatten-groups) grouped-points)]
     (map
-     (fn [[[flat-ref-group _] [flat-target-group target-unflatten]]]
-       (if (and (> (count flat-ref-group) 0) (> (count flat-target-group) 0))
-	 (let [translation (vec-sub (vec-center flat-ref-group) (vec-center flat-target-group))
-	       translated-target-points (move-points flat-target-group translation)
-	       result (kabsch flat-ref-group translated-target-points)
-	       unflat-result (target-unflatten (:rotated-points result))
-	       group-named-result (zipmap group-names unflat-result)]
-	   (merge 
-	    result
-	    {:result group-named-result}
-	    {:translation translation}))
-	 {:result (zipmap group-names (repeat [])),
-	  :rmsd (Double/POSITIVE_INFINITY)}))
-     pairs-of-flat-ref-and-target)))
-)
+     (fn [[[flat-reference _] [flat-labelled-points unflatten]]]
+       (if (and (> (count flat-reference) 0)
+		(> (count flat-labelled-points) 0))
+	 (let [result (kabsch-with-translation flat-reference flat-labelled-points)]
+	   (assoc result 
+	     :rotated-points (->> result :rotated-points unflatten (zipmap labels))))
+	 {:rmsd (Double/POSITIVE_INFINITY)}))
+     flat-grouped-labels)))
 
-(defn select-optimal
-  "Can be used for both alignment-on-group-pairs and optimal alignment over all groups."
-  [results]
-  (apply min-key :rmsd results))
-
+; Terrible names!
+(def alignments-on-groups-pair all-alignments-on-labelled-pairings)
+(defn select-optimal [results] (apply min-key :rmsd results))
 (defn optimal-alignment-on-all
   [reference-groups target-groups-groups]
   (map
@@ -97,10 +56,8 @@ Also, this is a huge chunk of code, but I don't feel like splitting it up."
      (select-optimal (alignments-on-groups-pair reference-groups target-groups)))
    target-groups-groups))
 
+;all-alignments-on-conformation-pairings
 (defn alignments-over-all-groups
-  "Input: {name-1 {group-name-1 [a1 a2], group-name-2 [b2]}, ... }
-Output: {:reference name-k, :rmsds [42.367, ... ], 
-         :alignment {name-1 {group-name-1 [p3], ... }, ... }}"
   [group-of-groups]
   (let [elm (keys group-of-groups)]
     (map
@@ -108,19 +65,21 @@ Output: {:reference name-k, :rmsds [42.367, ... ],
        (let [reference-group (group-of-groups reference-group-name)
 	     target-groups (map group-of-groups target-groups-names)
 	     alignments (optimal-alignment-on-all reference-group target-groups)
-	     named-alignments (zipmap target-groups-names (map :result alignments))
-	     rmsds (map :rmsd alignments)]
-	 {:reference reference-group-name,
-	  :alignment named-alignments,
-	  :rmsds rmsds}))
+	     named-alignments (zipmap target-groups-names alignments)]
+	 {:reference-name reference-group-name,
+	  :reference-features reference-group,
+	  :alignment named-alignments}))
      (leave-one-out elm))))
 
+; Terrible name
 (defn optimal-alignment-over-all-groups
   [group-of-groups]
-  (select-optimal
-   (map 
-    #(assoc % :rmsd (reduce + (:rmsds %))) 
-    (alignments-over-all-groups group-of-groups))))
+  (apply 
+   min-key
+   (fn [alignment]
+     (let [rmsds (map :rmsd (:alignment alignment))] 
+       (apply reduce + rmsds)))
+   (alignments-over-all-groups group-of-groups)))
 
 ;;;; Testing by printing :-s
 (todo

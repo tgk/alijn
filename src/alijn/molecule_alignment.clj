@@ -2,7 +2,7 @@
   (:gen-class)
   (:use clj-todo.todo)
   (:use [alijn pharmacophore kabsch combinatorics point-alignment]
-	[clojure.contrib combinatorics])
+	[clojure.contrib combinatorics pprint])
   (:import [javax.vecmath Point3d])
   (:import 
    [java.io File FileInputStream]
@@ -97,6 +97,6 @@
 
   (def pharmacophores (parse-pharmacophores pharmacophore-definitions-filename))
 
-  (println (extract-pharmacophores-and-align
-	    conformations-filename
-	    pharmacophores)))
+  (pprint (extract-pharmacophores-and-align
+	   conformations-filename
+	   pharmacophores)))

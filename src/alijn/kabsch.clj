@@ -1,4 +1,5 @@
 (ns alijn.kabsch
+  (:use [clj-todo.todo])
   (:import [Jama Matrix]
 	   [javax.vecmath Point3d]))
 
@@ -88,3 +89,44 @@ The points are assumed to be centered around some appropiate center of mass."
     {:rotation rotation,
      :rotated-points points-2-transformed,
      :rmsd rotation-rmsd}))
+
+;;; Translated Kabsch
+(defn vec-sub 
+  "u - v, where u and v are Point3d vectors."
+  [u v]
+  (let [result (Point3d.)]
+    (.sub result u v)
+    result))
+
+(defn vec-add 
+  "u + v, where u and v are Point3d vectors."
+  [u v]
+  (let [result (Point3d.)]
+    (.add result u v)
+    result))
+
+(todo
+"This should b shared with alijn.pharmacophore as it needs to find the center of atoms"
+(defn vec-center 
+  "Finds the vector center for a seq of Point3d."
+  [points]
+  (let [result (Point3d. 0 0 0)]
+    (assert (> (count points) 0))
+    (doseq [point points] (.add result point))
+    (.scale result (/ 1 (count points)))
+    result))
+)
+  
+(defn move-points
+  [points translation]
+  (map #(vec-add %1 translation) points))
+
+(defn kabsch-with-translation
+  "Performs Kabsch algorithm, but first centers the second set
+of points around the firsts center of mass."
+  [points-1 points-2]
+  (let [translation (vec-sub (vec-center points-1) (vec-center points-2))
+	translated-points (move-points points-2 translation)]
+    (assoc
+	(kabsch points-1 translated-points)
+      :translation translation)))
