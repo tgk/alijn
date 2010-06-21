@@ -1,4 +1,4 @@
-(ns alijn.pharmacophore
+(ns alijn.features
   (:use [clj-todo.todo]
 	[alijn.combinatorics]
 	[clojure.contrib.str-utils2 :only [split-lines split]])
@@ -9,14 +9,14 @@
 ; Taken from 
 ; http://www.daylight.com/dayhtml_tutorials/languages/smarts/smarts_examples.html
 ; More advanced definitions available from same site.
-(def example-pharmacophores
+(def example-features
      {"hydrogen-bond donor" "[!$([#6,H0,-,-2,-3])]",
       "aromatic-5-ring" "C1CCCC1"})
 
 (defn- not-commented? [s]
   (not (= \; (first s))))
 
-(defn parse-pharmacophores
+(defn parse-features
   [filename]
   (->> filename 
        slurp 
@@ -31,8 +31,8 @@
  "This function generates a new query-tool every time.
 Can they be cached in a nice manner?"
 
-(defn find-pharmacophore 
-  "Result is a coll of atom collections, even though some pharmacophores
+(defn find-feature
+  "Result is a coll of atom collections, even though some features
 only match a single atom."
   [smarts-string molecule]
   (let [query-tool (SMARTSQueryTool. smarts-string)
@@ -54,15 +54,15 @@ only match a single atom."
     (.scale result (/ 1 (count atoms)))
     result))
 
-(defn pharmacophore-groups
-  "Extract the phamacophores defined in a {name smarts-string} map
+(defn feature-groups
+  "Extract the features defined in a {name smarts-string} map
 from the molecule. Returns collection of {:name :centers}.
 The centers are Point3d objects."
-  [pharmacophores molecule]
+  [features molecule]
   (apply
    merge
    (map (fn [[name smarts-string]]
-	  (let [groups (find-pharmacophore smarts-string molecule)
+	  (let [groups (find-feature smarts-string molecule)
 		centers (map (partial apply get-center) groups)]
 	    {name centers}))
-	pharmacophores)))
+	features)))

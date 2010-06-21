@@ -42,3 +42,9 @@
 
 (deftest test-kabsch-on-rmsds-with-non-perfect-possible-rotation
   (is (= 1.0 (:rmsd (kabsch test-5-points-1 test-5-points-2)))))
+
+(deftest test-vec-center
+  (is (= (Point3d. 1 0 2)
+	 (vec-center [(Point3d. 0 -10 0)
+		      (Point3d. 2  10 4)]))))
+

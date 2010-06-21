@@ -1,7 +1,7 @@
 (ns alijn.molecule-alignment
   (:gen-class)
   (:use clj-todo.todo)
-  (:use [alijn pharmacophore kabsch combinatorics point-alignment]
+  (:use [alijn features kabsch combinatorics point-alignment]
 	[clojure.contrib combinatorics pprint])
   (:import [javax.vecmath Point3d])
   (:import 
@@ -36,21 +36,21 @@
   [f m]
   (apply merge (map (fn [[k v]] {k (f v)}) m)))
 
-(defn generate-pharmacophores
-  [pharmacophore-definitions grouped-conformations]
+(defn generate-features
+  [feature-definitions grouped-conformations]
   (map-on-values
    (fn [conformations] 
      (map 
-      (partial pharmacophore-groups pharmacophore-definitions) 
+      (partial feature-groups feature-definitions) 
       conformations))
    grouped-conformations))
 
 (todo
  "Is this yet another thing that should be in alijn.point-alignment?"
 (defn all-alignments-over-all-conformations
-  [conformations-pharmacophores]
-  (let [conf-names (keys conformations-pharmacophores)
-	confs (map conformations-pharmacophores conf-names)
+  [conformations-features]
+  (let [conf-names (keys conformations-features)
+	confs (map conformations-features conf-names)
 	combinations (apply cartesian-product confs)]
     (map 
      (fn [combi]
@@ -62,20 +62,20 @@
 (todo
  "And this, should this also be in alijn.point-alignment?"
 (defn optimal-alignment-over-all-conformations
-  [conformations-pharmacophores]
+  [conformations-features]
   (select-optimal
    (all-alignments-over-all-conformations
-    conformations-pharmacophores)))
+    conformations-features)))
 )
 
 ; Test by printing, bad! :-s
 
-(defn extract-pharmacophores-and-align
-  [conformations-filename pharmacophore-definitions]
+(defn extract-features-and-align
+  [conformations-filename feature-definitions]
   (->> conformations-filename
        read-sdf-file
        group-conformations-by-name
-       (generate-pharmacophores pharmacophore-definitions)
+       (generate-features feature-definitions)
        optimal-alignment-over-all-conformations))
 
 (defn -main [& args
@@ -83,20 +83,20 @@
 	     ;conformations-filename
 	     ]
   (println args)
-  (comment println "Extracting and aligning pharmacophores")
+  (comment println "Extracting and aligning features")
 
-  (comment def pharmacophores example-pharmacophores)
+  (comment def features example-features)
 
-  (comment println (extract-pharmacophores-and-align
+  (comment println (extract-features-and-align
 	    conformations-filename
-	    pharmacophores)))
+	    features)))
 
-(defn perform-alignment [pharmacophore-definitions-filename
+(defn perform-alignment [feature-definitions-filename
 			 conformations-filename]
-  (println "Extracting and aligning pharmacophores")
+  (println "Extracting and aligning features")
 
-  (def pharmacophores (parse-pharmacophores pharmacophore-definitions-filename))
+  (def features (parse-features feature-definitions-filename))
 
-  (pprint (extract-pharmacophores-and-align
+  (pprint (extract-features-and-align
 	   conformations-filename
-	   pharmacophores)))
+	   features)))

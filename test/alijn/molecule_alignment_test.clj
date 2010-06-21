@@ -15,11 +15,6 @@
      {"conformations-A" [{"foo" [p1 p2], "bar" [q1 q2]} {"foo" [p1 p3], "bar" [q1 q2]}],
       "conformations-B" [{"foo" [p3 p2], "bar" [q3 q1]} {"foo" [p3 p1], "bar" [q3 q2]}]})
 
-(deftest test-all-alignments-over-all-conformations
-  (is (= :unreachable
-	 (all-alignments-over-all-conformations example-all-conformations))))
-
-
 (deftest test-group-by
   (is (= {:foo [{:key :foo :elm 1} {:key :foo :elm 2}] :bar [{:key :bar :elm 3}]}
 	 (group-by :key [{:key :foo :elm 1}

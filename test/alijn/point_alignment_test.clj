@@ -27,22 +27,3 @@
 	[flat unflatten-groups] (flatten-groups groups)]
     (is (= [:foo :bar :baz] flat))
     (is (= groups (unflatten-groups flat)))))
-
-(deftest test-vec-center
-  (is (= (Point3d. 1 0 2)
-	 (vec-center [(Point3d. 0 -10 0)
-		      (Point3d. 2  10 4)]))))
-
-(def p1 (Point3d. 1 2 3))
-(def p2 (Point3d. 0 1 2))
-(def p3 (Point3d. 1 1 1))
-(def q1 (Point3d. -1 0 0))
-(def q2 (Point3d. -2 1 2))
-(def q3 (Point3d. -4 -5 -6))
-
-(deftest test-optimal-alignment-over-all-groups
-  (is (= :unreachable
-	 (optimal-alignment-over-all-groups
-	  {"conformations-A" {"foo" [p1 p2], "bar" [q1 q2]},
-	   "conformations-B" {"foo" [p3 p2], "bar" [q3 q1]}}))))
-

@@ -1,5 +1,5 @@
-(ns alijn.pharmacophore-test
-  (:use [alijn.pharmacophore] :reload-all)
+(ns alijn.features-test
+  (:use [alijn.features] :reload-all)
   (:use [clojure.test])
   (:use [clj-todo.todo])
   (:import 
@@ -35,25 +35,25 @@
 
 ;;;;;;;;;; TESTS ;;;;;;;;;;;;;
 
-;;; Test of pharmacophore identifier, find-pharmacophore
-(def smarts-hydrogen-acceptor (example-pharmacophores "hydrogen-bond acceptor"))
-(def smarts-hydrogen-donor    (example-pharmacophores "hydrogen-bond donor"))
-(def smarts-aromatic-5-ring   (example-pharmacophores "aromatic-5-ring"))
+;;; Test of feature identifier, find-feature
+(def smarts-hydrogen-acceptor (example-features "hydrogen-bond acceptor"))
+(def smarts-hydrogen-donor    (example-features "hydrogen-bond donor"))
+(def smarts-aromatic-5-ring   (example-features "aromatic-5-ring"))
 
-(comment deftest test-find-pharmacophore-by-counting
+(comment deftest test-find-feature-by-counting
   ; Hydrogen acceptor count
   (todo "I can only see three, but it might be five..."
-  (is (= 5 (count (find-pharmacophore smarts-hydrogen-acceptor pyrethrin)))))
-  (is (= 0 (count (find-pharmacophore smarts-hydrogen-acceptor flavopereirin))))
-  (is (= 2 (count (find-pharmacophore smarts-hydrogen-acceptor oenanthotoxin))))
+  (is (= 5 (count (find-feature smarts-hydrogen-acceptor pyrethrin)))))
+  (is (= 0 (count (find-feature smarts-hydrogen-acceptor flavopereirin))))
+  (is (= 2 (count (find-feature smarts-hydrogen-acceptor oenanthotoxin))))
   ; Hydrogen donor count
-  (is (= 0 (count (find-pharmacophore smarts-hydrogen-donor pyrethrin))))
-  (is (= 1 (count (find-pharmacophore smarts-hydrogen-donor flavopereirin))))
-  (is (= 2 (count (find-pharmacophore smarts-hydrogen-donor oenanthotoxin))))
+  (is (= 0 (count (find-feature smarts-hydrogen-donor pyrethrin))))
+  (is (= 1 (count (find-feature smarts-hydrogen-donor flavopereirin))))
+  (is (= 2 (count (find-feature smarts-hydrogen-donor oenanthotoxin))))
   ; 5-ring of carbon count
-  (is (= 1 (count (find-pharmacophore smarts-aromatic-5-ring pyrethrin))))
-  (is (= 0 (count (find-pharmacophore smarts-aromatic-5-ring flavopereirin))))
-  (is (= 0 (count (find-pharmacophore smarts-aromatic-5-ring oenanthotoxin)))))
+  (is (= 1 (count (find-feature smarts-aromatic-5-ring pyrethrin))))
+  (is (= 0 (count (find-feature smarts-aromatic-5-ring flavopereirin))))
+  (is (= 0 (count (find-feature smarts-aromatic-5-ring oenanthotoxin)))))
 
 ;;; Test of get-center
 (def epsilon 0.00001)
@@ -88,7 +88,7 @@
 					 (dummy-atom 2 2 2)]))))
 
 ;;; Unimplemented tests
-(comment deftest test-pharmacophore-groups-types
+(comment deftest test-feature-groups-types
   (is false))
 
 ;;; Ugly ugly println statements
@@ -97,14 +97,14 @@
 Running this results in a null pointer exception."
 
 (comment
-  (println (pharmacophore-groups example-pharmacophores pyrethrin))
-  (println (pharmacophore-groups example-pharmacophores flavopereirin))
-  (println (pharmacophore-groups example-pharmacophores oenanthotoxin)))
+  (println (feature-groups example-features pyrethrin))
+  (println (feature-groups example-features flavopereirin))
+  (println (feature-groups example-features oenanthotoxin)))
 )
 
-(comment deftest test-pharmacophore-pairings
+(comment deftest test-feature-pairings
   (is (= '(())
-	 (pharmacophore-pairings [{:name "foo" :centers nil} 
+	 (feature-pairings [{:name "foo" :centers nil} 
 				  {:name "bar" :centers nil}]
 				 [{:name "foo" :centers nil} 
 				  {:name "bar" :centers nil}])))
@@ -112,7 +112,7 @@ Running this results in a null pointer exception."
 	   (["foo" [:f1 :f3]] ["foo" [:f2 :f4]] ["bar" [:b1 :b3]])
 	   (["foo" [:f1 :f4]] ["foo" [:f2 :f3]] ["bar" [:b1 :b2]])
 	   (["foo" [:f1 :f4]] ["foo" [:f2 :f3]] ["bar" [:b1 :b3]]))
-	 (pharmacophore-pairings [{:name "foo" :centers [:f1 :f2]} 
+	 (feature-pairings [{:name "foo" :centers [:f1 :f2]} 
 				  {:name "bar" :centers [:b1]}]
 				 [{:name "foo" :centers [:f3 :f4]} 
 				  {:name "bar" :centers [:b2 :b3]}])))
@@ -120,7 +120,7 @@ Running this results in a null pointer exception."
 	   (["foo" [:f1 :f3]] ["foo" [:f2 :f4]] ["bar" [:b1 :b3]] ["baz" [:c1 :c2]])
 	   (["foo" [:f1 :f4]] ["foo" [:f2 :f3]] ["bar" [:b1 :b2]] ["baz" [:c1 :c2]])
 	   (["foo" [:f1 :f4]] ["foo" [:f2 :f3]] ["bar" [:b1 :b3]] ["baz" [:c1 :c2]]))
-	 (pharmacophore-pairings [{:name "foo" :centers [:f1 :f2]} 
+	 (feature-pairings [{:name "foo" :centers [:f1 :f2]} 
 				  {:name "bar" :centers [:b1]}
 				  {:name "baz" :centers [:c1]}]
 				 [{:name "foo" :centers [:f3 :f4]} 
