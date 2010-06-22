@@ -18,6 +18,5 @@
 	stream (FileOutputStream. file)
 	writer (SDFWriter. stream)]
     (doseq [molecule molecules] (.write writer molecule))
-    (.close writer)
-    (.close file)))
+    (.close writer)))
 

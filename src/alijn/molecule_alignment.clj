@@ -29,7 +29,7 @@ Check to see what the difference in performance is."
        (let [named-feature-combination (->> combination (map :features) (zipmap names))
 	     alignment (optimal-alignment-over-all-groups named-feature-combination)]
 	 (assoc alignment 
-	   :combination (->> combination (map :conformation) (zipmap names)))))
+	   :conformations (->> combination (map :conformation) (zipmap names)))))
      combinations)))
 )
 
@@ -41,6 +41,26 @@ Check to see what the difference in performance is."
    (all-alignments-over-all-conformations
     conformations-and-features)))
 )
+
+(defn move-molecules-from-alignment
+  "Takes an alignment such as the one from opimal-alignment-over-all-conformations 
+and returns the moved conformations to align with their optimal features positions. 
+The reference molecule is kept still. "
+  [alignment]
+  (let [names (-> alignment :alignment keys)
+	configurations (map (alignment :alignment) names)
+	translations (map :translation configurations)
+	rotations (map :rotation configurations)
+	conformations (map (alignment :conformations) names)
+	moved-molecules (map 
+			 translate-and-rotate-molecule 
+			 translations rotations conformations)
+;	named-moved-molecules (zipmap names moved-molecules)
+	reference (:reference-name alignment)]
+    (cons ((alignment :conformations) reference)
+	  moved-molecules
+	  )))
+
 
 ; Test by printing, bad! :-s
 
@@ -58,9 +78,16 @@ Check to see what the difference in performance is."
        optimal-alignment-over-all-conformations))
 
 (defn perform-alignment [feature-definitions-filename
-			 conformations-filename]
+			 conformations-filename
+			 output-filename]
   (println "Extracting and aligning features")
   (def features (parse-features feature-definitions-filename))
-  (pprint (extract-features-and-align
-	   conformations-filename
-	   features)))
+  (let [optimal-alignment (extract-features-and-align
+			   conformations-filename
+			   features)]
+    (println "Optimal alignment has reference " (:reference-name optimal-alignment))
+    (println "Other keys from result:" (keys optimal-alignment))
+    (println "Writing moved conformations to file" output-filename)
+    (write-sdf-file 
+     output-filename 
+     (move-molecules-from-alignment optimal-alignment))))
