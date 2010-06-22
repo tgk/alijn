@@ -1,6 +1,6 @@
 (ns alijn.features
   (:use [clj-todo.todo]
-	[alijn.combinatorics]
+	[alijn combinatorics math]
 	[clojure.contrib.str-utils2 :only [split-lines split]])
   (:import 
    [org.openscience.cdk.smiles.smarts SMARTSQueryTool]
@@ -49,10 +49,7 @@ only match a single atom."
   (let [atoms (cons atom more)
 	points (map #(.getPoint3d %) atoms)
 	result (Point3d. 0 0 0)]
-    (assert (> (count points) 0))
-    (doall (map #(.add result %) points))
-    (.scale result (/ 1 (count atoms)))
-    result))
+    (vec-center points)))
 
 (defn feature-groups
   "Extract the features defined in a {name smarts-string} map

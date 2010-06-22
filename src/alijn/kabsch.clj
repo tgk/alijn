@@ -1,16 +1,8 @@
 (ns alijn.kabsch
-  (:use [clj-todo.todo])
+  (:use [clj-todo.todo]
+	[alijn math])
   (:import [Jama Matrix]
 	   [javax.vecmath Point3d]))
-
-;;; Visualisation for debugging
-(defn print-matrix [matrix]
-  (let [arr (.getArray matrix)]
-    (doseq [i (range (count arr))]
-      (do
-	(doseq [j (range (count (aget arr i)))]
-	  (print (aget arr i j) " "))
-	(println)))))
 
 ;;; Calculations
 (defn calculate-A 
@@ -91,35 +83,6 @@ The points are assumed to be centered around some appropiate center of mass."
      :rmsd rotation-rmsd}))
 
 ;;; Translated Kabsch
-(defn vec-sub 
-  "u - v, where u and v are Point3d vectors."
-  [u v]
-  (let [result (Point3d.)]
-    (.sub result u v)
-    result))
-
-(defn vec-add 
-  "u + v, where u and v are Point3d vectors."
-  [u v]
-  (let [result (Point3d.)]
-    (.add result u v)
-    result))
-
-(todo
-"This should b shared with alijn.pharmacophore as it needs to find the center of atoms"
-(defn vec-center 
-  "Finds the vector center for a seq of Point3d."
-  [points]
-  (let [result (Point3d. 0 0 0)]
-    (assert (> (count points) 0))
-    (doseq [point points] (.add result point))
-    (.scale result (/ 1 (count points)))
-    result))
-)
-  
-(defn move-points
-  [points translation]
-  (map #(vec-add %1 translation) points))
 
 (defn kabsch-with-translation
   "Performs Kabsch algorithm, but first centers the second set

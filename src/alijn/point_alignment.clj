@@ -27,6 +27,8 @@ back to the original structure."
 	unflattener (partial partition-using-sizes sizes)]
     [flattened-groups unflattener]))
 
+(todo
+"Memorise this function!"
 (defn all-alignments-on-labelled-pairings
   "Aligns the labelled points in reference with the labelled points in 
 labelled-points using all legal ways of pairing points from the two.
@@ -45,6 +47,7 @@ values are the collections of Point3d's."
 	     :rotated-points (->> result :rotated-points unflatten (zipmap labels))))
 	 {:rmsd (Double/POSITIVE_INFINITY)}))
      flat-grouped-labels)))
+)
 
 ; Terrible names!
 (def alignments-on-groups-pair all-alignments-on-labelled-pairings)
