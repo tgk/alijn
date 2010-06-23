@@ -27,36 +27,37 @@ back to the original structure."
 	unflattener (partial partition-using-sizes sizes)]
     [flattened-groups unflattener]))
 
-(todo
-"Memorise this function!"
-(defn all-alignments-on-labelled-pairings
-  "Aligns the labelled points in reference with the labelled points in 
-labelled-points using all legal ways of pairing points from the two.
-The labelled points are maps where the keys are the labels and the
-values are the collections of Point3d's."
-  [reference labelled-points]
-  (let [labels (keys reference)
-	grouped-points (all-grouped-pairs (map reference labels) (map labelled-points labels))
-	flat-grouped-labels (map (partial map flatten-groups) grouped-points)]
-    (map
-     (fn [[[flat-reference _] [flat-labelled-points unflatten]]]
-       (if (and (> (count flat-reference) 0)
-		(> (count flat-labelled-points) 0))
-	 (let [result (kabsch-with-translation flat-reference flat-labelled-points)]
-	   (assoc result 
-	     :rotated-points (->> result :rotated-points unflatten (zipmap labels))))
-	 {:rmsd (Double/POSITIVE_INFINITY)}))
-     flat-grouped-labels)))
-)
+(def 
+ all-alignments-on-labelled-pairings
+ (memoize
+  (fn
+;    "Aligns the labelled points in reference with the labelled points in 
+;labelled-points using all legal ways of pairing points from the two.
+;The labelled points are maps where the keys are the labels and the
+;values are the collections of Point3d's."
+    [reference labelled-points]
+    (let [labels (keys reference)
+	  grouped-points (all-grouped-pairs (map reference labels) (map labelled-points labels))
+	  flat-grouped-labels (map (partial map flatten-groups) grouped-points)]
+      (map
+       (fn [[[flat-reference _] [flat-labelled-points unflatten]]]
+	 (if (and (> (count flat-reference) 0)
+		  (> (count flat-labelled-points) 0))
+	   (let [result (kabsch-with-translation flat-reference flat-labelled-points)]
+	     (assoc result 
+	       :rotated-points (->> result :rotated-points unflatten (zipmap labels))))
+	   {:rmsd (Double/POSITIVE_INFINITY)
+	    :no-solution true})) ; Pretty sure this is the culprit!
+       flat-grouped-labels)))))
 
 ; Terrible names!
 (def alignments-on-groups-pair all-alignments-on-labelled-pairings)
-(defn select-optimal [results] (apply min-key :rmsd results))
+
 (defn optimal-alignment-on-all
   [reference-groups target-groups-groups]
   (map
    (fn [target-groups]
-     (select-optimal (alignments-on-groups-pair reference-groups target-groups)))
+     (apply min-key :rmsd (alignments-on-groups-pair reference-groups target-groups)))
    target-groups-groups))
 
 ;all-alignments-on-conformation-pairings
@@ -74,14 +75,19 @@ values are the collections of Point3d's."
 	  :alignment named-alignments}))
      (leave-one-out elm))))
 
+(defn alignment-rmsd-sum
+  [alignment]
+  (let [rmsds (map :rmsd (:alignment alignment))] 
+    (apply reduce + rmsds)))
+
+(defn smallest-alignment-rmsd-sum
+  [alignments]
+  (apply min-key alignment-rmsd-sum alignments))
+
 ; Terrible name
 (defn optimal-alignment-over-all-groups
   [group-of-groups]
-  (apply 
-   min-key
-   (fn [alignment]
-     (let [rmsds (map :rmsd (:alignment alignment))] 
-       (apply reduce + rmsds)))
+  (smallest-alignment-rmsd-sum
    (alignments-over-all-groups group-of-groups)))
 
 ;;;; Testing by printing :-s

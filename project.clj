@@ -7,4 +7,5 @@
 		 [jama "1.0.1"]]
   :dev-dependencies [[lein-run "1.0.0-SNAPSHOT"]
 		     [swank-clojure "1.2.1"]
-		     [clj-todo "0.1.0-SNAPSHOT"]])
+		     [clj-todo "0.1.0-SNAPSHOT"]]
+  :jvm-opts "-Xmx1g")
