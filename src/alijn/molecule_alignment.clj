@@ -7,6 +7,7 @@
 
 (defn molecule-name [molecule] (.get (.getProperties molecule) "cdk:Title"))
 
+;;; Functions added in 1.2, delete when updating
 (todo
 "This function actually is in clojure 1.2, so this can be removed when updating."
 (defn group-by
@@ -15,12 +16,17 @@
   (apply merge-with concat (map (fn [elm] {(group-fn elm) [elm]}) seq)))
 )
 
+(defn rand-nth [coll]
+  (nth coll (rand-int (count coll))))
+
+;;;
+
 (defn map-on-values
   "Applies f to the values in the map m."
   [f m] (apply merge (map (fn [[k v]] {k (f v)}) m)))
 
-(defn all-alignments-over-all-conformations
-  [grouped-conformations]
+(defn all-alignments-over-selected-conformations
+  [conformation-selector grouped-conformations]
   (let [names (keys grouped-conformations)
 	conformations-list (map grouped-conformations names)]
     (map 
@@ -29,13 +35,31 @@
 	     alignment (optimal-alignment-over-all-groups named-feature-combination)]
 	 (assoc alignment 
 	   :conformations (->> combination (map :conformation) (zipmap names)))))
-     (apply cartesian-product conformations-list))))
+     (conformation-selector conformations-list))))
 
-(defn optimal-alignment-over-all-conformations
-  [conformations-and-features]
+;;; Conformation selectors
+(defn all-conformations-selector [conformations-list]
+  (apply cartesian-product conformations-list))
+
+(defn sample-conformations-selector [samples]
+  (fn [conformations-list]
+    (map (fn [_] (map rand-nth conformations-list)) (range samples))))
+
+;;; Wrapped methods
+(defn optimal-alignment-over-selected-conformations
+  [conformation-selector grouped-conformations]
   (smallest-alignment-rmsd-sum
-   (all-alignments-over-all-conformations conformations-and-features)))
+   (all-alignments-over-selected-conformations 
+    conformation-selector grouped-conformations)))
 
+(def optimal-alignment-over-all-conformations
+     (partial optimal-alignment-over-selected-conformations all-conformations-selector))
+
+(defn optimal-alignment-over-sampled-conformations [samples]
+  (partial optimal-alignment-over-selected-conformations
+	   (sample-conformations-selector samples)))
+
+;;; Post alignment molecule movement
 (defn move-molecules-from-alignment
   "Takes an alignment such as the one from opimal-alignment-over-all-conformations 
 and returns the moved conformations to align with their optimal features positions. 
@@ -53,28 +77,39 @@ The reference molecule is kept still. "
     (cons ((alignment :conformations) reference)
 	  moved-molecules)))
 
+;;; Pre alignment data massage
 (defn add-name-and-features
   [feature-definitions conformation]
   {:name (molecule-name conformation) 
    :conformation conformation
    :features (feature-groups feature-definitions conformation)})
 
+;;; Controller
 (defn extract-features-and-align
-  [conformations-filename feature-definitions]
+  [aligner conformations-filename feature-definitions]
   (->> conformations-filename
        read-sdf-file
        (map (partial add-name-and-features feature-definitions))
        (group-by :name)
-       optimal-alignment-over-all-conformations))
+       aligner))
 
-(defn perform-alignment [feature-definitions-filename
+;;; Main method
+(def aligners {"all-conformations" optimal-alignment-over-all-conformations
+	       "small-sample" (optimal-alignment-over-sampled-conformations 10)
+	       "large-sample" (optimal-alignment-over-sampled-conformations 1000)
+	       "huge-sample" (optimal-alignment-over-sampled-conformations 100000)
+	       })
+
+(defn perform-alignment [aligner
+			 feature-definitions-filename
 			 conformations-filename
 			 output-filename]
   (println "Extracting and aligning features")
-  (def features (parse-features feature-definitions-filename))
-  (let [optimal-alignment (extract-features-and-align
-			   conformations-filename
-			   features)
+
+  (let [aligner (aligners aligner)
+	features (parse-features feature-definitions-filename)
+	optimal-alignment (extract-features-and-align
+			   aligner conformations-filename features)
 	no-solution? (contains? (map :no-solution (vals (:alignment optimal-alignment))) true)]
     (if no-solution?
       (do
