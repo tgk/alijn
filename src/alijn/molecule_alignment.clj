@@ -34,8 +34,7 @@
 (defn optimal-alignment-over-all-conformations
   [conformations-and-features]
   (smallest-alignment-rmsd-sum
-   (all-alignments-over-all-conformations
-    conformations-and-features)))
+   (all-alignments-over-all-conformations conformations-and-features)))
 
 (defn move-molecules-from-alignment
   "Takes an alignment such as the one from opimal-alignment-over-all-conformations 
@@ -65,12 +64,8 @@ The reference molecule is kept still. "
   (->> conformations-filename
        read-sdf-file
        (map (partial add-name-and-features feature-definitions))
-;       (map #(assoc % :feature-counts (map-on-values count (:features %))))
-;       (map #(dissoc % :features :conformation))
        (group-by :name)
-;       pprint
-       optimal-alignment-over-all-conformations
-  ))
+       optimal-alignment-over-all-conformations))
 
 (defn perform-alignment [feature-definitions-filename
 			 conformations-filename
@@ -94,3 +89,4 @@ The reference molecule is kept still. "
 	(write-sdf-file 
 	 output-filename 
 	 (move-molecules-from-alignment optimal-alignment))))))
+

@@ -1,6 +1,7 @@
 (ns alijn.point-alignment
   (:use [clj-todo.todo]
-	[alijn combinatorics kabsch])
+	[alijn combinatorics kabsch]
+	[clojure.contrib pprint])
   (:import [javax.vecmath Point3d]))
 
 ;;; Shiny new code (some untested)
@@ -27,14 +28,9 @@ back to the original structure."
 	unflattener (partial partition-using-sizes sizes)]
     [flattened-groups unflattener]))
 
-(def 
- all-alignments-on-labelled-pairings
+(def all-alignments-on-labelled-pairings
  (memoize
   (fn
-;    "Aligns the labelled points in reference with the labelled points in 
-;labelled-points using all legal ways of pairing points from the two.
-;The labelled points are maps where the keys are the labels and the
-;values are the collections of Point3d's."
     [reference labelled-points]
     (let [labels (keys reference)
 	  grouped-points (all-grouped-pairs (map reference labels) (map labelled-points labels))
@@ -77,8 +73,8 @@ back to the original structure."
 
 (defn alignment-rmsd-sum
   [alignment]
-  (let [rmsds (map :rmsd (:alignment alignment))] 
-    (apply reduce + rmsds)))
+  (let [rmsds (->> alignment :alignment vals (map :rmsd))] 
+    (reduce + rmsds)))
 
 (defn smallest-alignment-rmsd-sum
   [alignments]
@@ -89,58 +85,4 @@ back to the original structure."
   [group-of-groups]
   (smallest-alignment-rmsd-sum
    (alignments-over-all-groups group-of-groups)))
-
-;;;; Testing by printing :-s
-(todo
- "All of this should become a unit test"
-(comment
- 
-(def p1 (Point3d. 0 0 0))
-(def p2 (Point3d. 1 1 1))
-(def p3 (Point3d. 1 2 3))
-(def q1 (Point3d. -1 -1 -1))
-(def q2 (Point3d. 3 4 5))
-(def q3 (Point3d. -1 1 -1))
-(def u1 (Point3d. 3 2 1))
-(def u2 (Point3d. 1 2 3))
-
-(println 
- (alignments-on-groups-pair
-  {"foo" [p1 p2], "bar" [p3]   }
-  {"bar" [q1]   , "foo" [q2 q3]}))
-
-
-(println)
-(println 
- (select-optimal
-  (alignments-on-groups-pair
-   {"foo" [p1 p2], "bar" [p3]   }
-   {"bar" [q1]   , "foo" [q2 q3]})))
-
-(println "Little bang test")
-(println 
- (optimal-alignment-on-all
-  {"foo" [p1 p2], "bar" [p3]   }
-  [
-   {"bar" [q1]   , "foo" [q2 q3]}
-   {"foo" [u1]   , "bar" [u2]   }
-   ]))
-
-
-(println "Big bang test")
-(println (alignments-over-all-groups
-	  {"A" {"foo" [p1 p2], "bar" [p3]   },
-	   "B" {"bar" [q1]   , "foo" [q2 q3]},
-	   "C" {"foo" [u1]   , "bar" [u2]   }}))
-
-(println)
-(println "Finding the best")
-(println (optimal-alignment-over-all-groups 
-	  {"A" {"foo" [p1 p2], "bar" [p3]   },
-	   "B" {"bar" [q1]   , "foo" [q2 q3]},
-	   "C" {"foo" [u1]   , "bar" [u2]   }}))
-
-
-)
-)
 
