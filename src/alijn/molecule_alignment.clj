@@ -138,3 +138,5 @@ The reference molecule is kept still. "
 	 (move-molecules-from-alignment optimal-alignment))))))
 
 (comment perform-alignment "5-samples" "data/debug/features.smarts" "data/debug/carboxy.sdf" "test.sdf")
+
+(def -main perform-alignment)
