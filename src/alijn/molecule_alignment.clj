@@ -129,6 +129,8 @@ The reference molecule is kept still. "
 
       (do
 	(println "Optimal alignment has reference " (:reference-name optimal-alignment))
+	(println "Reference points are")
+	(pprint (:reference-features optimal-alignment)) 
 	(println ":alignment field is")
 	(pprint (:alignment optimal-alignment))
 	(println "Other keys from result:" (keys optimal-alignment))
