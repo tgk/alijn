@@ -2,7 +2,7 @@
   (:gen-class)
   (:use clj-todo.todo)
   (:use [alijn features kabsch combinatorics point-alignment io molecule-manipulation]
-	[clojure.contrib combinatorics pprint])
+	[clojure.contrib combinatorics pprint str-utils])
   (:import [javax.vecmath Point3d]))
 
 (defn molecule-name [molecule] (.get (.getProperties molecule) "cdk:Title"))
@@ -94,16 +94,25 @@ The reference molecule is kept still. "
        aligner))
 
 ;;; Main method
-(def aligners {"all-conformations" optimal-alignment-over-all-conformations
-	       "small-sample" (optimal-alignment-over-sampled-conformations 10)
-	       "large-sample" (optimal-alignment-over-sampled-conformations 1000)
-	       "huge-sample" (optimal-alignment-over-sampled-conformations 100000)
-	       })
+(def static-aligners {"all-conformations" optimal-alignment-over-all-conformations
+		      "small-sample" (optimal-alignment-over-sampled-conformations 10)
+		      "large-sample" (optimal-alignment-over-sampled-conformations 1000)
+		      "huge-sample" (optimal-alignment-over-sampled-conformations 1000000)
+		      })
 
-(defn perform-alignment [aligner
-			 feature-definitions-filename
-			 conformations-filename
-			 output-filename]
+(defn aligners [aligner]
+  (if (contains? static-aligners aligner)
+    (static-aligners aligner)
+    (if (.endsWith aligner "-samples")
+      (let [samples (Integer/parseInt (first (re-split #"-" aligner)))]
+	(println "using" samples "samples")
+	(optimal-alignment-over-sampled-conformations samples))
+      :non-parseable-aligner)))
+
+(defn perform-alignment 
+  "Methods written to only take strings as to be easy to call from lein run."
+  [aligner feature-definitions-filename conformations-filename output-filename]
+
   (println "Extracting and aligning features")
 
   (let [aligner (aligners aligner)
@@ -111,10 +120,13 @@ The reference molecule is kept still. "
 	optimal-alignment (extract-features-and-align
 			   aligner conformations-filename features)
 	no-solution? (contains? (map :no-solution (vals (:alignment optimal-alignment))) true)]
+
     (if no-solution?
+
       (do
 	(println "No solution was found.")
 	(println "This is because at least one molecule didn't have any common features to any of the other molecules."))
+
       (do
 	(println "Optimal alignment has reference " (:reference-name optimal-alignment))
 	(println ":alignment field is")
@@ -125,3 +137,4 @@ The reference molecule is kept still. "
 	 output-filename 
 	 (move-molecules-from-alignment optimal-alignment))))))
 
+(comment perform-alignment "5-samples" "data/debug/features.smarts" "data/debug/carboxy.sdf" "test.sdf")
