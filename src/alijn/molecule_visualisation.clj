@@ -42,6 +42,7 @@
     (doseq [bond bonds] (draw-bond bond))))
 
 ;;; Feature drawing
+; Could change this with standard lib (java.awt.color)
 (defn abs [val] (Math/abs (double val)))
 (defn in-interval? [[lo hi] val] (and (<= lo val) (< val hi)))
 (defn rgb [h s l]
@@ -62,14 +63,10 @@
 (defn feature-color-fn [names]
   (let [names (distinct names)
 	angle-diff (/ 360 (count names))
+	; could be done with simpler range call
 	angles (map (partial * angle-diff) (range (count names)))
 	hues (zipmap names angles)]
     (fn [name] (rgb (hues name) 0.5 0.5))))
-
-(comment let [names ["foo" "bar" "baz" "bar" "foobar"]
-      test-color (feature-color-fn names)]
-  (doseq [name names]
-    (println name (test-color name))))
 
 ; Cube from penumbra wiki
 (defn quad []
@@ -98,7 +95,7 @@
     (doseq [[name pos] features]
       (let [[r g b] (feature-color name)]
 	(push-matrix
-	 (color r g b)
+	 (color r g b 0.5)
 	 (translate (.x pos) (.y pos) (.z pos))
 	 (cube))))))
     
@@ -110,6 +107,7 @@
   state)
 
 (defn reshape [[x y width height] state]
+  (comment ortho-view -10 10 -10 10 1.0 100.0)
   (frustum-view 60.0 (/ (double width) height) 1.0 100.0)
   (load-identity)
   state)

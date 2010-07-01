@@ -1,8 +1,9 @@
 (ns alijn.molecule-alignment
   (:gen-class)
   (:use clj-todo.todo)
-  (:use [alijn features kabsch combinatorics point-alignment io molecule-manipulation]
+  (:use [alijn features kabsch combinatorics point-alignment io molecule-manipulation molecule-visualisation]
 	[clojure.contrib combinatorics pprint str-utils command-line])
+  (:require [clojure.contrib.seq-utils :as seq])
   (:import [javax.vecmath Point3d]))
 
 (defn molecule-name [molecule] (.get (.getProperties molecule) "cdk:Title"))
@@ -125,20 +126,29 @@ outputting the result to a sdf file."
 	(println "No solution was found.")
 	(println "This is because at least one molecule didn't have any common features to any of the other molecules."))
       (do
-	(println "Optimal alignment has reference " (:reference-name optimal-alignment))
+	(println "Optimal alignment has reference " 
+		 (:reference-name optimal-alignment))
 	(println "Reference points are")
 	(pprint (:reference-features optimal-alignment)) 
 	(println ":alignment field is")
 	(pprint (:alignment optimal-alignment))
 	(println "Other keys from result:" (keys optimal-alignment))
-	(println "Writing moved conformations to file" output)
-	(write-sdf-file 
-	 output (move-molecules-from-alignment optimal-alignment)))))))
+	(let [moved (move-molecules-from-alignment optimal-alignment)]
+	  (println "Writing moved conformations to file" output)
+	  (write-sdf-file output moved)
+	(println "Opening fantastic view with molecules and features")
+	(let [molecules moved
+	      features (:reference-features optimal-alignment)
+	      features (seq/flatten
+			(for [[name points] features] 
+			  (for [p points] [name p])))]
+	  (pprint features)
+	  (show-molecules-app molecules features))))))))
 
 (def -main perform-alignment)
 
 (comment -main 
-	 "-s" "7" 
-	 "-o" "test42.sdf" 
-	 "-i" "data/debug/carboxy.sdf" 
-	 "-f" "data/debug/features.smarts")
+ "-s" "1" 
+ "-o" "test42.sdf" 
+ "-i" "data/debug/thrombin-standard.sdf" 
+ "-f" "data/debug/features.smarts")
