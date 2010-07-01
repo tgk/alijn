@@ -21,10 +21,19 @@
 
 ;;; end of 1.2 functionality
 
+;;; Other helpers
 (defn map-on-values
   "Applies f to the values in the map m."
   [f m] (apply merge (map (fn [[k v]] {k (f v)}) m)))
 
+;;; Pre alignment data massage
+(defn add-name-and-features
+  [feature-definitions conformation]
+  {:name (molecule-name conformation) 
+   :conformation conformation
+   :features (feature-groups feature-definitions conformation)})
+
+;;; Aligner
 (defn all-alignments-over-selected-conformations
   [conformation-selector grouped-conformations]
   (let [names (keys grouped-conformations)
@@ -45,7 +54,7 @@
   (fn [conformations-list]
     (map (fn [_] (map rand-nth conformations-list)) (range samples))))
 
-;;; Wrapped methods
+;;; Wrapped aligners
 (defn optimal-alignment-over-selected-conformations
   [conformation-selector grouped-conformations]
   (smallest-alignment-rmsd-sum
@@ -76,13 +85,6 @@ The reference molecule is kept still. "
 	reference (:reference-name alignment)]
     (cons ((alignment :conformations) reference)
 	  moved-molecules)))
-
-;;; Pre alignment data massage
-(defn add-name-and-features
-  [feature-definitions conformation]
-  {:name (molecule-name conformation) 
-   :conformation conformation
-   :features (feature-groups feature-definitions conformation)})
 
 ;;; Controller
 (defn extract-features-and-align
