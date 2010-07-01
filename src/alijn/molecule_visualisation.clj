@@ -7,6 +7,8 @@
   (:import [org.openscience.cdk Molecule Atom Bond]
 	   [javax.vecmath Point3d]))
 
+;;; Molecules drawing
+
 (def atom-color
      {"C" [0.5 0.5 0.5]
       "H" [1.0 1.0 1.0]
@@ -39,6 +41,70 @@
 	point-pairs (map (partial map #(.getPoint3d %)) bonds-atoms)]
     (doseq [bond bonds] (draw-bond bond))))
 
+;;; Feature drawing
+(defn abs [val] (Math/abs (double val)))
+(defn in-interval? [[lo hi] val] (and (<= lo val) (< val hi)))
+(defn rgb [h s l]
+  (let [c       (if (< l 0.5) (* 2 l s) (* (- 2 (* 2 l)) s))
+	h-prime (/ h 60)
+	x       (* c (- 1 (abs (mod h-prime (- 2 1)))))
+	[r1 g1 b1] (fcase in-interval? h-prime
+			  [0 1] [c x 0]
+			  [1 2] [x c 0]
+			  [2 3] [0 c x]
+			  [3 4] [0 x c]
+			  [4 5] [x 0 c]
+			  [5 6] [c 0 x])
+	m (- l (/ c 2))
+	[r g b] (map (partial + m) [r1 g1 b1])]
+  [r g b]))
+
+(defn feature-color-fn [names]
+  (let [names (distinct names)
+	angle-diff (/ 360 (count names))
+	angles (map (partial * angle-diff) (range (count names)))
+	hues (zipmap names angles)]
+    (fn [name] (rgb (hues name) 0.5 0.5))))
+
+(comment let [names ["foo" "bar" "baz" "bar" "foobar"]
+      test-color (feature-color-fn names)]
+  (doseq [name names]
+    (println name (test-color name))))
+
+; Cube from penumbra wiki
+(defn quad []
+  (push-matrix
+    (translate -0.5 -0.5 0.5)
+    (normal 0 0 -1)
+    (vertex 1 1 0)
+    (vertex 0 1 0)
+    (vertex 0 0 0)
+    (vertex 1 0 0)))
+ 
+(defn cube []
+  (draw-quads
+    (dotimes [_ 4]
+      (rotate 90 0 1 0) 
+      (quad))
+    (rotate 90 1 0 0)
+    (quad)
+    (rotate 180 1 0 0)
+    (quad)))
+
+(defn draw-features [features]
+  (let [features (partition 2 features)
+	names (map first features)
+	feature-color (feature-color-fn names)]
+    (doseq [[name pos] features]
+      (let [[r g b] (feature-color name)]
+	(push-matrix
+	 (color r g b)
+	 (translate (.x pos) (.y pos) (.z pos))
+	 (cube))))))
+    
+
+;;; Controllers
+
 (defn init [state]
   (app/vsync! true)
   state)
@@ -57,19 +123,30 @@
 		 :trans-x (+ (:trans-x state) (/ dx 10))
 		 :trans-y (+ (:trans-y state) (/ dy 10)))
 	:center (assoc state
-		  :trans-z (+ (:trans-z state) dx dy))))
+		  :trans-z (+ (:trans-z state) (/ dx 10) (/ dy 10)))))
 
 (defn display [[delta time] state]
   (translate (:trans-x state) (:trans-y state) (:trans-z state))
   (rotate (:rot-x state) 1 0 0)
   (rotate (:rot-y state) 0 1 0)
-  (doseq [mol (:molecules state)] (draw-molecule mol)))
+  (doseq [mol (:molecules state)] (draw-molecule mol))
+  (draw-features (:features state)))
 
-(defn show-molecules-app [molecules]
+;;; Interface
+
+(defn show-molecules-app [molecules features]
   (app/start 
    {:display display, :reshape reshape, :mouse-drag mouse-drag, :init init} 
    {:rot-x 0, :rot-y 0,
     :trans-x 0, :trans-y -0.9, :trans-z -30,
-    :molecules molecules}))
+    :molecules molecules
+    :features features}))
 
-(comment show-molecules-app (take 1 (read-sdf-file "data/debug/carboxy.sdf")))
+(comment show-molecules-app 
+  (take 1 (read-sdf-file "data/debug/carboxy.sdf"))
+  ["donor" (Point3d. 0 0 0)
+   "acceptor" (Point3d. 1 1 1)
+   "donor" (Point3d. 2 2 0)
+   "foobar" (Point3d. 0 2 3)
+   "bar" (Point3d. 1 2 3)
+   "baz" (Point3d. 0 -2 -3)])
