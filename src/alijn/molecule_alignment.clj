@@ -2,7 +2,7 @@
   (:gen-class)
   (:use clj-todo.todo)
   (:use [alijn features kabsch combinatorics point-alignment io molecule-manipulation]
-	[clojure.contrib combinatorics pprint str-utils])
+	[clojure.contrib combinatorics pprint str-utils command-line])
   (:import [javax.vecmath Point3d]))
 
 (defn molecule-name [molecule] (.get (.getProperties molecule) "cdk:Title"))
@@ -19,7 +19,7 @@
 (defn rand-nth [coll]
   (nth coll (rand-int (count coll))))
 
-;;;
+;;; end of 1.2 functionality
 
 (defn map-on-values
   "Applies f to the values in the map m."
@@ -94,39 +94,34 @@ The reference molecule is kept still. "
        aligner))
 
 ;;; Main method
-(def static-aligners {"all-conformations" optimal-alignment-over-all-conformations
-		      "small-sample" (optimal-alignment-over-sampled-conformations 10)
-		      "large-sample" (optimal-alignment-over-sampled-conformations 1000)
-		      "huge-sample" (optimal-alignment-over-sampled-conformations 1000000)
-		      })
-
-(defn aligners [aligner]
-  (if (contains? static-aligners aligner)
-    (static-aligners aligner)
-    (if (.endsWith aligner "-samples")
-      (let [samples (Integer/parseInt (first (re-split #"-" aligner)))]
-	(println "using" samples "samples")
-	(optimal-alignment-over-sampled-conformations samples))
-      :non-parseable-aligner)))
-
 (defn perform-alignment 
   "Methods written to only take strings as to be easy to call from lein run."
-  [aligner feature-definitions-filename conformations-filename output-filename]
+  [& args]
+  (comment println "Extracting and aligning features")
+  (with-command-line
+    args
+    "Program for aligning sdf files of conformations according to features and
+outputting the result to a sdf file."
+    [[samples s  "Number of samples to use"]
+     [all? a?    "Iterate over all pairs of combinations, don't sample"]
+     [output o   "Output sdf file"]
+     [input i    "Input sdf file"]
+     [features f "Feature file of smarts strings"]]
 
-  (println "Extracting and aligning features")
-
-  (let [aligner (aligners aligner)
-	features (parse-features feature-definitions-filename)
-	optimal-alignment (extract-features-and-align
-			   aligner conformations-filename features)
-	no-solution? (contains? (map :no-solution (vals (:alignment optimal-alignment))) true)]
-
-    (if no-solution?
-
+    (let [aligner (cond 
+		   samples (optimal-alignment-over-sampled-conformations 
+			    (Integer/parseInt samples))
+		   all? optimal-alignment-over-all-conformations)
+	  features (parse-features features)
+	  optimal-alignment (extract-features-and-align
+			     aligner input features)
+	  no-solution? (contains? (map :no-solution 
+				       (vals (:alignment optimal-alignment))) 
+				  true)]
+   (if no-solution?
       (do
 	(println "No solution was found.")
 	(println "This is because at least one molecule didn't have any common features to any of the other molecules."))
-
       (do
 	(println "Optimal alignment has reference " (:reference-name optimal-alignment))
 	(println "Reference points are")
@@ -134,11 +129,14 @@ The reference molecule is kept still. "
 	(println ":alignment field is")
 	(pprint (:alignment optimal-alignment))
 	(println "Other keys from result:" (keys optimal-alignment))
-	(println "Writing moved conformations to file" output-filename)
+	(println "Writing moved conformations to file" output)
 	(write-sdf-file 
-	 output-filename 
-	 (move-molecules-from-alignment optimal-alignment))))))
-
-(comment perform-alignment "5-samples" "data/debug/features.smarts" "data/debug/carboxy.sdf" "test.sdf")
+	 output (move-molecules-from-alignment optimal-alignment)))))))
 
 (def -main perform-alignment)
+
+(comment -main 
+	 "-s" "7" 
+	 "-o" "test42.sdf" 
+	 "-i" "data/debug/carboxy.sdf" 
+	 "-f" "data/debug/features.smarts")
