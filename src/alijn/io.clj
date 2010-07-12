@@ -1,17 +1,14 @@
 (ns alijn.io
   (:use clj-todo.todo)
   (:import 
-   [java.io File FileInputStream FileOutputStream]
+   [java.io File FileInputStream FileOutputStream FileReader]
    [org.openscience.cdk DefaultChemObjectBuilder]
-   [org.openscience.cdk.io SDFWriter]
-   [org.openscience.cdk.io.iterator IteratingMDLReader]))
+   [org.openscience.cdk.io SDFWriter ReaderFactory]
+   [org.openscience.cdk.io.iterator IteratingMDLReader]
+   [org.openscience.cdk.tools.manipulator ChemFileManipulator]))
 
-(defn read-sdf-file [filename]
-  (let [file (File. filename)
-        stream (FileInputStream. file)
-        reader 
-          (IteratingMDLReader. stream (DefaultChemObjectBuilder/getInstance))]
-    (iterator-seq reader)))
+
+(def builder (DefaultChemObjectBuilder/getInstance))
 
 (defn write-sdf-file [filename molecules]
   (let [file (File. filename)
@@ -20,3 +17,15 @@
     (doseq [molecule molecules] (.write writer molecule))
     (.close writer)))
 
+(defn read-molecules 
+  "Reads all the molecules from a file. 
+Adapted from http://rguha.net/code/java/"
+  [filename]
+  (let [reader (->> filename
+		    File.
+		    FileReader.
+		    (.createReader (ReaderFactory.)))
+	content (.read reader (.newChemFile builder))]
+    (ChemFileManipulator/getAllAtomContainers content)))
+	
+	

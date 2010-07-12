@@ -91,7 +91,7 @@ The reference molecule is kept still. "
 (defn extract-features-and-align
   [aligner conformations-filename feature-definitions]
   (->> conformations-filename
-       read-sdf-file
+       read-molecules
        (map (partial add-name-and-features feature-definitions))
        (group-by :name)
        aligner))
