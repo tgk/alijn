@@ -104,6 +104,8 @@
 
 (defn init [state]
   (app/vsync! true)
+  (app/title! "alijn")
+  (enable :depth-test)
   state)
 
 (defn reshape [[x y width height] state]
