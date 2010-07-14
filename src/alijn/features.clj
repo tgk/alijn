@@ -19,22 +19,19 @@
        (apply concat)
        (apply hash-map)))
 
-(todo 
- "This function generates a new query-tool every time.
-Can they be cached in a nice manner?"
-
+(defn get-query-tool [smarts-string] (SMARTSQueryTool. smarts-string))
+(def cached-query-tool (memoize get-query-tool))
 (defn find-feature
   "Result is a coll of atom collections, even though some features
 only match a single atom."
   [smarts-string molecule]
-  (let [query-tool (SMARTSQueryTool. smarts-string)
+  (let [query-tool (cached-query-tool smarts-string)
 	status (.matches query-tool molecule)]
     (if status
       (map (fn [indices] 
 	     (map #(.getAtom molecule %) indices))
 	   (.getUniqueMatchingAtoms query-tool))
       [])))
-)
 
 (defn get-center [& atoms]
   "Returns the center of the atoms as a Point3d."
