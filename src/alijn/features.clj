@@ -3,15 +3,7 @@
 	[alijn combinatorics math]
 	[clojure.contrib.str-utils2 :only [split-lines split]])
   (:import 
-   [org.openscience.cdk.smiles.smarts SMARTSQueryTool]
-   [javax.vecmath Point3d]))
-
-; Taken from 
-; http://www.daylight.com/dayhtml_tutorials/languages/smarts/smarts_examples.html
-; More advanced definitions available from same site.
-(def example-features
-     {"hydrogen-bond donor" "[!$([#6,H0,-,-2,-3])]",
-      "aromatic-5-ring" "C1CCCC1"})
+   [org.openscience.cdk.smiles.smarts SMARTSQueryTool]))
 
 (defn- not-commented? [s]
   (not (= \; (first s))))
@@ -44,11 +36,9 @@ only match a single atom."
       [])))
 )
 
-(defn get-center [atom & more]
+(defn get-center [& atoms]
   "Returns the center of the atoms as a Point3d."
-  (let [atoms (cons atom more)
-	points (map #(.getPoint3d %) atoms)
-	result (Point3d. 0 0 0)]
+  (let [points (map #(.getPoint3d %) atoms)]
     (vec-center points)))
 
 (defn feature-groups
