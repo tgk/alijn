@@ -28,4 +28,5 @@ Adapted from http://rguha.net/code/java/"
 	content (.read reader (.newChemFile builder))]
     (ChemFileManipulator/getAllAtomContainers content)))
 	
-	
+(defn read-molecules-from-files [filenames]
+  (apply concat (map read-molecules filenames)))

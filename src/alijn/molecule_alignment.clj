@@ -89,9 +89,9 @@ The reference molecule is kept still. "
 
 ;;; Controller
 (defn extract-features-and-align
-  [aligner conformations-filename feature-definitions]
-  (->> conformations-filename
-       read-molecules
+  [aligner conformations-filenames feature-definitions]
+  (->> conformations-filenames
+       read-molecules-from-files
        (map (partial add-name-and-features feature-definitions))
        (group-by :name)
        aligner))
@@ -107,9 +107,9 @@ The reference molecule is kept still. "
 outputting the result to a sdf file."
     [[samples s  "Number of samples to use"]
      [all? a?    "Iterate over all pairs of combinations, don't sample"]
-     [output o   "Output sdf file"]
-     [input i    "Input sdf file"]
-     [features f "Feature file of smarts strings"]]
+     [output o   "Output sdf file" nil]
+     [features f "Feature file of smarts strings"]
+     filenames]
 
     (let [aligner (cond 
 		   samples (optimal-alignment-over-sampled-conformations 
@@ -117,7 +117,7 @@ outputting the result to a sdf file."
 		   all? optimal-alignment-over-all-conformations)
 	  features (parse-features features)
 	  optimal-alignment (extract-features-and-align
-			     aligner input features)
+			     aligner filenames features)
 	  no-solution? (contains? (map :no-solution 
 				       (vals (:alignment optimal-alignment))) 
 				  true)]
@@ -133,17 +133,19 @@ outputting the result to a sdf file."
 	(println ":alignment field is")
 	(pprint (:alignment optimal-alignment))
 	(println "Other keys from result:" (keys optimal-alignment))
+	(println "Output:" output)
 	(let [moved (move-molecules-from-alignment optimal-alignment)]
-	  (println "Writing moved conformations to file" output)
-	  (write-sdf-file output moved)
-	(println "Opening fantastic view with molecules and features")
-	(let [molecules moved
-	      features (:reference-features optimal-alignment)
-	      features (seq/flatten
-			(for [[name points] features] 
-			  (for [p points] [name p])))]
-	  (pprint features)
-	  (show-molecules-app molecules features))))))))
+	  (when output
+	    (println "Writing moved conformations to file" output)
+	    (write-sdf-file output moved))
+	  (println "Opening fantastic view with molecules and features")
+	  (let [molecules moved
+		features (:reference-features optimal-alignment)
+		features (seq/flatten
+			  (for [[name points] features] 
+			    (for [p points] [name p])))]
+	    (pprint features)
+	    (show-molecules-app molecules features))))))))
 
 (def -main perform-alignment)
 
