@@ -1,0 +1,4 @@
+carbonyl-group [CX3]=[OX1]
+ether [OD2]([#6])[#6]
+hydrogen-bond-acceptor [#6,#7;R0]=[#8]
+hydrogen-bond-donor [!H0;#7,#8,#9]
