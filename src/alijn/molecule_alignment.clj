@@ -151,6 +151,5 @@ outputting the result to a sdf file."
 
 (comment -main 
  "-s" "1" 
- "-o" "test42.sdf" 
- "-i" "data/debug/thrombin-standard.sdf" 
- "-f" "data/debug/features.smarts")
+ "-f" "data/example/features.smarts"
+ "data/example/comt_subset.sdf" )
