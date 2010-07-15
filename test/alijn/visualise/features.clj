@@ -1,17 +1,14 @@
 (ns alijn.visualise.features
   (:use [alijn features io molecule-visualisation]
-	[clojure.contrib command-line]
-	[clj-todo todo]))
+	[clojure.contrib command-line]))
 
-(todo
- "This description isn't shown properly but only as a reference when used. Why is that?"
- (def desc 
-      "Identifies the features from the molecules in the files and opens
+(def desc 
+"Identifies the features from the molecules in the files and opens
 a view for each molecule containing the molecule and its features.")
-)
 
-(defn find-and-show-features 
-  desc
+(defn 
+  #^{:doc desc}
+  find-and-show-features 
   [& args]
   (with-command-line args desc
     [[feature-file f "The feature file to use." nil]
@@ -30,12 +27,6 @@ a view for each molecule containing the molecule and its features.")
 	    (show-molecules-app [molecule] found-features))))
       (println "Must specify valid feature file."))))
 
-(comment println "Description tests begin")
-(comment find-and-show-features "--help")
-(comment doc find-and-show-features)
-(comment println "Description tests end")
-
 (comment find-and-show-features 
 	 "-f" "data/example/features.smarts"
 	 "data/example/comt_subset.sdf")
-
