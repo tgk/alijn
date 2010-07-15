@@ -14,5 +14,6 @@
   :namespaces [alijn.molecule-alignment]
   :main alijn.molecule-alignment
   :jvm-opts "-Xmx1g"
-  :run-aliases {:align [alijn.molecule-alignment perform-alignment]}
+  :run-aliases {:align [alijn.molecule-alignment perform-alignment]
+		:features [alijn.visualise.features find-and-show-features]}
 )

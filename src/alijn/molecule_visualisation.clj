@@ -89,15 +89,16 @@
     (quad)))
 
 (defn draw-features [features]
-  (let [features (partition 2 features)
-	names (map first features)
-	feature-color (feature-color-fn names)]
-    (doseq [[name pos] features]
-      (let [[r g b] (feature-color name)]
-	(push-matrix
-	 (color r g b 0.5)
-	 (translate (.x pos) (.y pos) (.z pos))
-	 (cube))))))
+  (when (> (count features) 0)
+    (let [features (partition 2 features)
+	  names (map first features)
+	  feature-color (feature-color-fn names)]
+      (doseq [[name pos] features]
+	(let [[r g b] (feature-color name)]
+	  (push-matrix
+	   (color r g b 0.5)
+	   (translate (.x pos) (.y pos) (.z pos))
+	   (cube)))))))
     
 
 ;;; Controllers
