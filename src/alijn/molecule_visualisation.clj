@@ -1,39 +1,40 @@
 (ns alijn.molecule-visualisation
-  (:use [penumbra.opengl]
+  (:use [penumbra opengl]
 	[clojure.contrib pprint fcase]
 	[alijn io])
   (:require [penumbra.app :as app]
 	    [penumbra.text :as text])
   (:import [org.openscience.cdk Molecule Atom Bond]
-	   [javax.vecmath Point3d]))
+	   [javax.vecmath Point3d]
+	   [java.awt Color]))
 
 ;;; Molecules drawing
+
+(defn- bond-atoms [bond] (seq (.atoms bond)))
+
+(defn midway [u v] (doto (Point3d.) (.interpolate u v 0.5)))
 
 (def atom-color
      {"C" [0.5 0.5 0.5]
       "H" [1.0 1.0 1.0]
       "N" [0.0 0.0 1.0]
       "O" [1.0 0.0 0.0]})
-
-(defn midway [u v] (doto (Point3d.) (.interpolate u v 0.5)))
-
-(defn- bond-atoms [bond] (seq (.atoms bond)))
-
 (def default-color [0.7 0.5 0.3])
+
+(defn draw-atom [atm p middle]
+  (let [t (.getSymbol atm)
+	c (get atom-color t default-color)]
+  (draw-lines
+   (apply color c)
+   (vertex (.x p) (.y p) (.z p))
+   (vertex (.x middle) (.y middle) (.z middle)))))
+
 (defn draw-bond [bond]
-  (let [[a1 a2] (seq (.atoms bond))
+  (let [[a1 a2] (bond-atoms bond)
 	[p1 p2] [(.getPoint3d a1) (.getPoint3d a2)]
-	[t1 t2] [(.getSymbol a1) (.getSymbol a2)]
-	c1 (get atom-color t1 default-color) 
-	c2 (get atom-color t2 default-color)
 	middle (midway p1 p2)]
-    (draw-lines
-     (apply color c1)
-     (vertex (.x p1) (.y p1) (.z p1))
-     (vertex (.x middle) (.y middle) (.z middle))
-     (apply color c2)
-     (vertex (.x p2) (.y p2) (.z p2))
-     (vertex (.x middle) (.y middle) (.z middle)))))
+    (draw-atom a1 p1 middle)
+    (draw-atom a2 p2 middle)))
 
 (defn draw-molecule [molecule]
   (let [bonds (.bonds molecule)
@@ -41,32 +42,19 @@
 	point-pairs (map (partial map #(.getPoint3d %)) bonds-atoms)]
     (doseq [bond bonds] (draw-bond bond))))
 
+
 ;;; Feature drawing
-; Could change this with standard lib (java.awt.color)
-(defn abs [val] (Math/abs (double val)))
-(defn in-interval? [[lo hi] val] (and (<= lo val) (< val hi)))
 (defn rgb [h s l]
-  (let [c       (if (< l 0.5) (* 2 l s) (* (- 2 (* 2 l)) s))
-	h-prime (/ h 60)
-	x       (* c (- 1 (abs (mod h-prime (- 2 1)))))
-	[r1 g1 b1] (fcase in-interval? h-prime
-			  [0 1] [c x 0]
-			  [1 2] [x c 0]
-			  [2 3] [0 c x]
-			  [3 4] [0 x c]
-			  [4 5] [x 0 c]
-			  [5 6] [c 0 x])
-	m (- l (/ c 2))
-	[r g b] (map (partial + m) [r1 g1 b1])]
-  [r g b]))
+  (let [color (Color/getHSBColor h s l)
+	components [(.getRed color) (.getGreen color) (.getBlue color)]]
+    (map #(/ % 360) components)))
 
 (defn feature-color-fn [names]
   (let [names (distinct names)
-	angle-diff (/ 360 (count names))
-	; could be done with simpler range call
-	angles (map (partial * angle-diff) (range (count names)))
+	angle-diff (/ 1 (count names))
+	angles (range 0 1 angle-diff)
 	hues (zipmap names angles)]
-    (fn [name] (rgb (hues name) 0.5 0.5))))
+    (fn [name] (rgb (hues name) 0.5 1.0))))
 
 ; Cube from penumbra wiki
 (defn quad []
@@ -107,12 +95,30 @@
   (app/vsync! true)
   (app/title! "alijn")
   (enable :depth-test)
+  (enable :alpha-test)
+  (enable :blend)
   state)
 
 (defn reshape [[x y width height] state]
-  (comment ortho-view -10 10 -10 10 1.0 100.0)
-  (frustum-view 60.0 (/ (double width) height) 1.0 100.0)
-  (load-identity)
+  (let [[cx cy _] (->> state :bounding-sphere :center)
+	diam      (->> state :bounding-sphere :diameter)
+	diam (* 3 diam)
+	left   (- cx diam)
+	right  (+ cx diam)
+	bottom (- cy diam)
+	top    (+ cy diam)
+	aspect (/ width height)
+	[left right] (if (< aspect 1.0) 
+		       [(* aspect left) (* aspect right)] [left right])
+	[bottom top] (if (> aspect 1.0)
+		       [(/ bottom aspect) (/ top aspect)] [bottom top])
+	z-near (* -1 diam)
+	z-far  diam]
+    (gl-matrix-mode :projection)
+    (gl-load-identity-matrix)
+    (gl-ortho left right bottom top z-near z-far)
+    (gl-matrix-mode :modelview)
+    (gl-load-identity-matrix))
   state)
 
 (defn mouse-drag [[dx dy] [x y] button state]
@@ -127,13 +133,25 @@
 		  :trans-z (+ (:trans-z state) (/ dx 10) (/ dy 10)))))
 
 (defn display [[delta time] state]
-  (translate (:trans-x state) (:trans-y state) (:trans-z state))
   (rotate (:rot-x state) 1 0 0)
   (rotate (:rot-y state) 0 1 0)
   (doseq [mol (:molecules state)] (draw-molecule mol))
   (draw-features (:features state)))
 
+
 ;;; Interface
+(defn avg [numbers] (/ (reduce + numbers) (count numbers)))
+(defn calculate-bounding-sphere [molecules]
+  (let [points (apply concat (for [molecule molecules] 
+			       (for [atm (.atoms molecule)] (.getPoint3d atm))))
+	xs (map #(.x %) points)
+	ys (map #(.y %) points)
+	zs (map #(.z %) points)
+	center-point (Point3d. (avg xs) (avg ys) (avg zs))
+	center [(.x center-point) (.y center-point) (.z center-point)]
+	distances (for [point points] (.distance center-point point))
+	diameter (apply max distances)]
+  {:center center, :diameter diameter}))
 
 (defn show-molecules-app [molecules features]
   (app/start 
@@ -141,7 +159,8 @@
    {:rot-x 0, :rot-y 0,
     :trans-x 0, :trans-y -0.9, :trans-z -30,
     :molecules molecules
-    :features features}))
+    :features features
+    :bounding-sphere (calculate-bounding-sphere molecules)}))
 
 (comment show-molecules-app 
   (take 1 (read-sdf-file "data/debug/carboxy.sdf"))
