@@ -7,10 +7,12 @@
 		 [jama "1.0.1"]
 		 [penumbra "0.5.0"]]
   :native-dependencies [[lwjgl "2.2.2"]]
-  :dev-dependencies [[leiningen-run "0.2"]
+  :dev-dependencies [[lein-run "1.0.0-SNAPSHOT"]
 		     [swank-clojure "1.2.0"]
 		     [clj-todo "0.1.0-SNAPSHOT"]
 		     [native-deps "1.0.0"]]
   :namespaces [alijn.molecule-alignment]
   :main alijn.molecule-alignment
-  :jvm-opts "-Xmx1g")
+  :jvm-opts "-Xmx1g"
+  :run-aliases {:align [alijn.molecule-alignment perform-alignment]}
+)

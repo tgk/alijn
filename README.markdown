@@ -10,7 +10,7 @@ The feature definitions are extraced from the [Daylight online manual](http://ww
 To see a command line usage instruction use `lein run --help`.
 To try the enclosed example type
 
-    lein run -s 1 -f data/example/features.smarts data/example/comt_subset.sdf
+    lein run align -s 1 -f data/example/features.smarts data/example/comt_subset.sdf
 
 Be aware that the program is still quite buggy.
 
