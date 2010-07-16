@@ -1,12 +1,14 @@
 (ns alijn.molecule-visualisation
   (:use [penumbra opengl]
+	[penumbra.opengl.core :only [*view*]]
 	[clojure.contrib pprint fcase]
 	[alijn io])
   (:require [penumbra.app :as app]
 	    [penumbra.text :as text])
   (:import [org.openscience.cdk Molecule Atom Bond]
 	   [javax.vecmath Point3d]
-	   [java.awt Color]))
+	   [java.awt Color]
+	   [org.newdawn.slick.opengl TextureImpl]))
 
 ;;; Molecules drawing
 
@@ -40,6 +42,7 @@
   (let [bonds (.bonds molecule)
 	bonds-atoms (map bond-atoms bonds)
 	point-pairs (map (partial map #(.getPoint3d %)) bonds-atoms)]
+    (line-width 4)
     (doseq [bond bonds] (draw-bond bond))))
 
 
@@ -79,13 +82,29 @@
 (defn draw-features [features]
   (when (> (count features) 0)
     (let [features (partition 2 features)
-	  names (map first features)
+	  names (distinct (map first features))
 	  feature-color (feature-color-fn names)]
+      (doseq [[name offset] (zipmap names (iterate (partial + 30) 0))]
+	(let [[r g b] (feature-color name)]
+	  (with-disabled [:texture-rectangle :lighting]
+	    (with-enabled [:texture-2d :blend]
+	      (let [[x-origin y-origin w h] @*view*]
+		(with-projection 
+		  (ortho-view x-origin (+ x-origin w) (+ y-origin h) y-origin -1 1)
+		  (push-matrix
+		   (load-identity)
+		   (TextureImpl/bindNone)
+		   (color r g b 1.0)
+		   (draw-lines
+		    (vertex 0 (+ 25 offset))
+		    (vertex 100 (+ 25 offset)))
+		   (.drawString (text/font "Tahoma" :size 20) 0 offset name))))))))
       (doseq [[name pos] features]
 	(let [[r g b] (feature-color name)]
 	  (push-matrix
 	   (color r g b 0.5)
 	   (translate (.x pos) (.y pos) (.z pos))
+	   (scale 0.5 0.5 0.5)
 	   (cube)))))))
     
 
@@ -96,7 +115,7 @@
   (app/title! "alijn")
   (enable :depth-test)
   (enable :alpha-test)
-  (enable :blend)
+  (comment enable :blend)
   state)
 
 (defn reshape [[x y width height] state]
@@ -155,7 +174,9 @@
 
 (defn show-molecules-app [molecules features]
   (app/start 
-   {:display display, :reshape reshape, :mouse-drag mouse-drag, :init init} 
+   {:display display, :reshape reshape, 
+    :mouse-drag mouse-drag, 
+    :init init} 
    {:rot-x 0, :rot-y 0,
     :trans-x 0, :trans-y -0.9, :trans-z -30,
     :molecules molecules

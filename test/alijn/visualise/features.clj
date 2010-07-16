@@ -27,6 +27,6 @@ a view for each molecule containing the molecule and its features.")
 	    (show-molecules-app [molecule] found-features))))
       (println "Must specify valid feature file."))))
 
-(find-and-show-features 
- "-f" "data/example/features.smarts"
- "data/example/comt_subset.sdf")
+(comment find-and-show-features 
+	 "-f" "data/example/phase.smarts"
+	 "data/example/comt_subset.sdf")
