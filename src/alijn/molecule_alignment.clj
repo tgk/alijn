@@ -1,31 +1,14 @@
 (ns alijn.molecule-alignment
   (:gen-class)
   (:use clj-todo.todo)
-  (:use [alijn features kabsch combinatorics point-alignment io molecule-manipulation molecule-visualisation]
+  (:use [alijn 
+	 features kabsch combinatorics point-alignment io 
+	 molecule-manipulation molecule-visualisation utils]
 	[clojure.contrib combinatorics pprint str-utils command-line])
   (:require [clojure.contrib.seq-utils :as seq])
   (:import [javax.vecmath Point3d]))
 
 (defn molecule-name [molecule] (.get (.getProperties molecule) "cdk:Title"))
-
-;;; Functions added in 1.2, delete when updating
-(todo
-"This function actually is in clojure 1.2, so this can be removed when updating."
-(defn group-by
-  "Groups the seq by the keys generated from group-fn."
-  [group-fn seq]
-  (apply merge-with concat (map (fn [elm] {(group-fn elm) [elm]}) seq)))
-)
-
-(defn rand-nth [coll]
-  (nth coll (rand-int (count coll))))
-
-;;; end of 1.2 functionality
-
-;;; Other helpers
-(defn map-on-values
-  "Applies f to the values in the map m."
-  [f m] (apply merge (map (fn [[k v]] {k (f v)}) m)))
 
 ;;; Pre alignment data massage
 (defn add-name-and-features
