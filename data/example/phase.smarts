@@ -6,16 +6,14 @@
 ; Definitions of hydrogen donor and acceptor taken from
 ; http://www.daylight.com/dayhtml_tutorials/languages/smarts/smarts_examples.html
 hydrogen-donor [!$([#6,H0,-,-2,-3])]
-hydrogen-acceptor [!$([#6,F,Cl,Br,I,o,s,nX3,#7v5,#15v5,#16v4,#16v6,*+1,*+2,*+3])]
+;hydrogen-acceptor [!$([#6,F,Cl,Br,I,o,s,nX3,#7v5,#15v5,#16v4,#16v6,*+1,*+2,*+3])]
 ;
-; I have been unable to make one "aromatic-ring" definition
-; A five-ring of aromatic atoms
-aromatic-5-ring a1aaaa1
-;
-; A six-ring of aromatic atoms
-aromatic-6-ring a1aaaaa1
+; Five-ring and six-rings of aromatic atoms
+aromatic-ring a1aaaa1
+aromatic-ring a1aaaaa1
 ;
 ; Sulphur or oxygen with single bonded hydrogen
+negative-ionazble [#16H1,#8H1]
 negative-ionazble [#16H1,#8H1]
 ;
 ; Nitrogen with three bonds and not aromatic
