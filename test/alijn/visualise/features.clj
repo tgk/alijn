@@ -11,22 +11,25 @@ a view for each molecule containing the molecule and its features.")
   find-and-show-features 
   [& args]
   (with-command-line args desc
-    [[feature-file f "The feature file to use." nil]
+    [[feature-file f "A feature file." nil]
+     [phase-file p "A phase feature definition file." nil]
      filenames]
-    (if feature-file
-      (let [features (parse-features feature-file)
-	    molecules (read-molecules-from-files filenames)]
-	(println (format "Parsed %d features and %d molecules." 
-			 (count features) (count molecules)))
-	(doseq [molecule molecules]
-	  (let [grouped-features (feature-groups features molecule)
-		found-features (->> (for [[name centers] grouped-features]
-				      (map vector (repeat name) centers))
-				    (apply concat)
-				    (apply concat))]
-	    (show-molecules-app [molecule] found-features))))
-      (println "Must specify valid feature file."))))
+    (let [custom-features (if feature-file (parse-features feature-file) {})
+	  phase-features (if phase-file (parse-phase-features phase-file) {})
+	  features (merge-with concat custom-features phase-features)
+	  molecules (read-molecules-from-files filenames)]
+      (println (format "Parsed %d features and %d molecules." 
+		       (count features) (count molecules)))
+      (doseq [molecule molecules]
+	(let [grouped-features (feature-groups features molecule)
+	      found-features (->> (for [[name centers] grouped-features]
+				    (map vector (repeat name) centers))
+				  (apply concat)
+				  (apply concat))]
+	  (show-molecules-app [molecule] found-features))))))
 
-(comment find-and-show-features 
-	 "-f" "data/example/phase.smarts"
-	 "data/example/comt_subset.sdf")
+(comment
+  find-and-show-features 
+  "-f" "data/example/phase.smarts"
+  "-p" "data/example/phase_smarts.def"
+  "data/example/comt_subset.sdf")

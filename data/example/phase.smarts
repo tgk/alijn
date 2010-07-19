@@ -1,20 +1,4 @@
-; SMARTS definitions for standard features in phase.
-; Not taken from phase itself, but should cover same types.
-; Hydrophobe features are omitted as they cover too many
-; features for the program to handle.
-;
-; Definitions of hydrogen donor and acceptor taken from
-; http://www.daylight.com/dayhtml_tutorials/languages/smarts/smarts_examples.html
-hydrogen-donor [!$([#6,H0,-,-2,-3])]
-;hydrogen-acceptor [!$([#6,F,Cl,Br,I,o,s,nX3,#7v5,#15v5,#16v4,#16v6,*+1,*+2,*+3])]
-;
+; SMARTS definitions to supplement the 'default' features from phase.
 ; Five-ring and six-rings of aromatic atoms
-aromatic-ring a1aaaa1
-aromatic-ring a1aaaaa1
-;
-; Sulphur or oxygen with single bonded hydrogen
-negative-ionazble [#16H1,#8H1]
-negative-ionazble [#16H1,#8H1]
-;
-; Nitrogen with three bonds and not aromatic
-positive-ionazble [#7v3&!a]
+Aromatic-Rings-(R) a1aaaa1
+Aromatic-Rings-(R) a1aaaaa1

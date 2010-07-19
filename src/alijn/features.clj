@@ -1,8 +1,10 @@
 (ns alijn.features
   (:use [alijn combinatorics math utils io]
-	[clojure.contrib.str-utils2 :only [split-lines split]])
-  (:import 
-   [org.openscience.cdk.smiles.smarts SMARTSQueryTool]))
+	[clojure.contrib pprint])
+  (:require [clojure.contrib.str-utils2 :rename str-utils])
+  (:import [org.openscience.cdk.smiles.smarts SMARTSQueryTool]))
+
+;;; Parsers
 
 (defn- not-commented? [s]
   (not (= \; (first s))))
@@ -11,12 +13,62 @@
   [filename]
   (->> filename 
        slurp 
-       split-lines
+       str-utils/split-lines
        (filter not-commented?)
        (map #(.split #" " %))
        (map seq)
        (group-by first)
        (map-on-values (partial map second))))
+
+(def example-phase-block
+      (list 
+       "#IDENTIFIER D"
+       "#COMMENT Donor (D)"
+       "#INCLUDE "
+       "[#1][O;X2]                              vector(1)   0   1   -1   0   1   1.8"
+       "[#1]S[#6]                               vector(1)   0   1   -1   0   1   1.8"
+       "[#1][C;X2]#[C;X2]                       vector(1)   0   1   -1   0   1   1.8"
+       "[#1][NX3]C(=[NX2])[#6]                  vector(1)   0   1   -1   0   1   1.8"
+       "[#1][#7]                                vector(1)   0   1   -1   0   1   1.8"
+       "#EXCLUDE"
+       "[#1]OC(=O)                              point(1)   0   1   0   0   1   1.8"
+       "[#1]O[S;X3]=O                           point(1)   0   1   0   0   1   1.8"
+       "[#1]O[S;X4](=O)(=O)                     point(1)   0   1   0   0   1   1.8"
+       "[#1]O[P;X3]=O                           point(1)   0   1   0   0   1   1.8"
+       "[#1]O[P;X4]=O                           point(1)   0   1   0   0   1   1.8"
+       "[#1]n1nnnc1                             point(1)   0   1   0   0   1   1.8"
+       "[#1]N([S;X4](=O)(=O))(C(F)(F)(F))       point(1)   0   1   0   0   1   1.8"
+       "[#1]([NH2;X3,NH3]([#6;X4]))             point(1)   0   1   0   0   1   1.8"
+       "[#1]([NH;X3,NH2]([#6;X4])([#6;X4]))     point(1)   0   1   0   0   1   1.8"
+       "[#1]([NH;X4]([#6;X4])([#6;X4])([#6;X4]))   point(1)   0   1   0   0   1   1.8"
+       "[#1][NX3]C(=[NX2])[NX3]                 point(1)   0   1   0   0   1   1.8"
+       "[#1][NX3]C(=[NX3+])                     point(1)   0   1   0   0   1   1.8"
+       "[#1][NX3+]=C[NH2]                       point(1)   0   1   0   0   1   1.8"
+       "[#1][NX3]C(=[NX2])                      point(1)   0   1   0   0   1   1.8"
+       "[#1][NX3][#6](=[NX2,NX3+])[#6]          point(1)   0   1   0   0   1   1.8"))
+
+(defn parse-phase-block [block]
+  (let [name (-> block rest first (.substring 9) (str-utils/replace " " "-"))
+	included (take-while #(not (.equals % "#EXCLUDE")) (drop 3 block))
+	not-default (filter #(not (.startsWith % "default")) included)]
+    {name 
+     (map first (map #(.split #" " %) not-default))}))
+
+(defn parse-phase-features
+  "Parse a phase-type feature file. Ignores default lines (non-SMARTS strings)
+and Custom patterns."
+  [filename]
+  (dissoc 
+   (->> filename
+	slurp
+	str-utils/split-lines
+	(chop-using #(.equals % "#FEATURE"))
+	rest
+	(map parse-phase-block)
+	(apply merge))
+   "Custom"))
+
+;;; Query tools
 
 (defn get-query-tool [smarts-string] (SMARTSQueryTool. smarts-string))
 (def cached-query-tool (memoize get-query-tool))
