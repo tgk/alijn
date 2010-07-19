@@ -2,7 +2,7 @@
   (:use [penumbra opengl]
 	[penumbra.opengl.core :only [*view*]]
 	[clojure.contrib pprint fcase]
-	[alijn io])
+	[alijn io math])
   (:require [penumbra.app :as app]
 	    [penumbra.text :as text])
   (:import [org.openscience.cdk Molecule Atom Bond]
@@ -119,13 +119,12 @@
   state)
 
 (defn reshape [[x y width height] state]
-  (let [[cx cy _] (->> state :bounding-sphere :center)
-	diam      (->> state :bounding-sphere :diameter)
-	diam (* 3 diam)
-	left   (- cx diam)
-	right  (+ cx diam)
-	bottom (- cy diam)
-	top    (+ cy diam)
+  (let [center (->> state :bounding-sphere :center)
+	diam   (->> state :bounding-sphere :diameter (* 3))
+	left   (- (.x center) diam)
+	right  (+ (.x center) diam)
+	bottom (- (.y center) diam)
+	top    (+ (.y center) diam)
 	aspect (/ width height)
 	[left right] (if (< aspect 1.0) 
 		       [(* aspect left) (* aspect right)] [left right])
@@ -163,14 +162,10 @@
 (defn calculate-bounding-sphere [molecules]
   (let [points (apply concat (for [molecule molecules] 
 			       (for [atm (.atoms molecule)] (.getPoint3d atm))))
-	xs (map #(.x %) points)
-	ys (map #(.y %) points)
-	zs (map #(.z %) points)
-	center-point (Point3d. (avg xs) (avg ys) (avg zs))
-	center [(.x center-point) (.y center-point) (.z center-point)]
+	center-point (vec-center points)
 	distances (for [point points] (.distance center-point point))
 	diameter (apply max distances)]
-  {:center center, :diameter diameter}))
+  {:center center-point, :diameter diameter}))
 
 (defn show-molecules-app [molecules features]
   (app/start 
