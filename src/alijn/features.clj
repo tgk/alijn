@@ -20,33 +20,6 @@
        (group-by first)
        (map-on-values (partial map second))))
 
-(def example-phase-block
-      (list 
-       "#IDENTIFIER D"
-       "#COMMENT Donor (D)"
-       "#INCLUDE "
-       "[#1][O;X2]                              vector(1)   0   1   -1   0   1   1.8"
-       "[#1]S[#6]                               vector(1)   0   1   -1   0   1   1.8"
-       "[#1][C;X2]#[C;X2]                       vector(1)   0   1   -1   0   1   1.8"
-       "[#1][NX3]C(=[NX2])[#6]                  vector(1)   0   1   -1   0   1   1.8"
-       "[#1][#7]                                vector(1)   0   1   -1   0   1   1.8"
-       "#EXCLUDE"
-       "[#1]OC(=O)                              point(1)   0   1   0   0   1   1.8"
-       "[#1]O[S;X3]=O                           point(1)   0   1   0   0   1   1.8"
-       "[#1]O[S;X4](=O)(=O)                     point(1)   0   1   0   0   1   1.8"
-       "[#1]O[P;X3]=O                           point(1)   0   1   0   0   1   1.8"
-       "[#1]O[P;X4]=O                           point(1)   0   1   0   0   1   1.8"
-       "[#1]n1nnnc1                             point(1)   0   1   0   0   1   1.8"
-       "[#1]N([S;X4](=O)(=O))(C(F)(F)(F))       point(1)   0   1   0   0   1   1.8"
-       "[#1]([NH2;X3,NH3]([#6;X4]))             point(1)   0   1   0   0   1   1.8"
-       "[#1]([NH;X3,NH2]([#6;X4])([#6;X4]))     point(1)   0   1   0   0   1   1.8"
-       "[#1]([NH;X4]([#6;X4])([#6;X4])([#6;X4]))   point(1)   0   1   0   0   1   1.8"
-       "[#1][NX3]C(=[NX2])[NX3]                 point(1)   0   1   0   0   1   1.8"
-       "[#1][NX3]C(=[NX3+])                     point(1)   0   1   0   0   1   1.8"
-       "[#1][NX3+]=C[NH2]                       point(1)   0   1   0   0   1   1.8"
-       "[#1][NX3]C(=[NX2])                      point(1)   0   1   0   0   1   1.8"
-       "[#1][NX3][#6](=[NX2,NX3+])[#6]          point(1)   0   1   0   0   1   1.8"))
-
 (defn parse-phase-block [block]
   (let [name (-> block rest first (.substring 9) (str-utils/replace " " "-"))
 	included (take-while #(not (.equals % "#EXCLUDE")) (drop 3 block))
