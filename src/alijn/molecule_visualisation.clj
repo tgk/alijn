@@ -114,6 +114,7 @@
   (enable :depth-test)
   (enable :alpha-test)
   (enable :blend)
+  (blend-func :src-alpha :one-minus-src-alpha)
   state)
 
 (defn reshape [[x y width height] state]
