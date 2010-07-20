@@ -20,5 +20,6 @@
 ; This fails under lein 1.2
 ;  :jvm-opts "-Xmx1g"
   :run-aliases {:align    [alijn.molecule-alignment perform-alignment]
-		:features [alijn.visualise.features find-and-show-features]}
+		:features [alijn.visualise.features find-and-show-features]
+		:read-molecules [alijn.read-mol-file read-and-print-names]}
 )
