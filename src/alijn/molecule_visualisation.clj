@@ -1,7 +1,7 @@
 (ns alijn.molecule-visualisation
   (:use [penumbra opengl]
 	[penumbra.opengl.core :only [*view*]]
-	[clojure.contrib pprint fcase]
+	[clojure.contrib pprint]
 	[alijn io math])
   (:require [penumbra.app :as app]
 	    [penumbra.text :as text])
@@ -41,7 +41,7 @@
 (defn draw-molecule [molecule]
   (let [bonds (.bonds molecule)
 	bonds-atoms (map bond-atoms bonds)
-	point-pairs (map (partial map #(.getPoint3d %)) bonds-atoms)]
+	point-pairs (map (partial map (memfn getPoint3d)) bonds-atoms)]
     (line-width 4)
     (doseq [bond bonds] (draw-bond bond))))
 
@@ -86,19 +86,17 @@
 	  feature-color (feature-color-fn names)]
       (doseq [[name offset] (zipmap names (iterate (partial + 30) 0))]
 	(let [[r g b] (feature-color name)]
-	  (with-disabled [:texture-rectangle :lighting]
-	    (with-enabled [:texture-2d :blend]
-	      (let [[x-origin y-origin w h] @*view*]
-		(with-projection 
-		  (ortho-view x-origin (+ x-origin w) (+ y-origin h) y-origin -1 1)
-		  (push-matrix
-		   (load-identity)
-		   (TextureImpl/bindNone)
-		   (color r g b 1.0)
-		   (draw-lines
-		    (vertex 0 (+ 25 offset))
-		    (vertex 100 (+ 25 offset)))
-		   (.drawString (text/font "Tahoma" :size 20) 0 offset name))))))))
+	  (text/write-to-screen name 10 offset)
+	  (let [[x-origin y-origin w h] @*view*]
+	    (with-projection 
+	      (ortho-view x-origin (+ x-origin w) (+ y-origin h) y-origin -1 1)
+	      (push-matrix
+	       (load-identity)
+	       (TextureImpl/bindNone)
+	       (color r g b 1.0)
+	       (draw-lines
+		(vertex 0 (+ 25 offset))
+		(vertex 100 (+ 25 offset))))))))
       (doseq [[name pos] features]
 	(let [[r g b] (feature-color name)]
 	  (push-matrix
@@ -115,7 +113,7 @@
   (app/title! "alijn")
   (enable :depth-test)
   (enable :alpha-test)
-  (comment enable :blend)
+  (enable :blend)
   state)
 
 (defn reshape [[x y width height] state]
@@ -134,7 +132,7 @@
 	z-far  diam]
     (gl-matrix-mode :projection)
     (gl-load-identity-matrix)
-    (gl-ortho left right bottom top z-near z-far)
+    (ortho-view left right bottom top z-near z-far)
     (gl-matrix-mode :modelview)
     (gl-load-identity-matrix))
   state)
@@ -178,8 +176,9 @@
     :features features
     :bounding-sphere (calculate-bounding-sphere molecules)}))
 
-(comment show-molecules-app 
-  (take 1 (read-sdf-file "data/debug/carboxy.sdf"))
+(comment
+  show-molecules-app 
+  (take 1 (read-molecules "data/debug/carboxy.sdf"))
   ["donor" (Point3d. 0 0 0)
    "acceptor" (Point3d. 1 1 1)
    "donor" (Point3d. 2 2 0)

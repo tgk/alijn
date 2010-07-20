@@ -1,7 +1,7 @@
 (ns alijn.features
   (:use [alijn combinatorics math utils io]
 	[clojure.contrib pprint])
-  (:require [clojure.contrib.str-utils2 :rename str-utils])
+  (:require [clojure.contrib.str-utils2 :as str-utils])
   (:import [org.openscience.cdk.smiles.smarts SMARTSQueryTool]))
 
 ;;; Parsers

@@ -132,7 +132,8 @@ outputting the result to a sdf file."
 
 (def -main perform-alignment)
 
-(comment -main 
- "-s" "1" 
- "-f" "data/example/features.smarts"
- "data/example/comt_subset.sdf" )
+(comment
+  -main 
+  "-s" "1" 
+  "-f" "data/example/features.smarts"
+  "data/example/comt_subset.sdf" )
