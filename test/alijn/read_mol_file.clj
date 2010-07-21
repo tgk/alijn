@@ -3,5 +3,4 @@
 
 (defn read-and-print-names [& filenames]
   (let [molecules (read-molecules-from-files filenames)]
-    (doseq [molecule molecules]
-      (print molecule))))
+    (println "Parsed " (count molecules) " molecules")))

@@ -22,7 +22,6 @@
 Adapted from http://rguha.net/code/java/"
   [filename]
   (let [reader (->> filename
-		    File.
 		    FileReader.
 		    (.createReader (ReaderFactory.)))
 	content (.read reader (.newChemFile builder))]
