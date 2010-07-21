@@ -7,7 +7,7 @@
 ;;; Parsers
 
 (defn- not-commented? [s]
-  (not (= \; (first s))))
+  (not= \; (first s)))
 
 (defn parse-features
   [filename]
