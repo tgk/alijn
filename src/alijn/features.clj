@@ -1,6 +1,6 @@
 (ns alijn.features
   (:use [alijn combinatorics math utils io]
-	[clojure.contrib pprint])
+	[clojure pprint set])
   (:require [clojure.contrib.str-utils2 :as str-utils])
   (:import [org.openscience.cdk.smiles.smarts SMARTSQueryTool]))
 
@@ -18,14 +18,23 @@
        (map #(.split #" " %))
        (map seq)
        (group-by first)
-       (map-on-values (partial map second))))
+       (map-on-values (partial map second))
+       (map-on-values (fn [val] [val []]))))
+
+(comment pprint (parse-features "data/example/phase_supplement.smarts"))
+
+(defn remove-defaults [smarts-strings]
+  (filter #(not (.startsWith % "default")) smarts-strings))
+
+(defn first-word [s]
+  (first (.split #" " s)))
 
 (defn parse-phase-block [block]
   (let [name (-> block rest first (.substring 9) (str-utils/replace " " "-"))
-	included (take-while #(not (.equals % "#EXCLUDE")) (drop 3 block))
-	not-default (filter #(not (.startsWith % "default")) included)]
-    {name 
-     (map first (map #(.split #" " %) not-default))}))
+	[include exclude] (chop-using #(.equals % "#EXCLUDE") (drop 3 block))
+	include (map first-word (remove-defaults include))
+	exclude (map first-word (remove-defaults exclude))]
+    {name [include exclude]}))
 
 (defn parse-phase-features
   "Parse a phase-type feature file. Ignores default lines (non-SMARTS strings)
@@ -40,6 +49,8 @@ and Custom patterns."
 	(map parse-phase-block)
 	(apply merge))
    "Custom"))
+
+(comment pprint (parse-phase-features "data/example/phase_smarts.def"))
 
 ;;; Query tools
 
@@ -71,18 +82,25 @@ Returns the center points."
 	(apply concat)
 	(map get-center)
 	distinct))
+
+(defn find-and-exclude-features
+  "Finds all the features matching the include SMARTS strings,
+but excludes points matching patterns matching the exclude SMARTS strings."
+  [molecule [include exclude]]
+  (let [included (set (find-features molecule include))
+	excluded (set (find-features molecule exclude))]
+    (difference included excluded)))
    
 (defn feature-groups
-  "Extract the features defined in a {name smarts-strings} map
+  "Extract the features defined in a {name [include exclude-smarts-strings]} map
 from the molecule. Returns collection of name -> centers.
 The centers are Point3d objects."
   [features molecule]
-  (map-on-values (partial find-features molecule) features))
+  (map-on-values (partial find-and-exclude-features molecule) features))
 
-(comment let [features (parse-features "data/example/phase.smarts")
+(comment let [features (parse-phase-features "data/example/phase_smarts.def")
       molecules (read-molecules "data/example/comt_subset.sdf")]
   (println)
-  (println features)
   (doseq [molecule molecules]
-    (println
+    (pprint
      (feature-groups features molecule))))

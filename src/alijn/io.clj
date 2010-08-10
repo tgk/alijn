@@ -2,13 +2,10 @@
   (:use clj-todo.todo)
   (:import 
    [java.io File FileInputStream FileOutputStream FileReader]
-   [org.openscience.cdk DefaultChemObjectBuilder]
+   [org.openscience.cdk ChemFile]
    [org.openscience.cdk.io SDFWriter ReaderFactory]
    [org.openscience.cdk.io.iterator IteratingMDLReader]
    [org.openscience.cdk.tools.manipulator ChemFileManipulator]))
-
-
-(def builder (DefaultChemObjectBuilder/getInstance))
 
 (defn write-sdf-file [filename molecules]
   (let [file (File. filename)
@@ -24,8 +21,8 @@ Adapted from http://rguha.net/code/java/"
   (let [reader (->> filename
 		    FileReader.
 		    (.createReader (ReaderFactory.)))
-	content (.read reader (.newChemFile builder))]
+	content (.read reader (new ChemFile))]
     (ChemFileManipulator/getAllAtomContainers content)))
-	
+
 (defn read-molecules-from-files [filenames]
   (apply concat (map read-molecules filenames)))

@@ -16,7 +16,13 @@ Be aware that the program is still quite buggy.
 
 ## Installation
 
-Only requires [leiningen](http://github.com/technomancy/leiningen).
+Requires [leiningen](http://github.com/technomancy/leiningen).
+Requires CDK 1.3.5.git which I have not been able to find a maven repository with. 
+To install in local repository [first fork cdk from github](http://github.com/egonw/cdk) and issue the commands
+
+    ant dist-large
+    mvn install:install-file -DgroupId=org.openscience -DartifactId=cdk -Dversion=1.3.5.git -Dpackaging=jar -Dfile=dist/jar/cdk-1.3.5.git.jar
+
 After having installed leiningen and cloned the project, issue the following:
 
     lein deps

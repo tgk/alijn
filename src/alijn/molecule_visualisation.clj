@@ -117,9 +117,18 @@
   (blend-func :src-alpha :one-minus-src-alpha)
   state)
 
+(defn avg [numbers] (/ (reduce + numbers) (count numbers)))
+(defn calculate-bounding-sphere [molecules]
+  (let [points (apply concat (for [molecule molecules] 
+			       (for [atm (.atoms molecule)] (.getPoint3d atm))))
+	center-point (vec-center points)
+	distances (for [point points] (.distance center-point point))
+	diameter (apply max distances)]
+  [center-point diameter]))
+
 (defn reshape [[x y width height] state]
-  (let [center (->> state :bounding-sphere :center)
-	diam   (->> state :bounding-sphere :diameter (* 3))
+  (let [[center diam] (calculate-bounding-sphere (:molecules state))
+	diam (* 3 diam)
 	left   (- (.x center) diam)
 	right  (+ (.x center) diam)
 	bottom (- (.y center) diam)
@@ -157,15 +166,6 @@
 
 
 ;;; Interface
-(defn avg [numbers] (/ (reduce + numbers) (count numbers)))
-(defn calculate-bounding-sphere [molecules]
-  (let [points (apply concat (for [molecule molecules] 
-			       (for [atm (.atoms molecule)] (.getPoint3d atm))))
-	center-point (vec-center points)
-	distances (for [point points] (.distance center-point point))
-	diameter (apply max distances)]
-  {:center center-point, :diameter diameter}))
-
 (defn show-molecules-app [molecules features]
   (app/start 
    {:display display, :reshape reshape, 
@@ -174,8 +174,7 @@
    {:rot-x 0, :rot-y 0,
     :trans-x 0, :trans-y -0.9, :trans-z -30,
     :molecules molecules
-    :features features
-    :bounding-sphere (calculate-bounding-sphere molecules)}))
+    :features features}))
 
 (comment
   show-molecules-app 
