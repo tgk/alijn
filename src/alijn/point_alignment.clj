@@ -1,5 +1,5 @@
 (ns alijn.point-alignment
-  (:use [clj-todo.todo]
+  (:use [clj-todo]
 	[alijn combinatorics kabsch]
 	[clojure.contrib pprint])
   (:import [javax.vecmath Point3d]))

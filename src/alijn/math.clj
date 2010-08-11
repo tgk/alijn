@@ -1,5 +1,5 @@
 (ns alijn.math
-  (:use [clj-todo todo])
+  (:use [clj-todo])
   (:import [javax.vecmath Point3d]))
 
 (defn vec-add 

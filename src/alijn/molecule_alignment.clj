@@ -1,6 +1,6 @@
 (ns alijn.molecule-alignment
   (:gen-class)
-  (:use clj-todo.todo)
+  (:use clj-todo)
   (:use [alijn 
 	 features kabsch combinatorics point-alignment io 
 	 molecule-manipulation molecule-visualisation utils]

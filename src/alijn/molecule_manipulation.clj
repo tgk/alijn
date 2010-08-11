@@ -1,6 +1,6 @@
 (ns alijn.molecule-manipulation
   (:use
-   [clj-todo todo]
+   [clj-todo]
    [alijn math]))
 
 (defn translate-atom! 

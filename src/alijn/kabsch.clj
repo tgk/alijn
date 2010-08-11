@@ -1,5 +1,5 @@
 (ns alijn.kabsch
-  (:use [clj-todo.todo]
+  (:use [clj-todo]
 	[alijn math])
   (:import [Jama Matrix]
 	   [javax.vecmath Point3d]))

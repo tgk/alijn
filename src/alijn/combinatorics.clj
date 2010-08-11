@@ -1,5 +1,5 @@
 (ns alijn.combinatorics
-  (:use [clj-todo.todo]
+  (:use [clj-todo]
 	[clojure.contrib.combinatorics]))
 
 (defn shorter-permutations 
@@ -48,41 +48,3 @@ of coll and rest are the remaining elements."
      [(nth coll n) 
       (concat (take n coll) (drop (inc n) coll))])
    (range (count coll))))
-
-
-;;; Sandbox
-(todo
- "A big sandbox of ideas for refactoring..."
-(comment
-
-(defn smallest-combination
-  "Finds the smallest combination of items from the sets,combined using the combiner.
-Smallness is measured using metric."
-  [combiner metric sets]
-  (->> sets
-       (apply cartesian-product)
-       (map combiner)
-       (apply min-key metric)))
-
-(println 
- (smallest-combination 
-  (fn [numbers] {:sum (apply + numbers) :numbers numbers})
-  :sum 
-  [[1 2] [3 4]]))
-
-(defn smallest-pairing
-  "Find the smallest pairing of all items from the sets, pairred using pair-up.
-Smallnes is measured using metric."
-  [pair-up metric sets]
-  :not-implemented-but-could-probably-be-done-using-smallest-combination)
-
-(println
- (smallest-pairing
-  (fn [pairs-of-numbers]
-    {:total-sum (reduce + (apply map + pairs-of-numbers)) 
-     :pairs-of-numbers pairs-of-numbers})
-  :total-sum
-  [[1 2 3] [4 5] [5 6 7]]))
-; => {:total-sum 27 :pairs-of-numbers [[2 3] [4 5] [6 7]]}
-)
-)

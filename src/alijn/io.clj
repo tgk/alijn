@@ -1,5 +1,5 @@
 (ns alijn.io
-  (:use clj-todo.todo)
+  (:use clj-todo)
   (:import 
    [java.io File FileInputStream FileOutputStream FileReader]
    [org.openscience.cdk ChemFile]
