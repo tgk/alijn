@@ -14,5 +14,10 @@
 		     [swank-clojure "1.3.0-SNAPSHOT"]]
   :jvm-opts ["-Xmx1g"]
   :run-aliases {:align          [alijn.molecule-alignment perform-alignment]
+		:test-align     [alijn.molecule-alignment perform-alignment 
+				 "--samples" "1"
+				 "--feature-file" "data/example/phase_supplement.smarts"
+				 "--phase-file" "data/example/phase_smarts.def"
+				 "data/example/comt_ligands.mol2"]
 		:features       [alijn.visualise.features find-and-show-features]
 		:read-molecules [alijn.read-mol-file read-and-print-names]})

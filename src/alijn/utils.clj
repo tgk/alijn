@@ -30,3 +30,25 @@ of partition-by."
 (defn chop-using-2 [pred coll]
   (->> (partition-by pred coll)
        (filter (comp not pred first))))
+
+(defn partition-using-sizes 
+  "Partitions coll using the sizes from sizes."
+  [sizes coll]
+  (do
+    (assert (= (count coll) (reduce + sizes)))
+    (cond
+     (seq sizes) 
+      (cons 
+       (take (first sizes) coll) 
+       (partition-using-sizes (rest sizes) (drop (first sizes) coll)))
+     :else nil)))
+
+(defn flatten-groups
+  "Flattens the groups into one long seq. Returns the flatted sequence
+along with a function to unflatten a seq of same size as the flattened
+back to the original structure."
+  [groups]
+  (let [flattened-groups (apply concat groups)
+	sizes (map count groups)
+	unflattener (partial partition-using-sizes sizes)]
+    [flattened-groups unflattener]))

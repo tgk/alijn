@@ -92,4 +92,5 @@ of points around the firsts center of mass."
 	translated-points (move-points points-2 translation)]
     (assoc
 	(kabsch points-1 translated-points)
-      :translation translation)))
+      :translation translation
+      :translated-points translated-points)))

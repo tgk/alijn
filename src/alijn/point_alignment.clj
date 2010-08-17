@@ -1,32 +1,10 @@
 (ns alijn.point-alignment
   (:use [clj-todo]
-	[alijn combinatorics kabsch]
+	[alijn combinatorics kabsch utils]
 	[clojure.contrib pprint])
   (:import [javax.vecmath Point3d]))
 
 ;;; Shiny new code (some untested)
-
-(defn partition-using-sizes 
-  "Partitions coll using the sizes from sizes."
-  [sizes coll]
-  (do
-    (assert (= (count coll) (reduce + sizes)))
-    (cond
-     (seq sizes) 
-      (cons 
-       (take (first sizes) coll) 
-       (partition-using-sizes (rest sizes) (drop (first sizes) coll)))
-     :else nil)))
-
-(defn flatten-groups
-  "Flattens the groups into one long seq. Returns the flatted sequence
-along with a function to unflatten a seq of same size as the flattened
-back to the original structure."
-  [groups]
-  (let [flattened-groups (apply concat groups)
-	sizes (map count groups)
-	unflattener (partial partition-using-sizes sizes)]
-    [flattened-groups unflattener]))
 
 (def all-alignments-on-labelled-pairings
  (memoize
@@ -85,4 +63,3 @@ back to the original structure."
   [group-of-groups]
   (smallest-alignment-rmsd-sum
    (alignments-over-all-groups group-of-groups)))
-

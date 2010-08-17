@@ -1,7 +1,7 @@
 (ns alijn.combinatorics-test
   (:use [alijn.combinatorics] :reload-all)
   (:use [clojure.test]
-	[clj-todo.todo]))
+	clj-todo))
 
 (deftest test-shorter-permutations
   (is (= '(()) (shorter-permutations [1 2] 0)))

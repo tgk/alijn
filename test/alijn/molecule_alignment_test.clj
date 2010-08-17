@@ -1,7 +1,7 @@
 (ns alijn.molecule-alignment-test
-  (:use [alijn.molecule-alignment] :reload-all)
+  (:use [alijn molecule-alignment utils] :reload-all)
   (:use [clojure.test]
-	[clj-todo.todo])
+	clj-todo)
   (:import [javax.vecmath Point3d]))
 
 (def p1 (Point3d. 1 2 3))

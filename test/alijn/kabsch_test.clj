@@ -1,7 +1,7 @@
 (ns alijn.kabsch-test
-  (:use [alijn.kabsch] :reload-all)
-  (:use [clojure.test]
-	[clj-todo.todo])
+  (:use [alijn.kabsch] :reload-all
+	[clojure.test]
+	clj-todo)
   (:import [Jama Matrix]
 	   [javax.vecmath Point3d]))
 

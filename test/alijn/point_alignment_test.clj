@@ -1,7 +1,7 @@
 (ns alijn.point-alignment-test
   (:use [alijn.point-alignment] :reload-all)
   (:use [clojure.test]
-	[clj-todo.todo])
+	clj-todo)
   (:import [javax.vecmath Point3d]))
 
 (deftest test-partition-using-sizes

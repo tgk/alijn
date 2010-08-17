@@ -91,14 +91,17 @@ outputting the result to a sdf file."
     [[samples s  "Number of samples to use"]
      [all? a?    "Iterate over all pairs of combinations, don't sample"]
      [output o   "Output sdf file" nil]
-     [features f "Feature file of smarts strings"]
+     [feature-file f "Feature file of smarts strings"]
+     [phase-file p "PHASE feature file"]
      filenames]
 
-    (let [aligner (cond 
+    (let [custom-features (if feature-file (parse-features feature-file) {})
+	  phase-features (if phase-file (parse-phase-features phase-file) {})
+	  features (merge-with concat custom-features phase-features)
+	  aligner (cond 
 		   samples (optimal-alignment-over-sampled-conformations 
 			    (Integer/parseInt samples))
 		   all? optimal-alignment-over-all-conformations)
-	  features (parse-features features)
 	  optimal-alignment (extract-features-and-align
 			     aligner filenames features)
 	  no-solution? (contains? (map :no-solution 

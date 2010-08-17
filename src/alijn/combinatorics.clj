@@ -31,8 +31,8 @@ Might start with submitting it to mailing list"
 
 (defn all-grouped-pairs
   "See alijn.combinatorics-test for an example usage."
-  [reference-groups target-groups]
-  (let [blergh (->> (map all-pairs reference-groups target-groups)
+  [colls-1 colls-2]
+  (let [blergh (->> (map all-pairs colls-1 colls-2)
 		    (apply cartesian-product))]
     (map 
      vector
