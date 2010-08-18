@@ -59,38 +59,39 @@
   (letfn [(extract-row [i] (Point3d. (.get matrix i 0) (.get matrix i 1) (.get matrix i 2)))]
     (map extract-row (range (.getRowDimension matrix)))))
 
-(defn rmsd 
-  "Calculates the root mean square deviasion."
-  [points-1 points-2]
-  (let [distances (map #(.distance %1 %2) points-1 points-2)
-	s (reduce + distances)]
-    (Math/sqrt s)))
-
-;;; Putting it all together
+;;; Kabsch
 (defn kabsch 
   "Performs Kabschs algorithm for minimising the rmsd between the two point colls.
 The result is the new positions for the points in the second point collection.
 The points are assumed to be centered around some appropiate center of mass."
-  [points-1 points-2]
-  (let [P (points-to-matrix points-1)
-	Q (points-to-matrix points-2)
+  [constant-points variable-points]
+  (let [P (points-to-matrix constant-points)
+	Q (points-to-matrix variable-points)
 	rotation (optimal-rotation P Q)
 	Q-rotated (.times Q rotation)
-	points-2-transformed (matrix-to-points Q-rotated)
-	rotation-rmsd (rmsd points-1 points-2-transformed)]
+	variable-points-transformed (matrix-to-points Q-rotated)
+	rotation-rmsd (rmsd constant-points variable-points-transformed)]
     {:rotation rotation,
-     :rotated-points points-2-transformed,
+     :rotated-points variable-points-transformed,
      :rmsd rotation-rmsd}))
 
 ;;; Translated Kabsch
-
 (defn kabsch-with-translation
-  "Performs Kabsch algorithm, but first centers the second set
-of points around the firsts center of mass."
-  [points-1 points-2]
-  (let [translation (vec-sub (vec-center points-1) (vec-center points-2))
-	translated-points (move-points points-2 translation)]
-    (assoc
-	(kabsch points-1 translated-points)
-      :translation translation
-      :translated-points translated-points)))
+  "Performs Kabsch algorithm, but first centers the two set of points
+around zero according to their center of mass.
+The moved and rotated set of variable points is then moved back into 
+the constant set of points center of mass afterwards."
+  [constant-points variable-points]
+  (let [constant-center (vec-center constant-points)
+	variable-center (vec-center variable-points)
+	constant-translated (move-points constant-points (neg constant-center))
+	variable-translated (move-points variable-points (neg variable-center))
+	rotated (kabsch constant-translated variable-translated)
+	variable-in-same-frame-as-constant (move-points
+					    (:rotated-points rotated)
+					    constant-center)]
+    {:rotation (:rotation rotated)
+     :rmsd (:rmsd rotated)
+     :constant-center constant-center
+     :variable-center variable-center
+     :moved-variable variable-in-same-frame-as-constant}))

@@ -1,38 +1,50 @@
 (ns alijn.colored-point-alignment
-    (:use [alijn kabsch utils]))
+    (:use [alijn kabsch utils combinatorics]))
 
 ; Algortihms return type:
 (defstruct single-alignment-result 
   :rmsd 
-  :translation :rotation
+  :constant-translation :variable-translation
+  :rotation
   :selected-constant :selected-variable
   :moved-variable)
 
-; Exhaustive algorithm:
-(defn exhaustive-point-alignment
-  [constant-points variable-points]
+; Sceletion alignment method, requires a function for selecting grouped pairs
+(defn sceleton-point-alignment
+  [select-grouped-pairs constant-points variable-points]
   (apply min-key 
 	 :rmsd
 	 (for [[selected-constant selected-variable]
-	       (all-grouped-pairs constant-points variable-points)]
-	   (let [[flat-constant unflat-constant] (flatten-group constant-points)
-		 [flat-variable unflat-variable] (flatten-group variable-points)
+	       (select-grouped-pairs constant-points variable-points)]
+	   (let [[flat-constant unflat-constant] (flatten-groups selected-constant)
+		 [flat-variable unflat-variable] (flatten-groups selected-variable)
 		 alignment (kabsch-with-translation flat-constant flat-variable)]
-	     (struct (:rmsd alignment)
-		     (:translation alignment) (:rotation alignment)
+	     (struct single-alignment-result
+		     (:rmsd alignment)
+		     (:constant-translation alignment) 
+		     (:variable-translation alignment) 
+		     (:rotation alignment)
 		     selected-constant selected-variable
-		     (unflat-variable (:rotated-points alignment)))))))
+		     (unflat-variable (:moved-variable alignment)))))))
+
+; Exhaustive algorithm:
+(def exhaustive-point-alignment 
+     (partial sceleton-point-alignment all-grouped-pairs))
 
 ; Clique-based algorithm:
 (defn- clique-matches 
   [threshold colored-points-1 colored-points-2])
 
 (defn clique-based-point-alignment
-  [threshold contant-points variable-points])
+  [threshold constant-points variable-points]
+  (sceleton-point-alignment 
+   (partial clique-matches threshold)
+   constant-points variable-points))
 
 ; Wrapper for both methods
 ; Multimedthods for threshold vs. no threshold?
-; Can always refactor for that, forget for now
+; Can always refactor for that, forget for now.
+; Can also use multimethods to accept maps!
 (defn colored-point-alignment
   "Aligns colored points under a common translation and rotation.
 If threhold is false, all constant points of each color are paired

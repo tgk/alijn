@@ -10,6 +10,8 @@
   "u - v, where u and v are Point3d vectors."
   [u v] (doto (Point3d.) (.sub u v)))
 
+(defn neg [u] (vec-sub (Point3d. 0 0 0) u))
+
 (defn vec-center 
   "Finds the vector center for a seq of Point3d."
   [points]
@@ -21,7 +23,7 @@
   
 (defn move-points
   [points translation]
-  (map #(vec-add %1 translation) points))
+  (map (partial vec-add translation) points))
 
 (defn matrix-vector-product
   [matrix vector]
@@ -35,3 +37,17 @@
 (defn rotate-point
   [rotation point]
   (matrix-vector-product rotation point))
+
+(defn distance [u v] (.distance u v))
+(defn distance-squared [u v] (.distanceSquared u v))
+
+(defn average [coll]
+  (/ (reduce + coll) (count coll)))
+
+(defn rmsd 
+  "Calculates the root mean square deviation."
+  [points-1 points-2]
+  (assert (= (count points-1) (count points-2)))
+  (-> (map distance-squared points-1 points-2) 
+      average
+      Math/sqrt))

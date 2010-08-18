@@ -43,3 +43,15 @@
 (deftest test-kabsch-on-rmsds-with-non-perfect-possible-rotation
   (is (= 1.0 (:rmsd (kabsch test-5-points-1 test-5-points-2)))))
 
+(deftest test-kabsch-with-translation
+  (is (= 1
+	 (:rmsd
+	  (kabsch-with-translation
+	    [(Point3d. -5  2  0) (Point3d. -5 -2  0)]
+	    [(Point3d.  1  0  0) (Point3d. -1  0  0)]))))
+  (is (= 1
+	 (:rmsd
+	  (kabsch-with-translation
+	    [(Point3d. -5  2  0) (Point3d. -5 -2  0)]
+	    [(Point3d. 10 -3  0) (Point3d. 12 -3  0)])))))
+
