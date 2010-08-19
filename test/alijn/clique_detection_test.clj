@@ -1,6 +1,7 @@
 (ns alijn.clique-detection-test
   (:use [alijn.clique-detection] :reload-all)
   (:use [clojure.test]
+	[alijn utils]
 	clj-todo))
 
 (deftest test-node-distance
@@ -31,3 +32,16 @@
     (is (= {:c 0, :d 1, :e 1} (node-distances :c graph)))
     (is (= {:c 1, :d 0, :e 2} (node-distances :d graph)))
     (is (= {:c 1, :d 2, :e 0} (node-distances :e graph)))))
+
+
+
+(deftest test-correspondance-graph-from-graph
+
+  (is (= {[:a :x] []}
+	 (correspondance-graph-from-graph {:a []} {:x []})))
+  
+  (is (= {[:a :x] [[:b :y]] 
+	  [:a :y] [[:b :x]]
+	  [:b :x] }
+	 (correspondance-graph-from-graph
+	  {:a [:b], :b [:a]} {:x [:y], :y [:x]})

@@ -19,3 +19,9 @@ and are not returned in the map."
 	    result (assoc result node dist)]
 	(recur queue result))
       result)))
+
+(defn correspondance-graph-from-graph
+  [edges-1 edges-2]
+  (let [nodes-1 (keys edges-1)
+	nodes-2 (keys edges-2)]
+    {}))

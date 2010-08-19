@@ -31,6 +31,19 @@ of partition-by."
   (->> (partition-by pred coll)
        (filter (comp not pred first))))
 
+(defn double-linked-graph 
+  [& nodes]
+  (apply 
+   merge-with concat
+   (for [section (chop-using (partial = :stop) nodes)]
+     (case (count section)
+	   0 {}
+	   1 {(first section) []}
+	   (apply
+	    merge-with concat
+	    (for [[u v] (partition 2 1 section)]
+	      {u [v], v [u]}))))))
+
 (defn partition-using-sizes 
   "Partitions coll using the sizes from sizes."
   [sizes coll]
