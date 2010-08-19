@@ -23,4 +23,11 @@
     (is (= {:a 1, :b 0, :c 1, :d 2, :e 2} (node-distances :b graph)))
     (is (= {:a 2, :b 1, :c 0, :d 1, :e 1} (node-distances :c graph)))
     (is (= {:a 3, :b 2, :c 1, :d 0, :e 2} (node-distances :d graph)))
-    (is (= {:a 3, :b 2, :c 1, :d 2, :e 0} (node-distances :e graph)))))
+    (is (= {:a 3, :b 2, :c 1, :d 2, :e 0} (node-distances :e graph))))
+
+  (let [graph {:a [:b], :b [:a], :c [:d :e], :d [:c], :e [:c]}]
+    (is (= {:a 0, :b 1}       (node-distances :a graph)))
+    (is (= {:a 1, :b 0}       (node-distances :b graph)))
+    (is (= {:c 0, :d 1, :e 1} (node-distances :c graph)))
+    (is (= {:c 1, :d 0, :e 2} (node-distances :d graph)))
+    (is (= {:c 1, :d 2, :e 0} (node-distances :e graph)))))
