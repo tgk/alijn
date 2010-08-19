@@ -2,7 +2,9 @@
 
 (defn node-distances 
   "Returns a map from all nodes to their distance from the root.
-edges should, given a node, return its adjacent nodes."
+edges should, given a node, return its adjacent nodes.
+Unreachable nodes have undefined distances to the root
+and are not returned in the map."
   [root edges]
   (loop [queue [[root 0]]
 	 result {}]
