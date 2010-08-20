@@ -162,16 +162,18 @@
 			       [[:b :a] [:y :x]]]))))
 
 
+(defn- possible-pairings-from-graph-defs [def-1 def-2]
+  (possible-pairings
+   (correspondance-graph-from-graph
+    (apply undirected-graph def-1) 
+    (apply undirected-graph def-2))))
 
 (deftest test-possible-pairings
 
   (is (same-pairings?
        [[[:a] [:x]]
 	[[:b] [:x]]]
-       (possible-pairings
-	(correspondance-graph-from-graph 
-	 (undirected-graph :a :b)
-	 (undirected-graph :x)))))
+       (possible-pairings-from-graph-defs [:a :b] [:x])))
        
   (is (same-pairings? 
        [[[:a :b] [:x :y]]
@@ -186,10 +188,7 @@
 	[[:a :b] [:z :y]]
 	[[:a :c] [:z :y]]
 	[[:a :d] [:z :y]]]
-       (possible-pairings
-	(correspondance-graph-from-graph
-	 (undirected-graph :b :a :d :stop :a :c)
-	 (undirected-graph :x :y :z)))))
+       (possible-pairings-from-graph-defs [:b :a :d :stop :a :c] [:x :y :z])))
 
   (is (same-pairings?
        [[[:a :b] [:x :y]]
@@ -198,7 +197,72 @@
 	[[:a :c] [:y :x]]
 	[[:b :c] [:x :y]]
 	[[:b :c] [:y :x]]]
-       (possible-pairings
-	(correspondance-graph-from-graph
-	 (undirected-graph :a :b :c :a)
-	 (undirected-graph :x :y))))))
+       (possible-pairings-from-graph-defs [:a :b :c :a] [:x :y]))))
+
+(deftest test-possible-pairings-duplets
+  (is (same-pairings?
+       [[[:a :b] [:x :y]]
+	[[:a :b] [:y :x]]]
+       (possible-pairings-from-graph-defs [:a :stop :b] [:x :stop :y])))
+  (is (same-pairings?
+       [[[:a :b] [:x :y]]
+	[[:a :b] [:y :x]]]
+       (possible-pairings-from-graph-defs [:a :b] [:x :y])))
+  (is (same-pairings?
+       [[[:a] [:x]]
+	[[:a] [:y]]
+	[[:b] [:x]]
+	[[:b] [:y]]]
+       (possible-pairings-from-graph-defs [:a :stop :b] [:x :y]))))
+
+(deftest test-possible-pairings-triplets
+  (is (same-pairings?
+       [[[:a :b :c] [:x :y :z]]
+	[[:a :b :c] [:y :z :x]]
+	[[:a :b :c] [:z :x :y]]]
+       (possible-pairings-from-graph-defs [:a :b :c :a] [:x :y :z :x])))
+
+  (is (same-pairings?
+       [[[:a :b] [:x :y]]
+	[[:a :b] [:x :z]]
+	[[:a :b] [:y :x]]
+	[[:a :b] [:y :z]]
+	[[:a :b] [:z :x]]
+	[[:a :b] [:z :y]]
+	[[:b :c] [:x :y]]
+	[[:b :c] [:x :z]]
+	[[:b :c] [:y :x]]
+	[[:b :c] [:y :z]]
+	[[:b :c] [:z :x]]
+	[[:b :c] [:z :y]]]
+       (possible-pairings-from-graph-defs [:a :b :c] [:x :y :z :x])))
+
+  (is (same-pairings?
+       [[[:a :b :c] [:x :y :z]]
+	[[:a :b :c] [:y :x :z]]
+	[[:a :b :c] [:z :y :x]]
+	[[:a :b :c] [:y :z :x]]
+	[[:a :b :c] [:x :z :y]]
+	[[:a :b :c] [:z :x :y]]]
+       (possible-pairings-from-graph-defs [:a :b :stop :c] [:x :y :z :x])))
+
+  (is (same-pairings?
+       [[[:a :b] [:x :y]]
+	[[:a :b] [:y :x]]
+	[[:a :b] [:y :z]]
+	[[:a :b] [:z :y]]
+	[[:b :c] [:x :y]]
+	[[:b :c] [:y :x]]
+	[[:b :c] [:y :z]]
+	[[:b :c] [:z :y]]]
+       (possible-pairings-from-graph-defs [:a :b :c] [:x :y :z])))
+
+  (is (same-pairings?
+       [[[:a :b :c] [:x :y :z]]
+	[[:a :b :c] [:y :x :z]]
+	[[:a :c] [:x :z]]
+	[[:a :c] [:y :z]]
+	[[:b :c] [:x :z]]
+	[[:b :c] [:y :z]]]
+       (possible-pairings-from-graph-defs [:a :b :stop :c] [:x :y :stop :z]))))
+
