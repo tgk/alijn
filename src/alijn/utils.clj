@@ -31,7 +31,7 @@ of partition-by."
   (->> (partition-by pred coll)
        (filter (comp not pred first))))
 
-(defn double-linked-graph 
+(defn undirected-graph 
   [& nodes]
   (apply 
    merge-with concat
@@ -65,3 +65,7 @@ back to the original structure."
 	sizes (map count groups)
 	unflattener (partial partition-using-sizes sizes)]
     [flattened-groups unflattener]))
+
+(defn same-elements? [coll-1 coll-2]
+  (= (group-by identity coll-1)
+     (group-by identity coll-2)))

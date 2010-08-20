@@ -1,23 +1,23 @@
-(ns alijn.clique-detection)
+(ns alijn.clique-detection
+  (:use [bron-kerbosch]))
 
-(defn node-distances 
+(defn node-distances
   "Returns a map from all nodes to their distance from the root.
 edges should, given a node, return its adjacent nodes.
 Unreachable nodes have undefined distances to the root
 and are not returned in the map."
   [root edges]
   (loop [queue [[root 0]]
-	 result {}]
+	 result {}
+	 seen? #{root}]
     (if (seq queue)
       (let [[node dist] (first queue)
+	    unvisited-neighbours (filter (comp not seen?) (edges node))
+	    seen? (into seen? unvisited-neighbours)
 	    queue (concat (rest queue) 
-			  (for [neigh (edges node) 
-				:when (and
-				       (not (contains? result neigh))
-				       (not (contains? queue neigh)))] 
-			    [neigh (inc dist)]))
+			  (for [neigh unvisited-neighbours] [neigh (inc dist)]))
 	    result (assoc result node dist)]
-	(recur queue result))
+	(recur queue result seen?))
       result)))
 
 (defn correspondance-graph-from-graph
@@ -36,3 +36,9 @@ and are not returned in the map."
 		 :when (and (not= a b) (not= u v)
 			    (= (dist-1 a b) (dist-2 u v)))]
 	     {[a u] [[b v]]}))))
+
+(defn possible-pairings
+  [correspondance-graph]
+  (let [nodes (keys correspondance-graph)]
+    (for [cliques (maximum-cliques nodes correspondance-graph)]
+      [(map first cliques) (map second cliques)])))
