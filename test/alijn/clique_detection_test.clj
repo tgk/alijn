@@ -106,7 +106,8 @@
   (is (= 
        (map-on-values 
 	set
-	(undirected-graph [:c :y] [:a :x] [:b :y] [:c :x] [:a :y] [:b :x] [:c :y]))
+	(undirected-graph [:a :x] [:b :y] [:c :x] 
+			  [:a :y] [:b :x] [:c :y] [:a :x]))
        (map-on-values 
 	set 
 	(correspondance-graph-from-graph
@@ -114,9 +115,57 @@
 	 (undirected-graph :x :y))))))
 
 
+(defn- same-pairing?
+  [pairing-1 pairing-2]
+  (= (apply zipmap pairing-1)
+     (apply zipmap pairing-2)))
+
+(deftest test-same-pairing?
+  (is (true?  (same-pairing? [[:a] [:x]] [[:a] [:x]])))
+  (is (false? (same-pairing? [[:a] [:x]] [[:a] [:y]])))
+  (is (true?  (same-pairing? [[:a :b] [:x :y]] [[:a :b] [:x :y]])))
+  (is (true?  (same-pairing? [[:a :b] [:x :y]] [[:b :a] [:y :x]])))
+  (is (false? (same-pairing? [[:a :b] [:x :y]] [[:b :a] [:x :y]])))
+  (is (true?  (same-pairing? [[:a :b :c] [:x :y :z]] [[:a :c :b] [:x :z :y]])))
+  (is (false? (same-pairing? [[:a :b :c] [:x :y :z]] [[:a :b :c] [:x :z :y]]))))
+
+(defn- same-pairings?
+  [pairings-1 pairings-2]
+  (and 
+   (= (count pairings-1) (count pairings-2))
+   (every? 
+    (fn [pairing-1] 
+      (some (partial same-pairing? pairing-1) pairings-2))
+    pairings-1)))
+
+(deftest test-same-pairings?
+  (is (true?  (same-pairings? [[[] []]]
+			      [[[] []]])))
+  (is (true?  (same-pairings? [[[] []] [[] []]]
+			      [[[] []] [[] []]])))
+  (is (true?  (same-pairings? [[[:a :b] [:x :y]] [[:a :b] [:y :x]]]
+			      [[[:a :b] [:y :x]] [[:a :b] [:x :y]]])))
+  (is (false? (same-pairings? [[[:a :b] [:x :y]] [[:a :b] [:y :x]]]
+			      [[[:a :b] [:y :x]] [[:a :b] [:x :z]]])))
+  (is (false? (same-pairings? [[[:a :b] [:x :y]] 
+			       [[:a :b] [:y :x]] 
+			       [[:a :b] [:x :z]]]
+			      [[[:a :b] [:y :x]] 
+			       [[:a :b] [:x :y]]])))
+  (is (true?  (same-pairings? [[[:a :b] [:x :y]] 
+			       [[:a :b] [:z :x]]]
+			      [[[:a :b] [:z :x]]
+			       [[:b :a] [:y :x]]])))
+  (is (true?  (same-pairings? [[[:a :b] [:x :y]] 
+			       [[:a :b] [:z :x]]]
+			      [[[:a :b] [:z :x]]
+			       [[:b :a] [:y :x]]]))))
+
+
+
 (deftest test-possible-pairings
 
-  (is (same-elements?
+  (is (same-pairings?
        [[[:a] [:x]]
 	[[:b] [:x]]]
        (possible-pairings
@@ -124,7 +173,7 @@
 	 (undirected-graph :a :b)
 	 (undirected-graph :x)))))
        
-  (is (same-elements? 
+  (is (same-pairings? 
        [[[:a :b] [:x :y]]
 	[[:a :c] [:x :y]]
 	[[:a :d] [:x :y]]
@@ -142,7 +191,7 @@
 	 (undirected-graph :b :a :d :stop :a :c)
 	 (undirected-graph :x :y :z)))))
 
-  (is (same-elements?
+  (is (same-pairings?
        [[[:a :b] [:x :y]]
 	[[:a :b] [:y :x]]
 	[[:a :c] [:x :y]]
