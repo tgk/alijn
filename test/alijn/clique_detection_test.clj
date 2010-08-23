@@ -40,79 +40,62 @@
     (is (= {:a 1, :b 1, :c 0} (node-distances :c graph)))))
 
 
+(defn same-graph? [graph-1 graph-2]
+  "Only works if nodes are exactly the same and graphs are edge maps."
+  (= (map-on-values set graph-1)
+     (map-on-values set graph-2)))
 
 (deftest test-correspondance-graph-from-graph
 
-  (is (= (undirected-graph [:a :x])
-	 (correspondance-graph-from-graph {:a []} {:x []})))
+  (is (same-graph?
+       (undirected-graph [:a :x])
+       (correspondance-graph-from-graph {:a []} {:x []})))
   
-  (is (= (undirected-graph [:a :x] [:b :y] :stop
-			      [:a :y] [:b :x])
-	 (correspondance-graph-from-graph
-	  (undirected-graph :a :b)
-	  (undirected-graph :x :y))))
+  (is (same-graph?
+       (undirected-graph [:a :x] [:b :y] :stop
+			 [:a :y] [:b :x])
+       (correspondance-graph-from-graph
+	(undirected-graph :a :b)
+	(undirected-graph :x :y))))
 
-  (let [g1 (undirected-graph :a :b :stop :a :c :stop :a :d)
-	g2 (undirected-graph :x :y :z)]
-    (is (= {[:a :x] '([:d :y] [:c :y] [:b :y]),
-	    [:d :z] '([:c :x] [:a :y] [:b :x]),
-	    [:d :y] '([:a :z] [:a :x]),
-	    [:d :x] '([:c :z] [:a :y] [:b :z]),
-	    [:b :z] '([:d :x] [:c :x] [:a :y]),
-	    [:c :z] '([:d :x] [:a :y] [:b :x]),
-	    [:b :y] '([:a :z] [:a :x]),
-	    [:c :y] '([:a :z] [:a :x]),
-	    [:b :x] '([:d :z] [:c :z] [:a :y]),
-	    [:c :x] '([:d :z] [:a :y] [:b :z]),
-	    [:a :z] '([:d :y] [:c :y] [:b :y]),
-	    [:a :y] '([:d :z] [:d :x] [:c :z] [:c :x] [:b :z] [:b :x])}
-	   (correspondance-graph-from-graph g1 g2)))
-    (is (= 
-	 (map-on-values 
-	  set 
-	  {[:a :x] '([:d :y] [:c :y] [:b :y]),
-	   [:d :z] '([:c :x] [:a :y] [:b :x]),
-	   [:d :y] '([:a :z] [:a :x]),
-	   [:d :x] '([:c :z] [:a :y] [:b :z]),
-	   [:b :z] '([:d :x] [:c :x] [:a :y]),
-	   [:c :z] '([:d :x] [:a :y] [:b :x]),
-	   [:b :y] '([:a :z] [:a :x]),
-	   [:c :y] '([:a :z] [:a :x]),
-	   [:b :x] '([:d :z] [:c :z] [:a :y]),
-	   [:c :x] '([:d :z] [:a :y] [:b :z]),
-	   [:a :z] '([:d :y] [:c :y] [:b :y]),
-	   [:a :y] '([:d :z] [:d :x] [:c :z] [:c :x] [:b :z] [:b :x])})
-	 (map-on-values
-	  set
-	  (correspondance-graph-from-graph g1 g2))))
-    (is (= 
-	 (map-on-values 
-	  set 
-	  (undirected-graph [:a :x] [:b :y] [:a :z] :stop
-			    [:a :x] [:c :y] [:a :z] :stop
-			    [:a :x] [:d :y] [:a :z] :stop
-			    [:a :y] [:b :x] :stop
-			    [:a :y] [:c :x] :stop
-			    [:a :y] [:d :x] :stop
-			    [:a :y] [:b :z] :stop
-			    [:a :y] [:c :z] :stop
-			    [:a :y] [:d :z] :stop
-			    [:b :x] [:c :z] [:d :x] 
-			    [:b :z] [:c :x] [:d :z] [:b :x]))
-	 (map-on-values
-	  set
-	  (correspondance-graph-from-graph g1 g2)))))
+  (is (same-graph?
+       (undirected-graph [:a :x] [:b :y] [:a :z] :stop
+			 [:a :x] [:c :y] [:a :z] :stop
+			 [:a :x] [:d :y] [:a :z] :stop
+			 [:a :y] [:b :x] :stop
+			 [:a :y] [:c :x] :stop
+			 [:a :y] [:d :x] :stop
+			 [:a :y] [:b :z] :stop
+			 [:a :y] [:c :z] :stop
+			 [:a :y] [:d :z] :stop
+			 [:b :x] [:c :z] [:d :x] 
+			 [:b :z] [:c :x] [:d :z] [:b :x])
+       (correspondance-graph-from-graph 
+	(undirected-graph :a :b :stop :a :c :stop :a :d)
+	(undirected-graph :x :y :z))))
 
-  (is (= 
-       (map-on-values 
-	set
-	(undirected-graph [:a :x] [:b :y] [:c :x] 
-			  [:a :y] [:b :x] [:c :y] [:a :x]))
-       (map-on-values 
-	set 
-	(correspondance-graph-from-graph
-	 (undirected-graph :a :b :c :a)
-	 (undirected-graph :x :y))))))
+  (is (same-graph? 
+       (undirected-graph [:a :x] [:b :y] [:c :x] 
+			 [:a :y] [:b :x] [:c :y] [:a :x])
+       (correspondance-graph-from-graph
+	(undirected-graph :a :b :c :a)
+	(undirected-graph :x :y)))))
+
+(deftest test-correspondance-graph-on-triplets
+  (is (same-graph?
+       (undirected-graph [:a :x] [:b :y] [:a :z] [:b :x] [:a :y] [:b :z] [:a :x]
+			 :stop [:c :x] :stop [:c :y] :stop [:c :z])
+       (correspondance-graph-from-graph
+	(undirected-graph :a :b :stop :c)
+	(undirected-graph :x :y :z :x))))
+  (is (same-graph?
+       (undirected-graph [:a :x] [:b :y] [:c :z] [:a :x] :stop
+			 [:a :y] [:b :x] [:c :z] [:a :y] :stop
+			 [:a :z] [:c :x] [:b :z] :stop 
+			 [:a :z] [:c :y] [:b :z] :stop)
+       (correspondance-graph-from-graph
+	(undirected-graph :a :b :stop :c)
+	(undirected-graph :x :y :stop :z)))))
 
 
 (defn- same-pairing?
@@ -218,8 +201,11 @@
 (deftest test-possible-pairings-triplets
   (is (same-pairings?
        [[[:a :b :c] [:x :y :z]]
+	[[:a :b :c] [:x :z :y]]
 	[[:a :b :c] [:y :z :x]]
-	[[:a :b :c] [:z :x :y]]]
+	[[:a :b :c] [:y :x :z]]
+	[[:a :b :c] [:z :x :y]]
+	[[:a :b :c] [:z :y :x]]]
        (possible-pairings-from-graph-defs [:a :b :c :a] [:x :y :z :x])))
 
   (is (same-pairings?
@@ -238,31 +224,31 @@
        (possible-pairings-from-graph-defs [:a :b :c] [:x :y :z :x])))
 
   (is (same-pairings?
-       [[[:a :b :c] [:x :y :z]]
-	[[:a :b :c] [:y :x :z]]
-	[[:a :b :c] [:z :y :x]]
-	[[:a :b :c] [:y :z :x]]
-	[[:a :b :c] [:x :z :y]]
-	[[:a :b :c] [:z :x :y]]]
+       [[[:a :b] [:x :y]]
+	[[:a :b] [:y :x]]
+	[[:a :b] [:z :y]]
+	[[:a :b] [:y :z]]
+	[[:a :b] [:x :z]]
+	[[:a :b] [:z :x]]
+	[[:c] [:x]]
+	[[:c] [:y]]
+	[[:c] [:z]]]
        (possible-pairings-from-graph-defs [:a :b :stop :c] [:x :y :z :x])))
 
   (is (same-pairings?
-       [[[:a :b] [:x :y]]
-	[[:a :b] [:y :x]]
-	[[:a :b] [:y :z]]
-	[[:a :b] [:z :y]]
-	[[:b :c] [:x :y]]
-	[[:b :c] [:y :x]]
-	[[:b :c] [:y :z]]
-	[[:b :c] [:z :y]]]
+       [[[:a :b :c] [:x :y :z]]
+	[[:a :b]    [:y :x]]
+	[[:a :b]    [:y :z]]
+	[[:a :b :c] [:z :y :x]]
+	[[:b :c]    [:x :y]]
+	[[:b :c]    [:z :y]]]
        (possible-pairings-from-graph-defs [:a :b :c] [:x :y :z])))
 
   (is (same-pairings?
        [[[:a :b :c] [:x :y :z]]
 	[[:a :b :c] [:y :x :z]]
-	[[:a :c] [:x :z]]
-	[[:a :c] [:y :z]]
-	[[:b :c] [:x :z]]
-	[[:b :c] [:y :z]]]
+	[[:a :c] [:z :x]]
+	[[:a :c] [:z :y]]
+	[[:b :c] [:z :x]]
+	[[:b :c] [:z :y]]]
        (possible-pairings-from-graph-defs [:a :b :stop :c] [:x :y :stop :z]))))
-
