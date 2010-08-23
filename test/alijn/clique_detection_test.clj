@@ -83,8 +83,8 @@
 
 (deftest test-correspondance-graph-on-triplets
   (is (same-graph?
-       (undirected-graph [:a :x] [:b :y] [:a :z] [:b :x] [:a :y] [:b :z] [:a :x]
-			 :stop [:c :x] :stop [:c :y] :stop [:c :z])
+       (undirected-graph [:a :x] [:b :y] [:a :z] [:b :x] [:a :y] [:b :z] [:a :x] :stop
+			 [:c :x] :stop [:c :y] :stop [:c :z])
        (correspondance-graph-from-graph
 	(undirected-graph :a :b :stop :c)
 	(undirected-graph :x :y :z :x))))
