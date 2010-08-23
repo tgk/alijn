@@ -20,7 +20,7 @@ and are not returned in the map."
 	(recur queue result seen?))
       result)))
 
-(defn correspondance-graph-from-graph
+(defn correspondance-graph-from-graphs
   [edges-1 edges-2]
   (let [nodes-1 (keys edges-1)
 	nodes-2 (keys edges-2)

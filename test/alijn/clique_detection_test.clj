@@ -45,16 +45,16 @@
   (= (map-on-values set graph-1)
      (map-on-values set graph-2)))
 
-(deftest test-correspondance-graph-from-graph
+(deftest test-correspondance-graph-from-graphs
 
   (is (same-graph?
        (undirected-graph [:a :x])
-       (correspondance-graph-from-graph {:a []} {:x []})))
+       (correspondance-graph-from-graphs {:a []} {:x []})))
   
   (is (same-graph?
        (undirected-graph [:a :x] [:b :y] :stop
 			 [:a :y] [:b :x])
-       (correspondance-graph-from-graph
+       (correspondance-graph-from-graphs
 	(undirected-graph :a :b)
 	(undirected-graph :x :y))))
 
@@ -70,14 +70,14 @@
 			 [:a :y] [:d :z] :stop
 			 [:b :x] [:c :z] [:d :x] 
 			 [:b :z] [:c :x] [:d :z] [:b :x])
-       (correspondance-graph-from-graph 
+       (correspondance-graph-from-graphs 
 	(undirected-graph :a :b :stop :a :c :stop :a :d)
 	(undirected-graph :x :y :z))))
 
   (is (same-graph? 
        (undirected-graph [:a :x] [:b :y] [:c :x] 
 			 [:a :y] [:b :x] [:c :y] [:a :x])
-       (correspondance-graph-from-graph
+       (correspondance-graph-from-graphs
 	(undirected-graph :a :b :c :a)
 	(undirected-graph :x :y)))))
 
@@ -85,7 +85,7 @@
   (is (same-graph?
        (undirected-graph [:a :x] [:b :y] [:a :z] [:b :x] [:a :y] [:b :z] [:a :x] :stop
 			 [:c :x] :stop [:c :y] :stop [:c :z])
-       (correspondance-graph-from-graph
+       (correspondance-graph-from-graphs
 	(undirected-graph :a :b :stop :c)
 	(undirected-graph :x :y :z :x))))
   (is (same-graph?
@@ -93,7 +93,7 @@
 			 [:a :y] [:b :x] [:c :z] [:a :y] :stop
 			 [:a :z] [:c :x] [:b :z] :stop 
 			 [:a :z] [:c :y] [:b :z] :stop)
-       (correspondance-graph-from-graph
+       (correspondance-graph-from-graphs
 	(undirected-graph :a :b :stop :c)
 	(undirected-graph :x :y :stop :z)))))
 
@@ -147,7 +147,7 @@
 
 (defn- possible-pairings-from-graph-defs [def-1 def-2]
   (possible-pairings
-   (correspondance-graph-from-graph
+   (correspondance-graph-from-graphs
     (apply undirected-graph def-1) 
     (apply undirected-graph def-2))))
 
@@ -208,7 +208,7 @@
 	[[:a :b :c] [:z :y :x]]]
        (possible-pairings-from-graph-defs [:a :b :c :a] [:x :y :z :x])))
 
-  (is (same-pairings?
+  (is (same-pairings?			
        [[[:a :b] [:x :y]]
 	[[:a :b] [:x :z]]
 	[[:a :b] [:y :x]]
