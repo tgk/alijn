@@ -1,5 +1,6 @@
 (ns alijn.clique-detection
-  (:use [bron-kerbosch]))
+  (:use [bron-kerbosch]
+	[clojure.contrib.combinatorics]))
 
 (defn node-distances
   "Returns a map from all nodes to their distance from the root.
@@ -42,3 +43,7 @@ and are not returned in the map."
   (let [nodes (keys correspondance-graph)]
     (for [cliques (maximum-cliques nodes correspondance-graph)]
       [(map first cliques) (map second cliques)])))
+
+(defn possible-pairings-of-multiple-correspondance-graphs
+  [& correspondance-graphs]
+  (apply cartesian-product (map possible-pairings correspondance-graphs)))

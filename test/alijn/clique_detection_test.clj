@@ -110,7 +110,12 @@
   (is (true?  (same-pairing? [[:a :b] [:x :y]] [[:b :a] [:y :x]])))
   (is (false? (same-pairing? [[:a :b] [:x :y]] [[:b :a] [:x :y]])))
   (is (true?  (same-pairing? [[:a :b :c] [:x :y :z]] [[:a :c :b] [:x :z :y]])))
-  (is (false? (same-pairing? [[:a :b :c] [:x :y :z]] [[:a :b :c] [:x :z :y]]))))
+  (is (false? (same-pairing? [[:a :b :c] [:x :y :z]] [[:a :b :c] [:x :z :y]])))
+
+  (is (true?  (same-pairing? [[] []] [[] []])))
+  (is (false? (same-pairing? [[:a] [:b]] [[] []])))
+  (is (false? (same-pairing? [[] []] [[:a] [:b]])))
+  (is (true?  (same-pairing? [[:a] [:a]] [[:a] [:a]]))))
 
 (defn- same-pairings?
   [pairings-1 pairings-2]
@@ -252,3 +257,95 @@
 	[[:b :c] [:z :x]]
 	[[:b :c] [:z :y]]]
        (possible-pairings-from-graph-defs [:a :b :stop :c] [:x :y :stop :z]))))
+
+
+(defn same-colored-pairing?
+  [pairings-1 pairings-2]
+  (every? (partial apply same-pairing?) (map vector pairings-1 pairings-2)))
+
+(deftest test-same-colored-pairing?
+  (is (same-colored-pairing?
+       [[[] []]] [[[] []]]))
+  (is (same-colored-pairing?
+       [[[] []] [[] []]] [[[] []] [[] []]]))
+  (is (not (same-colored-pairing?
+       [[[:a] [:b]]] [[[] []]])))
+  (is (not (same-colored-pairing?
+       [[[] []]] [[[:a] [:b]]])))
+  (is (same-colored-pairing? 
+    [[[:a :b :c] [:x :y :z]] [[:u :v] [:i :j]]]
+    [[[:c :b :a] [:z :y :x]] [[:u :v] [:i :j]]]))
+  (is (not 
+       (same-colored-pairing?
+	[[[:a :b :c] [:x :y :z]] [[:u :v] [:i :j]]]
+	[[[:c :b :a] [:x :y :z]] [[:u :v] [:i :j]]]))))
+
+(defn same-multiple-pairings?
+  [pairings-1 pairings-2]
+  (matching-elements? same-colored-pairing? pairings-1 pairings-2))
+
+(deftest test-same-multiple-pairings?
+  (is (same-multiple-pairings?
+       [[[[:a :b] [:x :y]] [[:i] [:u]]]
+	[[[:a :b] [:y :x]] [[:j] [:u]]]]
+       [[[[:b :a] [:x :y]] [[:j] [:u]]]
+	[[[:a :b] [:x :y]] [[:i] [:u]]]]))
+  (is (not       
+       (same-multiple-pairings?
+	[[[[:a :b] [:x :y]] [[:i] [:u]]]
+	 [[[:a :b] [:y :x]] [[:j] [:u]]]]
+	[[[[:a :b] [:x :y]] [[:j] [:u]]]
+	 [[[:a :b] [:x :y]] [[:i] [:u]]]])))
+  (is (not       
+       (same-multiple-pairings?
+	[[[[:a :b] [:x :y]] [[:i] [:u]]]
+	 [[[:a :b] [:y :x]] [[:j] [:u]]]]
+	[[[[:a :b] [:x :y]] [[:j] [:u]]]
+	 [[[:a :b] [:y :x]] [[:i] [:u]] [:f :g] [:n :m]]])))
+  (is (same-multiple-pairings?
+       [[[[:a :b] [:x :y]] [[] []]]
+	[[[:a :b] [:y :x]] [[:j] [:u]]]]
+       [[[[:b :a] [:x :y]] [[:j] [:u]]]
+	[[[:a :b] [:x :y]] [[] []]]])))
+
+(deftest test-possible-pairings-of-multiple-correspondance-graphs
+  (is (same-multiple-pairings?
+       [[[[:a :b] [:x :y]] [[:i] [:u]]]
+	[[[:a :b] [:x :y]] [[:i] [:v]]]
+	[[[:a :b] [:x :y]] [[:j] [:u]]]
+	[[[:a :b] [:x :y]] [[:j] [:v]]]
+	[[[:b :c] [:x :y]] [[:i] [:u]]]
+	[[[:b :c] [:x :y]] [[:i] [:v]]]
+	[[[:b :c] [:x :y]] [[:j] [:u]]]
+	[[[:b :c] [:x :y]] [[:j] [:v]]]
+	[[[:a :b] [:y :x]] [[:i] [:u]]]
+	[[[:a :b] [:y :x]] [[:i] [:v]]]
+	[[[:a :b] [:y :x]] [[:j] [:u]]]
+	[[[:a :b] [:y :x]] [[:j] [:v]]]
+	[[[:b :c] [:y :x]] [[:i] [:u]]]
+	[[[:b :c] [:y :x]] [[:i] [:v]]]
+	[[[:b :c] [:y :x]] [[:j] [:u]]]
+	[[[:b :c] [:y :x]] [[:j] [:v]]]]
+       (possible-pairings-of-multiple-correspondance-graphs
+	(correspondance-graph-from-graphs
+	 (undirected-graph :a :b :c)
+	 (undirected-graph :x :y))
+	(correspondance-graph-from-graphs
+	 (undirected-graph :i :j)
+	 (undirected-graph :u :stop :v)))))
+  (is (same-multiple-pairings?
+       [[[[:a :b] [:x :y]] [[:i :j] [:u :v]]]
+	[[[:a :b] [:x :y]] [[:i :j] [:v :u]]]
+	[[[:a :b] [:y :x]] [[:i :j] [:u :v]]]
+	[[[:a :b] [:y :x]] [[:i :j] [:v :u]]]
+	[[[:b :c] [:x :y]] [[:i :j] [:u :v]]]
+	[[[:b :c] [:x :y]] [[:i :j] [:v :u]]]
+	[[[:b :c] [:y :x]] [[:i :j] [:u :v]]]
+	[[[:b :c] [:y :x]] [[:i :j] [:v :u]]]]
+       (possible-pairings-of-multiple-correspondance-graphs
+	(correspondance-graph-from-graphs 
+	 (undirected-graph :a :b :c)
+	 (undirected-graph :x :y))
+	(correspondance-graph-from-graphs
+	 (undirected-graph :i :j)
+	 (undirected-graph :u :v))))))

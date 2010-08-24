@@ -32,6 +32,13 @@ of partition-by."
        (filter (comp not pred first))))
 
 (defn undirected-graph 
+  "Creates an undirected graph from a sequence of nodes.
+  Adjacent nodes are linked. A sequence of nodes can be
+  terminated with the keyword :stop. A node can occur
+  several times. The call
+  (undirected-graph :a :b :c :stop :b :d)
+  will generate a star topology with :b in the center.
+  The returned graph is a map from nodes to neighbours."
   [& nodes]
   (apply 
    merge-with concat
@@ -69,3 +76,24 @@ back to the original structure."
 (defn same-elements? [coll-1 coll-2]
   (= (group-by identity coll-1)
      (group-by identity coll-2)))
+
+(defn remove-first 
+  "Removes first element which satisfies pred."
+  [pred coll]
+  (concat (take-while (comp not pred) coll)
+	  (rest (drop-while (comp not pred) coll))))
+
+(defn matching-elements?
+  "Checks if every element from coll-1 matches an element from
+  coll-2. If (matches? a b) and (matches? b c) then (matches? a c).
+  A complete pairing from coll-1 to coll-2 must be possible."
+  [matches? coll-1 coll-2]
+  (loop [coll-1 coll-1
+	 coll-2 coll-2]
+    (if (not= (count coll-1) (count coll-2)) 
+      false
+      (if (= 0 (count coll-1))
+	true
+	(recur 
+	 (rest coll-1)
+	 (remove-first (partial matches? (first coll-1)) coll-2))))))
