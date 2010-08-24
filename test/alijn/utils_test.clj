@@ -22,6 +22,22 @@
   (is (= {:a [:b :d], :b [:a :c], :c [:b :d], :d [:c :a]} 
 	 (undirected-graph :a :b :c :d :a))))
 
+(deftest test-fully-connected-graph
+  (is (same-graph?
+       (fully-connected-graph :a :b)
+       (undirected-graph :a :b :stop :b :a)))
+  (is (same-graph?
+       (fully-connected-graph :a)
+       (undirected-graph :a)))
+  (is (same-graph?
+       (fully-connected-graph :a :b :c)
+       (undirected-graph :a :b :c :a :stop)))
+  (is (same-graph?
+       (fully-connected-graph :a :b :c :d)
+       (undirected-graph :a :b :c :d :a :stop
+			 :a :c :stop
+			 :b :d :stop))))
+
 (deftest test-partition-using-sizes
   (is (= [[:foo] [:bar :baz]] 
 	 (partition-using-sizes [1 2] [:foo :bar :baz])))

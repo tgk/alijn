@@ -31,6 +31,11 @@ of partition-by."
   (->> (partition-by pred coll)
        (filter (comp not pred first))))
 
+(defn same-graph? [graph-1 graph-2]
+  "Only works if nodes are exactly the same and graphs are edge maps."
+  (= (map-on-values set graph-1)
+     (map-on-values set graph-2)))
+
 (defn undirected-graph 
   "Creates an undirected graph from a sequence of nodes.
   Adjacent nodes are linked. A sequence of nodes can be
@@ -50,6 +55,12 @@ of partition-by."
 	    merge-with concat
 	    (for [[u v] (partition 2 1 section)]
 	      {u [v], v [u]}))))))
+
+(defn fully-connected-graph [& nodes]
+  (apply merge-with concat
+	 (concat
+	  (for [u nodes] {u []})
+	  (for [u nodes, v nodes :when (not= u v)] {u [v]}))))
 
 (defn partition-using-sizes 
   "Partitions coll using the sizes from sizes."

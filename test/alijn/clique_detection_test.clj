@@ -3,7 +3,8 @@
   (:use [clojure.test]
 	[alijn utils]
 	clojure.pprint
-	clj-todo))
+	clj-todo)
+  (:import [javax.vecmath Point3d]))
 
 (deftest test-node-distance
 
@@ -40,10 +41,22 @@
     (is (= {:a 1, :b 1, :c 0} (node-distances :c graph)))))
 
 
-(defn same-graph? [graph-1 graph-2]
-  "Only works if nodes are exactly the same and graphs are edge maps."
-  (= (map-on-values set graph-1)
-     (map-on-values set graph-2)))
+(deftest test-within?
+  (is (within? 0.5 1 1.4))
+  (is (not (within? 0.5 1 1.6)))
+  (is (within? 0.5 1 1.5))
+
+  (is (within? 0.5 1.4 1))
+  (is (not (within? 0.5 1.6 1)))
+  (is (within? 0.5 1.5 1))
+
+  (is (within? 0 0 0))
+  (is (within? 0 1 1))
+  (is (not (within? 0 1 2)))
+
+  (is (not (within? 1 1 nil)))
+  (is (not (within? 1 nil 1))))
+
 
 (deftest test-correspondance-graph-from-graphs
 
@@ -97,6 +110,107 @@
 	(undirected-graph :a :b :stop :c)
 	(undirected-graph :x :y :stop :z)))))
 
+(defn fully-connected-corresponsdance-graph
+  [nodes-1 nodes-2]
+  (apply merge-with concat
+	 (for [a nodes-1, b nodes-1, u nodes-2, v nodes-2 
+	       :when (and (not= a b) (not= u v))]
+	   {[a u] [[b v]]})))
+
+(deftest test-fully-connected-correspondance-graph
+  (is (same-graph?
+       (undirected-graph [:a :u] [:b :v] :stop
+			 [:a :v] [:b :u])
+       (fully-connected-corresponsdance-graph [:a :b] [:u :v])))
+  (is (same-graph?
+       (undirected-graph [:a :u] [:b :v] :stop
+			 [:a :u] [:c :v] :stop
+			 [:a :v] [:b :u] :stop
+			 [:a :v] [:c :u] :stop
+			 [:b :u] [:c :v] :stop
+			 [:b :v] [:c :u])
+       (fully-connected-corresponsdance-graph [:a :b :c] [:u :v]))))
+
+(deftest test-correspondance-graph-from-points
+  (let [a (Point3d.  0  0  0)
+	b (Point3d.  3  0  0)
+	c (Point3d.  6  0  0)
+	u (Point3d. 11  0  0)
+	v (Point3d. 14  0  0)
+	w (Point3d. 16  0  0)
+	points-1 [a b c]
+	points-2 [u v w]]
+    (is (same-graph?
+	 (undirected-graph [a u] :stop [b u] :stop [c u] :stop
+			   [a v] :stop [b v] :stop [c v] :stop
+			   [a w] :stop [b w] :stop [c w] :stop
+			   [a u] [b v] [c u] :stop
+			   [a v] [b u] [c v] :stop)
+	 (correspondance-graph-from-points 0 points-1 points-2)))
+    (is (same-graph?
+	 (undirected-graph [a u] :stop [b u] :stop [c u] :stop
+			   [a v] :stop [b v] :stop [c v] :stop
+			   [a w] :stop [b w] :stop [c w] :stop
+			   [a u] [b v] [c u] :stop
+			   [a v] [b u] [c v] :stop)
+	 (correspondance-graph-from-points 0.5 points-1 points-2)))
+    (is (same-graph?
+	 (undirected-graph [a u] :stop [b u] :stop [c u] :stop
+			   [a v] :stop [b v] :stop [c v] :stop
+			   [a w] :stop [b w] :stop [c w] :stop
+			   [a u] [b v] :stop [a u] [c w] :stop
+			   [a v] [b u] :stop [a v] [b w] :stop
+			   [a w] [b v] :stop [a w] [c u] :stop
+			   [b u] [c v] :stop
+			   [b v] [c u] :stop [b v] [c w] :stop
+			   [b w] [c v])
+	 (correspondance-graph-from-points 1 points-1 points-2)))
+    (is (same-graph?
+	 (undirected-graph [a u] :stop [b u] :stop [c u] :stop
+			   [a v] :stop [b v] :stop [c v] :stop
+			   [a w] :stop [b w] :stop [c w] :stop
+			   [a u] [b v] :stop [a u] [c w] :stop
+			   [a v] [b u] :stop [a v] [b w] :stop
+			   [a w] [b v] :stop [a w] [c u] :stop
+			   [b u] [c v] :stop
+			   [b v] [c u] :stop [b v] [c w] :stop
+			   [b w] [c v])
+	 (correspondance-graph-from-points 1.5 points-1 points-2)))
+    (is (same-graph?
+	 (undirected-graph [a u] :stop [b u] :stop [c u] :stop
+			   [a v] :stop [b v] :stop [c v] :stop
+			   [a w] :stop [b w] :stop [c w] :stop
+			   [a u] [b v] :stop [a u] [b w] :stop [a u] [c w] :stop
+			   [a v] [b u] :stop [a v] [b w] :stop
+			   [a w] [b u] :stop [a w] [b v] :stop [a w] [c u] :stop
+			   [b u] [c v] :stop [b u] [c w] :stop
+			   [b v] [c u] :stop [b v] [c w] :stop
+			   [b w] [c u] :stop [b w] [c v])
+	 (correspondance-graph-from-points 2 points-1 points-2)))
+    (is (same-graph?
+	 (undirected-graph [a u] :stop [b u] :stop [c u] :stop
+			   [a v] :stop [b v] :stop [c v] :stop
+			   [a w] :stop [b w] :stop [c w] :stop
+			   [a u] [b v] :stop [a u] [b w] :stop 
+			   [a u] [c v] :stop [a u] [c w] :stop
+			   [a v] [b u] :stop [a v] [b w] :stop [a v] [c u] :stop
+			   [a w] [b u] :stop [a w] [b v] :stop [a w] [c u] :stop
+			   [b u] [c v] :stop [b u] [c w] :stop
+			   [b v] [c u] :stop [b v] [c w] :stop
+			   [b w] [c u] :stop [b w] [c v])
+	 (correspondance-graph-from-points 3 points-1 points-2)))
+    (is (same-graph?
+	 (fully-connected-corresponsdance-graph [a b c] [u v w])
+	 (correspondance-graph-from-points 4 points-1 points-2)))
+    (is (same-graph?
+	 (fully-connected-corresponsdance-graph [a b c] [u v w])
+	 (correspondance-graph-from-points 5 points-1 points-2)))
+    (is (same-graph?
+	 (fully-connected-corresponsdance-graph [a b c] [u v w])
+	 (correspondance-graph-from-points 6 points-1 points-2)))
+    (is (same-graph?
+	 (fully-connected-corresponsdance-graph [a b c] [u v w])
+	 (correspondance-graph-from-points 42 points-1 points-2)))))
 
 (defn- same-pairing?
   [pairing-1 pairing-2]
@@ -349,3 +463,29 @@
 	(correspondance-graph-from-graphs
 	 (undirected-graph :i :j)
 	 (undirected-graph :u :v))))))
+
+(deftest test-same-graph-on-points-nodes
+  (is (same-graph?
+       (undirected-graph (Point3d. 0 0 0))
+       (undirected-graph (Point3d. 0 0 0))))
+  (is (same-graph?
+      (undirected-graph (Point3d. 0 0 0) (Point3d. 1 2 3))
+      (undirected-graph (Point3d. 0 0 0) (Point3d. 1 2 3))))
+  (is (same-graph?
+      (undirected-graph (Point3d. 0 0 0) (Point3d. 1 2 3))
+      (undirected-graph (Point3d. 1 2 3) (Point3d. 0 0 0))))
+  (is (same-graph?
+       (undirected-graph (Point3d. 0 0 0) 
+			 (Point3d. 1 2 3)
+			 (Point3d. 4 5 6)
+			 (Point3d. 0 0 0))
+       {(Point3d. 0 0 0) [(Point3d. 1 2 3) (Point3d. 4 5 6)]
+	(Point3d. 1 2 3) [(Point3d. 0 0 0) (Point3d. 4 5 6)]
+	(Point3d. 4 5 6) [(Point3d. 0 0 0) (Point3d. 1 2 3)]}))
+  (is (not (same-graph?
+	    (undirected-graph (Point3d. 0 0 0) 
+			      (Point3d. 1 2 3)
+			      (Point3d. 4 5 6))
+	    {(Point3d. 0 0 0) [(Point3d. 1 2 3) (Point3d. 4 5 6)]
+	     (Point3d. 1 2 3) [(Point3d. 0 0 0) (Point3d. 4 5 6)]
+	     (Point3d. 4 5 6) [(Point3d. 0 0 0) (Point3d. 1 2 3)]}))))
