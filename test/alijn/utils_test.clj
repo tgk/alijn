@@ -2,6 +2,11 @@
   (:use [alijn.utils] :reload-all)
   (:use [clojure.test]))
 
+(deftest test-map-on-values
+  (is (= {:foo 3 :bar 4 :baz 42}
+	 (map-on-values inc {:foo 2 :bar 3 :baz 41}))))
+
+
 (deftest test-chop-using
   (is (= '((0) (2) (4) (6) (8))
 	 (chop-using odd? (range 10))))
