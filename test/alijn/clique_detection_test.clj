@@ -282,12 +282,6 @@
 	  threshold colored-points-1 colored-points-2)]
      (is (same-graph? red-oracle red-corr-graph))
      (is (same-graph? black-oracle black-corr-graph)))
-   (let [threshold 1
-	 [red-corr-graph black-corr-graph] 
-	 (correspondance-graph-from-colored-points 
-	  threshold colored-points-1 colored-points-2)]
-     (is (same-graph? red-oracle red-corr-graph))
-     (is (same-graph? black-oracle black-corr-graph)))
    (let [threshold 2
 	 [red-corr-graph black-corr-graph] 
 	 (correspondance-graph-from-colored-points 
@@ -312,7 +306,20 @@
 	  threshold colored-points-1 colored-points-2)]
      (is (same-graph? red-oracle red-corr-graph))
      (is (same-graph? black-oracle black-corr-graph)))
-   (let [threshold 1
+   (let [threshold 2
+	 [red-corr-graph black-corr-graph] 
+	 (correspondance-graph-from-colored-points 
+	  threshold colored-points-1 colored-points-2)]
+     (is (same-graph? red-oracle red-corr-graph))
+     (is (same-graph? black-oracle black-corr-graph))))
+
+ (let [red-1 [], red-2 []
+       black-1 [], black-2 []
+       colored-points-1 [red-1 black-1]
+       colored-points-2 [red-2 black-2]
+       red-oracle (undirected-graph)
+       black-oracle (undirected-graph)]
+   (let [threshold 0
 	 [red-corr-graph black-corr-graph] 
 	 (correspondance-graph-from-colored-points 
 	  threshold colored-points-1 colored-points-2)]
