@@ -73,3 +73,10 @@
 (defn possible-pairings-of-multiple-correspondance-graphs
   [& correspondance-graphs]
   (apply cartesian-product (map possible-pairings correspondance-graphs)))
+
+(defn possible-pairings-of-colored-points
+  [threshold colored-points-1 colored-points-2]
+  (apply
+   possible-pairings-of-multiple-correspondance-graphs
+   (correspondance-graph-from-colored-points 
+    threshold colored-points-1 colored-points-2)))

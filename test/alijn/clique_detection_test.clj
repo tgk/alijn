@@ -1,7 +1,7 @@
 (ns alijn.clique-detection-test
   (:use [alijn.clique-detection] :reload-all)
   (:use [clojure.test]
-	[alijn utils]
+	[alijn utils combinatorics]
 	clojure.pprint
 	clj-todo)
   (:import [javax.vecmath Point3d]))
@@ -495,7 +495,9 @@
 
 (defn same-colored-pairing?
   [pairings-1 pairings-2]
-  (every? (partial apply same-pairing?) (map vector pairings-1 pairings-2)))
+  (and
+   (= (count pairings-1) (count pairings-2))
+   (every? (partial apply same-pairing?) (map vector pairings-1 pairings-2))))
 
 (deftest test-same-colored-pairing?
   (is (same-colored-pairing?
@@ -506,6 +508,7 @@
        [[[:a] [:b]]] [[[] []]])))
   (is (not (same-colored-pairing?
        [[[] []]] [[[:a] [:b]]])))
+  (is (not (same-colored-pairing? [[[[:a :b] [:c :e]] [[:i] [:k]]]] nil)))
   (is (same-colored-pairing? 
     [[[:a :b :c] [:x :y :z]] [[:u :v] [:i :j]]]
     [[[:c :b :a] [:z :y :x]] [[:u :v] [:i :j]]]))
@@ -609,3 +612,61 @@
 	    {(Point3d. 0 0 0) [(Point3d. 1 2 3) (Point3d. 4 5 6)]
 	     (Point3d. 1 2 3) [(Point3d. 0 0 0) (Point3d. 4 5 6)]
 	     (Point3d. 4 5 6) [(Point3d. 0 0 0) (Point3d. 1 2 3)]}))))
+
+(deftest test-possible-pairings-on-correspondance-graphs-from-points
+  (let [a (Point3d.  0  0  0) 
+	b (Point3d.  3  0  0)
+	c (Point3d. 13  2  0)
+	d (Point3d. 15  2  0)
+	e (Point3d. 16  2  0)
+	points-1 [a b]
+	points-2 [c d e]]
+    (is (same-pairings?
+	 [[[a b] [c d]]
+	  [[a b] [d c]]]
+	 (possible-pairings 
+	  (correspondance-graph-from-points 0 points-1 points-2))))
+    (is (same-pairings?
+	 [[[a b] [c d]]
+	  [[a b] [d c]]
+	  [[a b] [c e]]
+	  [[a b] [e c]]]
+	 (possible-pairings
+	  (correspondance-graph-from-points 1 points-1 points-2))))
+    (is (same-pairings?
+	 (all-pairs points-1 points-2)
+	 (possible-pairings
+	  (correspondance-graph-from-points 2 points-1 points-2))))
+    (is (same-pairings?
+	 (all-pairs points-1 points-2)
+	 (possible-pairings
+	  (correspondance-graph-from-points 3 points-1 points-2))))))
+
+(deftest test-possible-pairings-of-colored-points
+  (comment let [a (Point3d.  0  0  0) 
+	b (Point3d.  3  0  0)
+	c (Point3d. 13  2  0)
+	d (Point3d. 15  2  0)
+	e (Point3d. 16  2  0)
+	i (Point3d.  6  2  0)
+	j (Point3d.  8  2  0)
+	k (Point3d. 13  3  0)
+	l (Point3d. 16  3  0)
+	red-1 [a b]
+	red-2 [c d e]
+	black-1 [i j]
+	black-2 [k l]
+	colored-points-1 [red-1 black-1]
+	colored-points-2 [red-2 black-2]]
+    (is (same-colored-pairing? 
+	 [[[[a b] [c e]] [[i] [k]]]
+	  [[[a b] [c e]] [[i] [l]]]
+	  [[[a b] [c e]] [[j] [k]]]
+	  [[[a b] [c e]] [[j] [l]]]
+	  [[[a b] [e c]] [[i] [k]]]
+	  [[[a b] [e c]] [[i] [l]]]
+	  [[[a b] [e c]] [[j] [k]]]
+	  [[[a b] [e c]] [[j] [l]]]]
+	 (possible-pairings-of-colored-points 
+	  0 colored-points-1 colored-points-2))))
+  (is false "Need more tests"))
