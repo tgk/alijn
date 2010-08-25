@@ -44,7 +44,7 @@
 ; Wrapper for both methods
 ; Multimedthods for threshold vs. no threshold?
 ; Can always refactor for that, forget for now.
-; Can also use multimethods to accept maps!
+; Can also use multimethods to accept maps.
 (defn colored-point-alignment
   "Aligns colored points under a common translation and rotation.
 If threhold is false, all constant points of each color are paired
@@ -64,3 +64,14 @@ A point is a Point3d object."
   (if threshold
     (clique-based-point-alignment threshold constant-points variable-points)
     (exhaustive-point-alignment constant-points variable-points)))
+
+(defn colored-point-alignment-on-maps
+  [threshold constant-points-map variable-points-map]
+  (let [[to-map constant-points variable-points]
+	(maps-to-vectors constant-points-map variable-points-map)
+	res (colored-point-alignment threshold constant-points variable-points)]
+    (assoc res
+      :selected-constant (to-map (:selected-constant res))
+      :selected-variable (to-map (:selected-variable res))
+      :unflat-variable   (to-map (:unflat-variable   res)))))
+    
