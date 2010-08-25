@@ -46,7 +46,7 @@ of partition-by."
   The returned graph is a map from nodes to neighbours."
   [& nodes]
   (apply 
-   merge-with concat
+   merge-with concat {}
    (for [section (chop-using (partial = :stop) nodes)]
      (case (count section)
 	   0 {}
@@ -108,3 +108,21 @@ back to the original structure."
 	(recur 
 	 (rest coll-1)
 	 (remove-first (partial matches? (first coll-1)) coll-2))))))
+
+(todo
+ "Uses [m & ms] along with (cons m ms) to gurantee at least one element.
+ Is there a nicer way?"
+
+(defn same-keys? [m & ms] 
+  (->> (cons m ms) (map keys) (map set) (apply =)))
+
+)
+
+(defn maps-to-vectors [m & ms] 
+  (let [ms (cons m ms)]
+    (if (apply same-keys? ms)
+      (let [ks (keys m)
+	    vs (map #(map % ks) ms)
+	    f (fn [v] (zipmap ks v))]
+	(cons f vs))
+      (throw (new IllegalArgumentException "Maps must have same keys.")))))
