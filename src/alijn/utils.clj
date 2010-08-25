@@ -20,7 +20,8 @@
 (todo
  "Also uses [m & ms] with (cons m ms). Is there a better way?"
 (defn map-on-values 
-  "Applies f to the values in the maps."
+  "Applies f to the values in the maps and returns a new map with the 
+  results."
   [f m & ms]
   (let [ms (cons m ms)
 	[to-map & vs] (apply maps-to-vectors ms)
