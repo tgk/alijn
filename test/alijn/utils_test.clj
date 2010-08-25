@@ -151,6 +151,12 @@
     (is (= m2 (f v2)))
     (is (= m3 (f v3))))
 
+  (let [[f v1 v2] (maps-to-vectors {:a 1, :b 2} {:a 3, :b 4})
+	v1 (map inc v1)
+	v2 (map dec v2)]
+    (is (= {:a 2, :b 3} (f v1)))
+    (is (= {:a 2, :b 3} (f v2))))
+
   (is (thrown? IllegalArgumentException (maps-to-vectors {:a :b} {:x :y})))
   (is (thrown? IllegalArgumentException (maps-to-vectors {:a :y} {:x :y})))
   (is (thrown? IllegalArgumentException (maps-to-vectors {:a :b} {:x :y} {:a :c})))
