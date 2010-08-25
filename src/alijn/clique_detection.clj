@@ -59,6 +59,11 @@
   [threshold points-1 points-2]
   (correspondance-graph threshold points-1 points-2 distance distance))
 
+(defn correspondance-graph-from-colored-points
+  [threshold colored-points-1 colored-points-2]
+  (map (partial correspondance-graph-from-points threshold)
+       colored-points-1 colored-points-2))
+
 (defn possible-pairings
   [correspondance-graph]
   (let [nodes (keys correspondance-graph)]

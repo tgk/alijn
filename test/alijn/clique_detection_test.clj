@@ -212,6 +212,57 @@
 	 (fully-connected-corresponsdance-graph [a b c] [u v w])
 	 (correspondance-graph-from-points 42 points-1 points-2)))))
 
+(deftest test-correspondance-graph-from-colored-points
+ (let [a (Point3d.  0  0  0) 
+       b (Point3d.  3  0  0)
+       c (Point3d. 13  2  0)
+       d (Point3d. 15  2  0)
+       e (Point3d. 16  2  0)
+       i (Point3d.  6  2  0)
+       j (Point3d.  8  2  0)
+       k (Point3d. 13  3  0)
+       l (Point3d. 16  3  0)
+       red-1 [a b]
+       red-2 [c d e]
+       black-1 [i j]
+       black-2 [k l]
+       colored-points-1 [red-1 black-1]
+       colored-points-2 [red-2 black-2]]
+   (let [threshold 0
+	 red-oracle
+	 (undirected-graph [a c] :stop [a d] :stop [a e] :stop
+			   [b c] :stop [b d] :stop [b e] :stop
+			   [a c] [b e] :stop [a e] [b c])
+	 black-oracle 
+	 (undirected-graph [i k] :stop [i l] :stop [j l] :stop [j k] :stop)
+	 [red-corr-graph black-corr-graph] 
+	 (correspondance-graph-from-colored-points 
+	  threshold colored-points-1 colored-points-2)]
+     (is (same-graph? red-oracle red-corr-graph))
+     (is (same-graph? black-oracle black-corr-graph)))
+   (let [threshold 1
+	 red-oracle
+	 (undirected-graph [a c] :stop [a d] :stop [a e] :stop
+			   [b c] :stop [b d] :stop [b e] :stop
+			   [a c] [b e] :stop [a e] [b c] :stop
+			   [a c] [b d] :stop [a d] [b c])
+	 black-oracle 
+	 (undirected-graph [i k] :stop [i l] :stop [j l] :stop [j k] :stop
+			   [i k] [j l] :stop [i l] [j k])
+	 [red-corr-graph black-corr-graph] 
+	 (correspondance-graph-from-colored-points 
+	  threshold colored-points-1 colored-points-2)]
+     (is (same-graph? red-oracle red-corr-graph))
+     (is (same-graph? black-oracle black-corr-graph)))
+   (let [threshold 2
+	 red-oracle (fully-connected-corresponsdance-graph [a b] [c d e])
+	 black-oracle (fully-connected-corresponsdance-graph [i j] [k l])
+	 [red-corr-graph black-corr-graph] 
+	 (correspondance-graph-from-colored-points 
+	  threshold colored-points-1 colored-points-2)]
+     (is (same-graph? red-oracle red-corr-graph))
+     (is (same-graph? black-oracle black-corr-graph)))))
+ 
 (defn- same-pairing?
   [pairing-1 pairing-2]
   (= (apply zipmap pairing-1)
