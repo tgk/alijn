@@ -2,9 +2,61 @@
   (:use [alijn.utils] :reload-all)
   (:use [clojure.test]))
 
+
+(deftest test-same-keys?
+  (is (same-keys? {1 2, 3 4} {3 :foo, 1 :bar}))
+  (is (not (same-keys? {1 2, 3 4} {2 1, 4 3})))
+  (is (same-keys? {1 2, 3 4} {3 :foo, 1 :bar} {1 "a", 3 "b"}))
+  (is (not (same-keys? {1 2, 3 4} {2 1, 4 3} {1 2, 3 4})))
+  (is (same-keys? {1 2})))
+
+(deftest test-maps-to-vectors
+  (let [m {:a :b, :x :y}
+	[f v] (maps-to-vectors m)]
+    (is (same-elements? [:b :y] v))
+    (is (= m (f v))))
+
+  (let [m1 {:a :b, :x :y}
+	m2 {:a :c, :x :z}
+	[f & vs] (maps-to-vectors m1 m2)
+	[v1 v2] vs]
+    (is (= 2 (count vs)))
+    (is (same-elements? [:b :y] v1))
+    (is (same-elements? [:c :z] v2))
+    (is (= m1 (f v1)))
+    (is (= m2 (f v2))))
+
+  (let [m1 {:a :b, :x :y}
+	m2 {:a :c, :x :z}
+	m3 {:a :d, :x :w}
+	[f & vs] (maps-to-vectors m1 m2 m3)
+	[v1 v2 v3] vs]
+    (is (= 3 (count vs)))
+    (is (same-elements? [:b :y] v1))
+    (is (same-elements? [:c :z] v2))
+    (is (same-elements? [:d :w] v3))
+    (is (= m1 (f v1)))
+    (is (= m2 (f v2)))
+    (is (= m3 (f v3))))
+
+  (let [[f v1 v2] (maps-to-vectors {:a 1, :b 2} {:a 3, :b 4})
+	v1 (map inc v1)
+	v2 (map dec v2)]
+    (is (= {:a 2, :b 3} (f v1)))
+    (is (= {:a 2, :b 3} (f v2))))
+
+  (is (thrown? IllegalArgumentException (maps-to-vectors {:a :b} {:x :y})))
+  (is (thrown? IllegalArgumentException (maps-to-vectors {:a :y} {:x :y})))
+  (is (thrown? IllegalArgumentException (maps-to-vectors {:a :b} {:x :y} {:a :c})))
+  (is (thrown? IllegalArgumentException (maps-to-vectors {:a :b} {:a :c} {:x :y}))))
+
 (deftest test-map-on-values
   (is (= {:foo 3 :bar 4 :baz 42}
-	 (map-on-values inc {:foo 2 :bar 3 :baz 41}))))
+	 (map-on-values inc {:foo 2 :bar 3 :baz 41})))
+  (is (= {:a 5, :b 42}
+	 (map-on-values + {:a 1, :b 2} {:a 4, :b 40})))
+  (is (= {:a 7, :b 50}
+	 (map-on-values + {:a 1, :b 2} {:a 4, :b 40} {:a 2, :b 8}))))
 
 
 (deftest test-chop-using
@@ -114,50 +166,3 @@
     (is (true?  (matching-elements? same-parity? [1 2 3 4] [5 6 7 8])))
     (is (false? (matching-elements? same-parity? [1 2 3 5] [5 6 7 8])))
     (is (true?  (matching-elements? same-parity? [1 2 3 4] [4 3 2 3])))))
-
-(deftest test-same-keys?
-  (is (same-keys? {1 2, 3 4} {3 :foo, 1 :bar}))
-  (is (not (same-keys? {1 2, 3 4} {2 1, 4 3})))
-  (is (same-keys? {1 2, 3 4} {3 :foo, 1 :bar} {1 "a", 3 "b"}))
-  (is (not (same-keys? {1 2, 3 4} {2 1, 4 3} {1 2, 3 4})))
-  (is (same-keys? {1 2})))
-
-(deftest test-maps-to-vectors
-  (let [m {:a :b, :x :y}
-	[f v] (maps-to-vectors m)]
-    (is (same-elements? [:b :y] v))
-    (is (= m (f v))))
-
-  (let [m1 {:a :b, :x :y}
-	m2 {:a :c, :x :z}
-	[f & vs] (maps-to-vectors m1 m2)
-	[v1 v2] vs]
-    (is (= 2 (count vs)))
-    (is (same-elements? [:b :y] v1))
-    (is (same-elements? [:c :z] v2))
-    (is (= m1 (f v1)))
-    (is (= m2 (f v2))))
-
-  (let [m1 {:a :b, :x :y}
-	m2 {:a :c, :x :z}
-	m3 {:a :d, :x :w}
-	[f & vs] (maps-to-vectors m1 m2 m3)
-	[v1 v2 v3] vs]
-    (is (= 3 (count vs)))
-    (is (same-elements? [:b :y] v1))
-    (is (same-elements? [:c :z] v2))
-    (is (same-elements? [:d :w] v3))
-    (is (= m1 (f v1)))
-    (is (= m2 (f v2)))
-    (is (= m3 (f v3))))
-
-  (let [[f v1 v2] (maps-to-vectors {:a 1, :b 2} {:a 3, :b 4})
-	v1 (map inc v1)
-	v2 (map dec v2)]
-    (is (= {:a 2, :b 3} (f v1)))
-    (is (= {:a 2, :b 3} (f v2))))
-
-  (is (thrown? IllegalArgumentException (maps-to-vectors {:a :b} {:x :y})))
-  (is (thrown? IllegalArgumentException (maps-to-vectors {:a :y} {:x :y})))
-  (is (thrown? IllegalArgumentException (maps-to-vectors {:a :b} {:x :y} {:a :c})))
-  (is (thrown? IllegalArgumentException (maps-to-vectors {:a :b} {:a :c} {:x :y}))))

@@ -1,13 +1,37 @@
 (ns alijn.utils
   (:use clj-todo))
 
-(defn map-on-values
-  "Applies f to the values in the map m."
-  [f m] (apply merge (map (fn [[k v]] {k (f v)}) m)))
+(todo
+ "Uses [m & ms] along with (cons m ms) to gurantee at least one element.
+ Is there a nicer way?"
+(defn same-keys? [m & ms] 
+  (->> (cons m ms) (map keys) (map set) (apply =)))
+)
+
+(defn maps-to-vectors [m & ms] 
+  (let [ms (cons m ms)]
+    (if (apply same-keys? ms)
+      (let [ks (keys m)
+	    vs (map #(map % ks) ms)
+	    f (fn [v] (zipmap ks v))]
+	(cons f vs))
+      (throw (new IllegalArgumentException "Maps must have same keys.")))))
+
+(todo
+ "Also uses [m & ms] with (cons m ms). Is there a better way?"
+(defn map-on-values 
+  "Applies f to the values in the maps."
+  [f m & ms]
+  (let [ms (cons m ms)
+	[to-map & vs] (apply maps-to-vectors ms)
+	tuples (apply map vector vs)
+	results (map (partial apply f) tuples)]
+    (to-map results)))
+)
 
 (todo
  "This function could be rewritten as a simple usage
-of partition-by."
+of partition-by. See further down."
 
 (defn chop-using 
   "Chops up a coll using pred. Every time pred is true, a new sequence is started."
@@ -109,20 +133,3 @@ back to the original structure."
 	 (rest coll-1)
 	 (remove-first (partial matches? (first coll-1)) coll-2))))))
 
-(todo
- "Uses [m & ms] along with (cons m ms) to gurantee at least one element.
- Is there a nicer way?"
-
-(defn same-keys? [m & ms] 
-  (->> (cons m ms) (map keys) (map set) (apply =)))
-
-)
-
-(defn maps-to-vectors [m & ms] 
-  (let [ms (cons m ms)]
-    (if (apply same-keys? ms)
-      (let [ks (keys m)
-	    vs (map #(map % ks) ms)
-	    f (fn [v] (zipmap ks v))]
-	(cons f vs))
-      (throw (new IllegalArgumentException "Maps must have same keys.")))))
