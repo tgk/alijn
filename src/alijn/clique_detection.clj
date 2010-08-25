@@ -27,7 +27,7 @@
    (= n m)   true
    (= nil n) false
    (= nil m) false
-   :else     (<= (Math/abs (- m n)) threshold)))
+   :else     (<= (- threshold) (- m n) threshold)))
 
 (defn correspondance-graph 
   "Create a correspondance graph with the elements from coll-1 and 
