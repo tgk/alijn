@@ -166,3 +166,31 @@
     (is (true?  (matching-elements? same-parity? [1 2 3 4] [5 6 7 8])))
     (is (false? (matching-elements? same-parity? [1 2 3 5] [5 6 7 8])))
     (is (true?  (matching-elements? same-parity? [1 2 3 4] [4 3 2 3])))))
+
+(deftest test-isomorph-trees?
+  (is (isomorph-trees? :a :a))
+  (is (not (isomorph-trees? :a :b)))
+
+  (is (isomorph-trees? [] []))
+
+  (is (isomorph-trees? [:a :b] [:a :b]))
+  (is (isomorph-trees? [:a :a] [:a :a]))
+  (is (isomorph-trees? [:a :b] [:b :a]))
+  (is (not (isomorph-trees? [:a :b] [:a])))
+  (is (not (isomorph-trees? [:a] [])))
+  
+  (is (isomorph-trees? [[:a :b] :c] [:c [:a :b]]))
+  (is (not (isomorph-trees? [[:a :b] :c] [:b [:a :c]])))
+
+  (is (isomorph-trees? [[:a :b] [:c :d]] [[:d :c] [:a :b]]))
+
+  (is (isomorph-trees? '([:a :b] [:c :d]) ['(:d :c) [:a :b]]))
+
+  (is (isomorph-trees? (range 10) (range 10)))
+  (is (not (isomorph-trees? (range 10) (range 9))))
+  (is (not (isomorph-trees? (range 10) (range 1 11))))
+
+  ; Found to fail when used to replace same-pairing? in clique-detection-test
+  (is (not (isomorph-trees? [[:a] [:b]] [[:c] [:a]])))
+
+)

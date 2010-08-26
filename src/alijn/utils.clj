@@ -1,5 +1,6 @@
 (ns alijn.utils
-  (:use clj-todo))
+  (:use clj-todo
+	clojure.contrib.combinatorics))
 
 (todo
  "Uses [m & ms] along with (cons m ms) to gurantee at least one element.
@@ -134,3 +135,22 @@ back to the original structure."
 	 (rest coll-1)
 	 (remove-first (partial matches? (first coll-1)) coll-2))))))
 
+(defn isomorph-trees?
+  "Tests if two trees made out of nested sequences are the same."
+  [tree-1 tree-2]
+  (if (and (sequential? tree-1) (sequential? tree-2))
+    ; nodes
+    (if (= 0 (count tree-1) (count tree-2))
+      true
+      (and
+       (= (count tree-1) (count tree-2))
+       (let [child-1 (first tree-1)
+	     idx (first (filter #(isomorph-trees? child-1 (nth tree-2 %))
+				(range (count tree-2))))]
+	 (when idx
+	   (let [tree-1 (rest tree-1)
+		 [f l] (split-at idx tree-2)
+		 tree-2 (concat f (rest l))]
+	     (isomorph-trees? tree-1 tree-2))))))
+					; leafs
+      (= tree-1 tree-2)))

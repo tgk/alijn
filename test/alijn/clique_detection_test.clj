@@ -6,6 +6,8 @@
 	clj-todo)
   (:import [javax.vecmath Point3d]))
 
+;;;; Correspondance graphs
+
 (deftest test-node-distance
 
   (is (= {:root 0} (node-distances :root {:root []})))
@@ -331,25 +333,27 @@
 	  threshold colored-points-1 colored-points-2)]
      (is (same-graph? red-oracle red-corr-graph))
      (is (same-graph? black-oracle black-corr-graph)))))
- 
+
+
+;;;;;;;;; Pairing ;;;;;;;;;;;;;
+
 (defn- same-pairing?
   [pairing-1 pairing-2]
   (= (apply zipmap pairing-1)
      (apply zipmap pairing-2)))
 
 (deftest test-same-pairing?
-  (is (true?  (same-pairing? [[:a] [:x]] [[:a] [:x]])))
-  (is (false? (same-pairing? [[:a] [:x]] [[:a] [:y]])))
-  (is (true?  (same-pairing? [[:a :b] [:x :y]] [[:a :b] [:x :y]])))
-  (is (true?  (same-pairing? [[:a :b] [:x :y]] [[:b :a] [:y :x]])))
-  (is (false? (same-pairing? [[:a :b] [:x :y]] [[:b :a] [:x :y]])))
-  (is (true?  (same-pairing? [[:a :b :c] [:x :y :z]] [[:a :c :b] [:x :z :y]])))
-  (is (false? (same-pairing? [[:a :b :c] [:x :y :z]] [[:a :b :c] [:x :z :y]])))
-
-  (is (true?  (same-pairing? [[] []] [[] []])))
-  (is (false? (same-pairing? [[:a] [:b]] [[] []])))
-  (is (false? (same-pairing? [[] []] [[:a] [:b]])))
-  (is (true?  (same-pairing? [[:a] [:a]] [[:a] [:a]]))))
+  (is      (same-pairing? [[:a] [:x]] [[:a] [:x]]))
+  (is (not (same-pairing? [[:a] [:x]] [[:a] [:y]])))
+  (is      (same-pairing? [[:a :b] [:x :y]] [[:a :b] [:x :y]]))
+  (is      (same-pairing? [[:a :b] [:x :y]] [[:b :a] [:y :x]]))
+  (is (not (same-pairing? [[:a :b] [:x :y]] [[:b :a] [:x :y]])))
+  (is      (same-pairing? [[:a :b :c] [:x :y :z]] [[:a :c :b] [:x :z :y]]))
+  (is (not (same-pairing? [[:a :b :c] [:x :y :z]] [[:a :b :c] [:x :z :y]])))
+  (is      (same-pairing? [[] []] [[] []]))
+  (is (not (same-pairing? [[:a] [:b]] [[] []])))
+  (is (not (same-pairing? [[] []] [[:a] [:b]])))
+  (is      (same-pairing? [[:a] [:a]] [[:a] [:a]])))
 
 (defn- same-pairings?
   [pairings-1 pairings-2]
@@ -361,27 +365,27 @@
     pairings-1)))
 
 (deftest test-same-pairings?
-  (is (true?  (same-pairings? [[[] []]]
-			      [[[] []]])))
-  (is (true?  (same-pairings? [[[] []] [[] []]]
-			      [[[] []] [[] []]])))
-  (is (true?  (same-pairings? [[[:a :b] [:x :y]] [[:a :b] [:y :x]]]
-			      [[[:a :b] [:y :x]] [[:a :b] [:x :y]]])))
-  (is (false? (same-pairings? [[[:a :b] [:x :y]] [[:a :b] [:y :x]]]
-			      [[[:a :b] [:y :x]] [[:a :b] [:x :z]]])))
-  (is (false? (same-pairings? [[[:a :b] [:x :y]] 
-			       [[:a :b] [:y :x]] 
-			       [[:a :b] [:x :z]]]
-			      [[[:a :b] [:y :x]] 
-			       [[:a :b] [:x :y]]])))
-  (is (true?  (same-pairings? [[[:a :b] [:x :y]] 
-			       [[:a :b] [:z :x]]]
-			      [[[:a :b] [:z :x]]
-			       [[:b :a] [:y :x]]])))
-  (is (true?  (same-pairings? [[[:a :b] [:x :y]] 
-			       [[:a :b] [:z :x]]]
-			      [[[:a :b] [:z :x]]
-			       [[:b :a] [:y :x]]]))))
+  (is      (same-pairings? [[[] []]]
+			   [[[] []]]))
+  (is      (same-pairings? [[[] []] [[] []]]
+			   [[[] []] [[] []]]))
+  (is      (same-pairings? [[[:a :b] [:x :y]] [[:a :b] [:y :x]]]
+			   [[[:a :b] [:y :x]] [[:a :b] [:x :y]]]))
+  (is (not (same-pairings? [[[:a :b] [:x :y]] [[:a :b] [:y :x]]]
+			   [[[:a :b] [:y :x]] [[:a :b] [:x :z]]])))
+  (is (not (same-pairings? [[[:a :b] [:x :y]] 
+			    [[:a :b] [:y :x]] 
+			    [[:a :b] [:x :z]]]
+			   [[[:a :b] [:y :x]] 
+			    [[:a :b] [:x :y]]])))
+  (is      (same-pairings? [[[:a :b] [:x :y]] 
+			    [[:a :b] [:z :x]]]
+			   [[[:a :b] [:z :x]]
+			    [[:b :a] [:y :x]]]))
+  (is      (same-pairings? [[[:a :b] [:x :y]] 
+			    [[:a :b] [:z :x]]]
+			   [[[:a :b] [:z :x]]
+			    [[:b :a] [:y :x]]])))
 
 
 (defn- possible-pairings-from-graph-defs [def-1 def-2]
@@ -622,8 +626,10 @@
 	points-1 [a b]
 	points-2 [c d e]]
     (is (same-pairings?
-	 [[[a b] [c d]]
-	  [[a b] [d c]]]
+	 [[[a] [d]]
+	  [[b] [d]]
+	  [[a b] [c e]]
+	  [[a b] [e c]]]
 	 (possible-pairings 
 	  (correspondance-graph-from-points 0 points-1 points-2))))
     (is (same-pairings?
@@ -634,16 +640,26 @@
 	 (possible-pairings
 	  (correspondance-graph-from-points 1 points-1 points-2))))
     (is (same-pairings?
-	 (all-pairs points-1 points-2)
+	 [[[a b] [c d]]
+	  [[a b] [d c]]
+	  [[a b] [c e]]
+	  [[a b] [e c]]
+	  [[a b] [d e]]
+	  [[a b] [e d]]]
 	 (possible-pairings
 	  (correspondance-graph-from-points 2 points-1 points-2))))
     (is (same-pairings?
-	 (all-pairs points-1 points-2)
+	 [[[a b] [c d]]
+	  [[a b] [d c]]
+	  [[a b] [c e]]
+	  [[a b] [e c]]
+	  [[a b] [d e]]
+	  [[a b] [e d]]]
 	 (possible-pairings
 	  (correspondance-graph-from-points 3 points-1 points-2))))))
 
 (deftest test-possible-pairings-of-colored-points
-  (comment let [a (Point3d.  0  0  0) 
+  (let [a (Point3d.  0  0  0) 
 	b (Point3d.  3  0  0)
 	c (Point3d. 13  2  0)
 	d (Point3d. 15  2  0)
@@ -658,8 +674,16 @@
 	black-2 [k l]
 	colored-points-1 [red-1 black-1]
 	colored-points-2 [red-2 black-2]]
-    (is (same-colored-pairing? 
-	 [[[[a b] [c e]] [[i] [k]]]
+    (is (same-multiple-pairings? 
+	 [[[[a] [d]] [[i] [k]]]
+	  [[[a] [d]] [[i] [l]]]
+	  [[[a] [d]] [[j] [k]]]
+	  [[[a] [d]] [[j] [l]]]
+	  [[[b] [d]] [[i] [k]]]
+	  [[[b] [d]] [[i] [l]]]
+	  [[[b] [d]] [[j] [k]]]
+	  [[[b] [d]] [[j] [l]]]
+	  [[[a b] [c e]] [[i] [k]]]
 	  [[[a b] [c e]] [[i] [l]]]
 	  [[[a b] [c e]] [[j] [k]]]
 	  [[[a b] [c e]] [[j] [l]]]
@@ -669,4 +693,59 @@
 	  [[[a b] [e c]] [[j] [l]]]]
 	 (possible-pairings-of-colored-points 
 	  0 colored-points-1 colored-points-2))))
-  (is false "Need more tests"))
+  (let [a (Point3d.  0  0  0)
+	b (Point3d.  3  0  0)
+	c (Point3d. 13  2  0)
+	d (Point3d. 15  2  0)
+	e (Point3d. 16  2  0)
+	i (Point3d.  6  2  0)
+	j (Point3d.  8  2  0)
+	k (Point3d. 13  3  0)
+	l (Point3d. 16  3  0)
+	red-1 [a b]
+	red-2 [c d e]
+	black-1 [i j]
+	black-2 [k l]
+	colored-points-1 [red-1 black-1]
+	colored-points-2 [red-2 black-2]]
+    (is (same-multiple-pairings? 
+	 [[[[a b] [c d]] [[i j] [k l]]]
+	  [[[a b] [c d]] [[i j] [l k]]]
+	  [[[a b] [c e]] [[i j] [k l]]]
+	  [[[a b] [c e]] [[i j] [l k]]]
+	  [[[a b] [d c]] [[i j] [k l]]]
+	  [[[a b] [d c]] [[i j] [l k]]]
+	  [[[a b] [e c]] [[i j] [k l]]]
+	  [[[a b] [e c]] [[i j] [l k]]]]
+	 (possible-pairings-of-colored-points 
+	  1 colored-points-1 colored-points-2))))
+    (let [a (Point3d.  0  0  0)
+	b (Point3d.  3  0  0)
+	c (Point3d. 13  2  0)
+	d (Point3d. 15  2  0)
+	e (Point3d. 16  2  0)
+	i (Point3d.  6  2  0)
+	j (Point3d.  8  2  0)
+	k (Point3d. 13  3  0)
+	l (Point3d. 16  3  0)
+	red-1 [a b]
+	red-2 [c d e]
+	black-1 [i j]
+	black-2 [k l]
+	colored-points-1 [red-1 black-1]
+	colored-points-2 [red-2 black-2]]
+    (is (same-multiple-pairings? 
+	 [[[[a b] [c d]] [[i j] [k l]]]
+	  [[[a b] [c d]] [[i j] [l k]]]
+	  [[[a b] [c e]] [[i j] [k l]]]
+	  [[[a b] [c e]] [[i j] [l k]]]
+	  [[[a b] [d c]] [[i j] [k l]]]
+	  [[[a b] [d c]] [[i j] [l k]]]
+	  [[[a b] [d e]] [[i j] [k l]]]
+	  [[[a b] [d e]] [[i j] [l k]]]
+	  [[[a b] [e c]] [[i j] [k l]]]
+	  [[[a b] [e c]] [[i j] [l k]]]
+	  [[[a b] [e d]] [[i j] [k l]]]
+	  [[[a b] [e d]] [[i j] [l k]]]]
+	 (possible-pairings-of-colored-points 
+	  2 colored-points-1 colored-points-2)))))
