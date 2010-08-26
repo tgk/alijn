@@ -7,7 +7,12 @@
 (deftest test-vec-center
   (is (= (Point3d. 1 0 2)
 	 (vec-center [(Point3d. 0 -10 0)
-		      (Point3d. 2  10 4)]))))
+		      (Point3d. 2  10 4)])))
+    (is (= (Point3d. 1 3 0)
+	 (vec-center [(Point3d. -1 3 0)
+		      (Point3d.  3 3 0)
+		      (Point3d.  1 2 0)
+		      (Point3d.  1 4 0)]))))
 
 (deftest test-matrix-vector-product
   (let [matrix (Matrix. 3 3)

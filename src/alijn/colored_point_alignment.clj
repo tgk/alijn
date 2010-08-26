@@ -4,7 +4,7 @@
 ; Algortihms return type:
 (defstruct single-alignment-result 
   :rmsd 
-  :constant-translation :variable-translation
+  :constant-center :variable-center
   :rotation
   :selected-constant :selected-variable
   :moved-variable)
@@ -21,8 +21,8 @@
 		 alignment (kabsch-with-translation flat-constant flat-variable)]
 	     (struct single-alignment-result
 		     (:rmsd alignment)
-		     (:constant-translation alignment) 
-		     (:variable-translation alignment) 
+		     (:constant-center alignment) 
+		     (:variable-center alignment) 
 		     (:rotation alignment)
 		     selected-constant selected-variable
 		     (unflat-variable (:moved-variable alignment)))))))
