@@ -1,5 +1,5 @@
 (ns alijn.colored-point-alignment
-    (:use [alijn kabsch utils combinatorics]))
+    (:use [alijn kabsch utils combinatorics clique-detection]))
 
 ; Algortihms return type:
 (defstruct single-alignment-result 
@@ -9,7 +9,7 @@
   :selected-constant :selected-variable
   :moved-variable)
 
-; Sceletion alignment method, requires a function for selecting grouped pairs
+; Sceleton alignment method, requires a function for selecting grouped pairs
 (defn sceleton-point-alignment
   [select-grouped-pairs constant-points variable-points]
   (apply min-key 
@@ -28,17 +28,17 @@
 		     (unflat-variable (:moved-variable alignment)))))))
 
 ; Exhaustive algorithm:
-(def exhaustive-point-alignment 
-     (partial sceleton-point-alignment all-grouped-pairs))
+(defn exhaustive-point-alignment 
+  [constant-points variable-points]
+  (sceleton-point-alignment 
+   all-grouped-pairs
+   constant-points variable-points))
 
 ; Clique-based algorithm:
-(defn- clique-matches 
-  [threshold colored-points-1 colored-points-2])
-
 (defn clique-based-point-alignment
   [threshold constant-points variable-points]
   (sceleton-point-alignment 
-   (partial clique-matches threshold)
+   (partial possible-pairings-of-colored-points threshold)
    constant-points variable-points))
 
 ; Wrapper for both methods
