@@ -1,5 +1,7 @@
 (ns alijn.colored-point-alignment
-    (:use [alijn kabsch utils combinatorics clique-detection]))
+    (:use [alijn kabsch utils combinatorics clique-detection])
+    (:use [clojure.pprint])
+    (:import [javax.vecmath Point3d]))
 
 ; Algortihms return type:
 (defstruct single-alignment-result 
@@ -35,11 +37,34 @@
    constant-points variable-points))
 
 ; Clique-based algorithm:
+(defn transform-clique-pairing-to-readable-format [pairing]
+  [(map first pairing) (map second pairing)])
+
+(defn clique-colored-pairs 
+  [threshold colored-points-1 colored-points-2]
+  (map transform-clique-pairing-to-readable-format
+       (possible-pairings-of-colored-points
+	threshold
+	colored-points-1 colored-points-2)))
+
 (defn clique-based-point-alignment
   [threshold constant-points variable-points]
   (sceleton-point-alignment 
-   (partial possible-pairings-of-colored-points threshold)
+   (partial clique-colored-pairs threshold)
    constant-points variable-points))
+
+(comment let [a (Point3d. 0 0 0)
+      b (Point3d. 1 1 1)
+      c (Point3d. 2 2 2)
+      s (Point3d. 10 10 10)
+      t (Point3d. 20 20 20)
+      u (Point3d. 30 30 30)]
+  (println "all-grouped-pairs")
+  (pprint (all-grouped-pairs [[a b] [s]] [[c] [t u]]))
+  (pprint (all-grouped-pairs [[:a :b] [:s]] [[:c] [:t :u]]))
+
+  (println "possible-pairings-of-colored-points")
+  (pprint (possible-pairings-of-colored-points 100 [[a b] [s]] [[c] [t u]])))
 
 ; Wrapper for both methods
 ; Multimedthods for threshold vs. no threshold?
