@@ -42,23 +42,26 @@
     (is (= {:a 1, :b 0, :c 1} (node-distances :b graph)))
     (is (= {:a 1, :b 1, :c 0} (node-distances :c graph)))))
 
+(deftest test-graph-distance-fn
+  (let [g (undirected-graph :a :b :c :d :stop :c :e)
+	d (graph-distance-fn g)]
+    (is (= 0 (d :a :a)))
+    (is (= 1 (d :a :b)))
+    (is (= 2 (d :a :c)))
+    (is (= 3 (d :a :d)))
+    (is (= 3 (d :a :e)))
 
-(deftest test-within?
-  (is (within? 0.5 1 1.4))
-  (is (not (within? 0.5 1 1.6)))
-  (is (within? 0.5 1 1.5))
+    (is (= 0 (d :a :a)))
+    (is (= 1 (d :b :a)))
+    (is (= 2 (d :c :a)))
+    (is (= 3 (d :d :a)))
+    (is (= 3 (d :e :a)))
 
-  (is (within? 0.5 1.4 1))
-  (is (not (within? 0.5 1.6 1)))
-  (is (within? 0.5 1.5 1))
-
-  (is (within? 0 0 0))
-  (is (within? 0 1 1))
-  (is (not (within? 0 1 2)))
-
-  (is (not (within? 1 1 nil)))
-  (is (not (within? 1 nil 1))))
-
+    (is (= 2 (d :c :a)))
+    (is (= 1 (d :c :b)))
+    (is (= 0 (d :c :c)))
+    (is (= 1 (d :c :d)))
+    (is (= 1 (d :c :e)))))
 
 (deftest test-correspondance-graph-from-graphs
 
@@ -111,6 +114,19 @@
        (correspondance-graph-from-graphs
 	(undirected-graph :a :b :stop :c)
 	(undirected-graph :x :y :stop :z)))))
+
+(deftest test-correspondance-graph-from-colored-graphs
+  (let [a {:elm :a, :color :red}
+	b {:elm :b, :color :red}
+	c {:elm :c, :color :black}
+	x {:elm :x, :color :red}
+	y {:elm :y, :color :black}
+	z {:elm :z, :color :red}]
+    (is (same-graph?
+	 (undirected-graph [a x] [b z] [c y] [a x] :stop [a z] [b x])
+	 (correspondance-graph-from-colored-graphs
+	  (undirected-graph b a c)
+	  (undirected-graph y x z))))))
 
 (defn fully-connected-corresponsdance-graph
   [nodes-1 nodes-2]
@@ -213,126 +229,6 @@
     (is (same-graph?
 	 (fully-connected-corresponsdance-graph [a b c] [u v w])
 	 (correspondance-graph-from-points 42 points-1 points-2)))))
-
-(deftest test-correspondance-graph-from-colored-points
- (let [a (Point3d.  0  0  0) 
-       b (Point3d.  3  0  0)
-       c (Point3d. 13  2  0)
-       d (Point3d. 15  2  0)
-       e (Point3d. 16  2  0)
-       i (Point3d.  6  2  0)
-       j (Point3d.  8  2  0)
-       k (Point3d. 13  3  0)
-       l (Point3d. 16  3  0)
-       red-1 [a b]
-       red-2 [c d e]
-       black-1 [i j]
-       black-2 [k l]
-       colored-points-1 [red-1 black-1]
-       colored-points-2 [red-2 black-2]]
-   (let [threshold 0
-	 red-oracle
-	 (undirected-graph [a c] :stop [a d] :stop [a e] :stop
-			   [b c] :stop [b d] :stop [b e] :stop
-			   [a c] [b e] :stop [a e] [b c])
-	 black-oracle 
-	 (undirected-graph [i k] :stop [i l] :stop [j l] :stop [j k] :stop)
-	 [red-corr-graph black-corr-graph] 
-	 (correspondance-graph-from-colored-points 
-	  threshold colored-points-1 colored-points-2)]
-     (is (same-graph? red-oracle red-corr-graph))
-     (is (same-graph? black-oracle black-corr-graph)))
-   (let [threshold 1
-	 red-oracle
-	 (undirected-graph [a c] :stop [a d] :stop [a e] :stop
-			   [b c] :stop [b d] :stop [b e] :stop
-			   [a c] [b e] :stop [a e] [b c] :stop
-			   [a c] [b d] :stop [a d] [b c])
-	 black-oracle 
-	 (undirected-graph [i k] :stop [i l] :stop [j l] :stop [j k] :stop
-			   [i k] [j l] :stop [i l] [j k])
-	 [red-corr-graph black-corr-graph] 
-	 (correspondance-graph-from-colored-points 
-	  threshold colored-points-1 colored-points-2)]
-     (is (same-graph? red-oracle red-corr-graph))
-     (is (same-graph? black-oracle black-corr-graph)))
-   (let [threshold 2
-	 red-oracle (fully-connected-corresponsdance-graph [a b] [c d e])
-	 black-oracle (fully-connected-corresponsdance-graph [i j] [k l])
-	 [red-corr-graph black-corr-graph] 
-	 (correspondance-graph-from-colored-points 
-	  threshold colored-points-1 colored-points-2)]
-     (is (same-graph? red-oracle red-corr-graph))
-     (is (same-graph? black-oracle black-corr-graph))))
-
- (let [a (Point3d.  0  0  0) 
-       b (Point3d.  3  0  0)
-       d (Point3d. 15  2  0)
-       i (Point3d.  6  2  0)
-       j (Point3d.  8  2  0)
-       red-1 [a b]
-       red-2 [d]
-       black-1 [i j]
-       black-2 []
-       colored-points-1 [red-1 black-1]
-       colored-points-2 [red-2 black-2]
-       red-oracle (undirected-graph [a d] :stop [b d])
-       black-oracle (undirected-graph)]
-   (let [threshold 0
-	 [red-corr-graph black-corr-graph] 
-	 (correspondance-graph-from-colored-points 
-	  threshold colored-points-1 colored-points-2)]
-     (is (same-graph? red-oracle red-corr-graph))
-     (is (same-graph? black-oracle black-corr-graph)))
-   (let [threshold 2
-	 [red-corr-graph black-corr-graph] 
-	 (correspondance-graph-from-colored-points 
-	  threshold colored-points-1 colored-points-2)]
-     (is (same-graph? red-oracle red-corr-graph))
-     (is (same-graph? black-oracle black-corr-graph))))
-
- (let [d (Point3d. 15  2  0)
-       i (Point3d.  6  2  0)
-       j (Point3d.  8  2  0)
-       red-1 []
-       red-2 [d]
-       black-1 [i j]
-       black-2 []
-       colored-points-1 [red-1 black-1]
-       colored-points-2 [red-2 black-2]
-       red-oracle (undirected-graph)
-       black-oracle (undirected-graph)]
-   (let [threshold 0
-	 [red-corr-graph black-corr-graph] 
-	 (correspondance-graph-from-colored-points 
-	  threshold colored-points-1 colored-points-2)]
-     (is (same-graph? red-oracle red-corr-graph))
-     (is (same-graph? black-oracle black-corr-graph)))
-   (let [threshold 2
-	 [red-corr-graph black-corr-graph] 
-	 (correspondance-graph-from-colored-points 
-	  threshold colored-points-1 colored-points-2)]
-     (is (same-graph? red-oracle red-corr-graph))
-     (is (same-graph? black-oracle black-corr-graph))))
-
- (let [red-1 [], red-2 []
-       black-1 [], black-2 []
-       colored-points-1 [red-1 black-1]
-       colored-points-2 [red-2 black-2]
-       red-oracle (undirected-graph)
-       black-oracle (undirected-graph)]
-   (let [threshold 0
-	 [red-corr-graph black-corr-graph] 
-	 (correspondance-graph-from-colored-points 
-	  threshold colored-points-1 colored-points-2)]
-     (is (same-graph? red-oracle red-corr-graph))
-     (is (same-graph? black-oracle black-corr-graph)))
-   (let [threshold 2
-	 [red-corr-graph black-corr-graph] 
-	 (correspondance-graph-from-colored-points 
-	  threshold colored-points-1 colored-points-2)]
-     (is (same-graph? red-oracle red-corr-graph))
-     (is (same-graph? black-oracle black-corr-graph)))))
 
 
 ;;;;;;;;; Pairing ;;;;;;;;;;;;;
@@ -658,94 +554,75 @@
 	 (possible-pairings
 	  (correspondance-graph-from-points 3 points-1 points-2))))))
 
-(deftest test-possible-pairings-of-colored-points
-  (let [a (Point3d.  0  0  0) 
-	b (Point3d.  3  0  0)
-	c (Point3d. 13  2  0)
-	d (Point3d. 15  2  0)
-	e (Point3d. 16  2  0)
-	i (Point3d.  6  2  0)
-	j (Point3d.  8  2  0)
-	k (Point3d. 13  3  0)
-	l (Point3d. 16  3  0)
-	red-1 [a b]
-	red-2 [c d e]
-	black-1 [i j]
-	black-2 [k l]
-	colored-points-1 [red-1 black-1]
-	colored-points-2 [red-2 black-2]]
-    (is (same-multiple-pairings? 
-	 [[[[a] [d]] [[i] [k]]]
-	  [[[a] [d]] [[i] [l]]]
-	  [[[a] [d]] [[j] [k]]]
-	  [[[a] [d]] [[j] [l]]]
-	  [[[b] [d]] [[i] [k]]]
-	  [[[b] [d]] [[i] [l]]]
-	  [[[b] [d]] [[j] [k]]]
-	  [[[b] [d]] [[j] [l]]]
-	  [[[a b] [c e]] [[i] [k]]]
-	  [[[a b] [c e]] [[i] [l]]]
-	  [[[a b] [c e]] [[j] [k]]]
-	  [[[a b] [c e]] [[j] [l]]]
-	  [[[a b] [e c]] [[i] [k]]]
-	  [[[a b] [e c]] [[i] [l]]]
-	  [[[a b] [e c]] [[j] [k]]]
-	  [[[a b] [e c]] [[j] [l]]]]
-	 (possible-pairings-of-colored-points 
-	  0 colored-points-1 colored-points-2))))
-  (let [a (Point3d.  0  0  0)
-	b (Point3d.  3  0  0)
-	c (Point3d. 13  2  0)
-	d (Point3d. 15  2  0)
-	e (Point3d. 16  2  0)
-	i (Point3d.  6  2  0)
-	j (Point3d.  8  2  0)
-	k (Point3d. 13  3  0)
-	l (Point3d. 16  3  0)
-	red-1 [a b]
-	red-2 [c d e]
-	black-1 [i j]
-	black-2 [k l]
-	colored-points-1 [red-1 black-1]
-	colored-points-2 [red-2 black-2]]
-    (is (same-multiple-pairings? 
-	 [[[[a b] [c d]] [[i j] [k l]]]
-	  [[[a b] [c d]] [[i j] [l k]]]
-	  [[[a b] [c e]] [[i j] [k l]]]
-	  [[[a b] [c e]] [[i j] [l k]]]
-	  [[[a b] [d c]] [[i j] [k l]]]
-	  [[[a b] [d c]] [[i j] [l k]]]
-	  [[[a b] [e c]] [[i j] [k l]]]
-	  [[[a b] [e c]] [[i j] [l k]]]]
-	 (possible-pairings-of-colored-points 
-	  1 colored-points-1 colored-points-2))))
-    (let [a (Point3d.  0  0  0)
-	b (Point3d.  3  0  0)
-	c (Point3d. 13  2  0)
-	d (Point3d. 15  2  0)
-	e (Point3d. 16  2  0)
-	i (Point3d.  6  2  0)
-	j (Point3d.  8  2  0)
-	k (Point3d. 13  3  0)
-	l (Point3d. 16  3  0)
-	red-1 [a b]
-	red-2 [c d e]
-	black-1 [i j]
-	black-2 [k l]
-	colored-points-1 [red-1 black-1]
-	colored-points-2 [red-2 black-2]]
-    (is (same-multiple-pairings? 
-	 [[[[a b] [c d]] [[i j] [k l]]]
-	  [[[a b] [c d]] [[i j] [l k]]]
-	  [[[a b] [c e]] [[i j] [k l]]]
-	  [[[a b] [c e]] [[i j] [l k]]]
-	  [[[a b] [d c]] [[i j] [k l]]]
-	  [[[a b] [d c]] [[i j] [l k]]]
-	  [[[a b] [d e]] [[i j] [k l]]]
-	  [[[a b] [d e]] [[i j] [l k]]]
-	  [[[a b] [e c]] [[i j] [k l]]]
-	  [[[a b] [e c]] [[i j] [l k]]]
-	  [[[a b] [e d]] [[i j] [k l]]]
-	  [[[a b] [e d]] [[i j] [l k]]]]
-	 (possible-pairings-of-colored-points 
-	  2 colored-points-1 colored-points-2)))))
+;;;;;;;;;;;;; SANDBOX TESTS ;;;;;;;;;
+
+(deftest test-connect-graph
+  (is (same-graph?
+       {1 [2 3], 2 [3], 3 []}
+       (connect-graph [1 2 3] <)))
+  (is (same-graph?
+       (fully-connected-graph :a :b :c :d)
+       (connect-graph [:a :b :c :d] (fn [u v] (not= u v))))))
+
+(deftest test-true-pred
+  (is (true-pred))
+  (is (true-pred :foo))
+  (is (true-pred :foo :bar))
+  (is (true-pred false))
+  (is (true-pred nil)))
+
+(deftest test-same-color?
+  (is (same-color? {:color :red} {:color :red}))
+  (is (not (same-color? {:color :red} {:color :black})))
+  (is (same-color? {:color :black} {:color :black})))
+
+(deftest test-not-same-underlying-nodes?
+  (is (not-same-underlying-node? [:a :x] [:b :y]))
+  (is (not (not-same-underlying-node? [:a :x] [:a :y])))
+  (is (not (not-same-underlying-node? [:a :x] [:b :x])))
+  (is (not (not-same-underlying-node? [:a :x] [:a :x]))))
+
+(deftest test-same-distance?
+  (let [pred (same-distance? - -)]
+    (is (pred [0 5] [1 6]))
+    (is (not (pred [1 5] [1 6])))
+    (is (not (pred [2 5] [1 6]))))
+  (let [abs-diff (fn [u v] (Math/abs (- u v)))
+	pred (same-distance? abs-diff abs-diff)]
+    (is (pred [0 5] [1 6]))
+    (is (not (pred [1 5] [1 6])))
+    (is (pred [2 5] [1 6]))))
+
+(deftest test-combine-predicates
+  (let [pred (combine-predicates not-same-underlying-node? (same-distance? - -))]
+    (is (pred [0 1] [4 5]))
+    (is (not (pred [0 1] [0 1])))
+    (is (not (pred [4 5] [4 5])))
+    (is (not (pred [1 5] [2 7]))))
+  (let [abs-diff (fn [u v] (Math/abs (- u v)))
+	pred (combine-predicates 
+	      not-same-underlying-node? 
+	      (same-distance? abs-diff abs-diff))]
+    (is (pred [10 20] [5 25]))
+    (is (not (pred [4 5] [4 3])))))
+
+(deftest test-wrapped-edge-predicate
+  (let [wrapped-pred (wrapped-edge-predicate not-same-underlying-node?)
+	a {:elm :a}
+	b {:elm :b}
+	c {:elm :c}
+	d {:elm :d}]
+    (is (wrapped-pred [a b] [c d]))
+    (is (not (wrapped-pred [a b] [a d])))
+    (is (not (wrapped-pred [a b] [c b])))
+    (is (not (wrapped-pred [a b] [a b]))))
+  (let [wrapped-pred (wrapped-edge-predicate (same-distance? - -))
+	a {:elm 0}
+	b {:elm 1}
+	c {:elm 2}
+	d {:elm 3}]
+    (is (wrapped-pred [a c] [b d]))
+    (is (wrapped-pred [a b] [c d]))
+    (is (not (wrapped-pred [a c] [a d])))
+    (is (not (wrapped-pred [a c] [a a])))))
+

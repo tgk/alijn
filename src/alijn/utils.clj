@@ -31,6 +31,9 @@
     (to-map results)))
 )
 
+(defn map-on-keys [f m]
+  (into {} (map (fn [[k v]] [(f k) v]) m)))
+
 (todo
  "This function could be rewritten as a simple usage
 of partition-by. See further down."

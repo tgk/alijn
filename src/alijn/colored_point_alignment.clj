@@ -37,34 +37,8 @@
    constant-points variable-points))
 
 ; Clique-based algorithm:
-(defn transform-clique-pairing-to-readable-format [pairing]
-  [(map first pairing) (map second pairing)])
 
-(defn clique-colored-pairs 
-  [threshold colored-points-1 colored-points-2]
-  (map transform-clique-pairing-to-readable-format
-       (possible-pairings-of-colored-points
-	threshold
-	colored-points-1 colored-points-2)))
-
-(defn clique-based-point-alignment
-  [threshold constant-points variable-points]
-  (sceleton-point-alignment 
-   (partial clique-colored-pairs threshold)
-   constant-points variable-points))
-
-(comment let [a (Point3d. 0 0 0)
-      b (Point3d. 1 1 1)
-      c (Point3d. 2 2 2)
-      s (Point3d. 10 10 10)
-      t (Point3d. 20 20 20)
-      u (Point3d. 30 30 30)]
-  (println "all-grouped-pairs")
-  (pprint (all-grouped-pairs [[a b] [s]] [[c] [t u]]))
-  (pprint (all-grouped-pairs [[:a :b] [:s]] [[:c] [:t :u]]))
-
-  (println "possible-pairings-of-colored-points")
-  (pprint (possible-pairings-of-colored-points 100 [[a b] [s]] [[c] [t u]])))
+(defn clique-based-point-alignment)
 
 ; Wrapper for both methods
 ; Multimedthods for threshold vs. no threshold?
@@ -90,13 +64,3 @@ A point is a Point3d object."
     (clique-based-point-alignment threshold constant-points variable-points)
     (exhaustive-point-alignment constant-points variable-points)))
 
-(defn colored-point-alignment-on-maps
-  [threshold constant-points-map variable-points-map]
-  (let [[to-map constant-points variable-points]
-	(maps-to-vectors constant-points-map variable-points-map)
-	res (colored-point-alignment threshold constant-points variable-points)]
-    (assoc res
-      :selected-constant (to-map (:selected-constant res))
-      :selected-variable (to-map (:selected-variable res))
-      :unflat-variable   (to-map (:unflat-variable   res)))))
-    
