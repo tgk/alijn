@@ -90,7 +90,7 @@
 
 ;;; Clique based algorithm
 
-(deftest test-transform-clique-pairing-to-readable-format
+(comment deftest test-transform-clique-pairing-to-readable-format
   (is (= [[[:a] [:x]] [[:b] [:y]]]
 	 (transform-clique-pairing-to-readable-format
 	  [[[:a] [:b]] [[:x] [:y]]])))
@@ -98,7 +98,7 @@
 	 (transform-clique-pairing-to-readable-format
 	  [[[:a :b] [:c :d]] [[:x] [:y]]]))))
 
-(deftest test-clique-based-point-alignment
+(comment deftest test-clique-based-point-alignment
   (let [r1 (Point3d. -1  3  0)
 	r2 (Point3d.  3  3  0)
 	b1 (Point3d.  1  2  0)
