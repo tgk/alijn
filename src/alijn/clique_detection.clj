@@ -1,34 +1,10 @@
 (ns alijn.clique-detection
   (:use [bron-kerbosch]
 	[clojure.contrib.combinatorics]
-	alijn.math)
+	[alijn math graph])
   (:require [alijn.utils :as utils]))
 
-(defn node-distances
-  "Returns a map from all nodes to their distance from the root.
-  edges should, given a node, return its adjacent nodes.
-  Unreachable nodes have undefined distances to the root and are 
-  not returned in the map."
-  [root edges]
-  (loop [queue [[root 0]]
-	 result {}
-	 seen? #{root}]
-    (if (seq queue)
-      (let [[node dist] (first queue)
-	    unvisited-neighbours (filter (comp not seen?) (edges node))
-	    seen? (into seen? unvisited-neighbours)
-	    queue (concat (rest queue) 
-			  (for [neigh unvisited-neighbours] [neigh (inc dist)]))
-	    result (assoc result node dist)]
-	(recur queue result seen?))
-      result)))
-
-(defn graph-distance-fn [edges]
-  (let [cached-node-dist (memoize node-distances)]
-    (fn [u v] ((cached-node-dist u edges) v))))
-
-;;;;;;; SANDBOX 
-
+; Correspondance graph generator
 (defn connect-graph
   "Connects node u to v when (pred u v) is true."
   [nodes pred]
@@ -46,12 +22,11 @@
   (let [nodes (for [a coll-1, u coll-2 :when (node-pred a u)] [a u])]
     (connect-graph nodes edge-pred)))
 
+; Predicates
 ; Dummy predicate
 (defn true-pred [& _] true)
-
 ; Node predicates
 (defn same-color? [u v] (= (:color u) (:color v)))
-
 ; Edge predicates
 (defn not-same-underlying-node?
   [[a u] [b v]]
@@ -68,18 +43,16 @@
 (defn within-distance? [threshold dist-1 dist-2]
   (fn [[a u] [b v]] 
     (within? threshold (dist-1 a b) (dist-2 u v))))
-
 ; Predicate combiner
 (defn combine-predicates
   "Combine predicates."
   [& preds]
   (fn [& elms] (every? (fn [pred] (apply pred elms)) preds)))
-
-; Helper for colored predicates
+; Helper for predicates on wrapped elements (stuff that's in a {:elm}
 (defn wrapped-edge-predicate [pred]
   (fn [[u s] [v t]] (pred [(:elm u) (:elm s)] [(:elm v) (:elm t)])))
 
-; Implementations
+; Correspondance graphs from graphs
 (defn correspondance-graph-from-graphs
   [edges-1 edges-2]
   (let [edge-pred 
@@ -98,6 +71,7 @@
 			 (graph-distance-fn edges-2)))]
     (new-correspondance-graph (keys edges-1) (keys edges-2) same-color? edge-pred)))
 
+; Correspondance graphs from points
 (defn correspondance-graph-from-points
   [threshold points-1 points-2]
   (new-correspondance-graph 
@@ -116,18 +90,10 @@
     (wrapped-edge-predicate not-same-underlying-node?)
     (wrapped-edge-predicate (within-distance? threshold distance distance)))))
 
-
-;;;;;;;; SANDBOX END
-
-
-;;;;;;;; Possible pairings ;;;;;;;;;;
+; Possible pairings sub routine
 
 (defn possible-pairings
   [correspondance-graph]
   (let [nodes (keys correspondance-graph)]
     (for [cliques (maximum-cliques nodes correspondance-graph)]
       [(map first cliques) (map second cliques)])))
-
-(defn possible-pairings-of-multiple-correspondance-graphs
-  [& correspondance-graphs]
-  (apply cartesian-product (map possible-pairings correspondance-graphs)))

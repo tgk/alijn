@@ -60,36 +60,6 @@ of partition-by. See further down."
   (->> (partition-by pred coll)
        (filter (comp not pred first))))
 
-(defn same-graph? [graph-1 graph-2]
-  "Only works if nodes are exactly the same and graphs are edge maps."
-  (= (map-on-values set graph-1)
-     (map-on-values set graph-2)))
-
-(defn undirected-graph 
-  "Creates an undirected graph from a sequence of nodes.
-  Adjacent nodes are linked. A sequence of nodes can be
-  terminated with the keyword :stop. A node can occur
-  several times. The call
-  (undirected-graph :a :b :c :stop :b :d)
-  will generate a star topology with :b in the center.
-  The returned graph is a map from nodes to neighbours."
-  [& nodes]
-  (apply 
-   merge-with concat {}
-   (for [section (chop-using (partial = :stop) nodes)]
-     (case (count section)
-	   0 {}
-	   1 {(first section) []}
-	   (apply
-	    merge-with concat
-	    (for [[u v] (partition 2 1 section)]
-	      {u [v], v [u]}))))))
-
-(defn fully-connected-graph [& nodes]
-  (apply merge-with concat
-	 (concat
-	  (for [u nodes] {u []})
-	  (for [u nodes, v nodes :when (not= u v)] {u [v]}))))
 
 (defn partition-using-sizes 
   "Partitions coll using the sizes from sizes."
@@ -137,23 +107,3 @@ back to the original structure."
 	(recur 
 	 (rest coll-1)
 	 (remove-first (partial matches? (first coll-1)) coll-2))))))
-
-(defn isomorph-trees?
-  "Tests if two trees made out of nested sequences are the same."
-  [tree-1 tree-2]
-  (if (and (sequential? tree-1) (sequential? tree-2))
-    ; nodes
-    (if (= 0 (count tree-1) (count tree-2))
-      true
-      (and
-       (= (count tree-1) (count tree-2))
-       (let [child-1 (first tree-1)
-	     idx (first (filter #(isomorph-trees? child-1 (nth tree-2 %))
-				(range (count tree-2))))]
-	 (when idx
-	   (let [tree-1 (rest tree-1)
-		 [f l] (split-at idx tree-2)
-		 tree-2 (concat f (rest l))]
-	     (isomorph-trees? tree-1 tree-2))))))
-					; leafs
-      (= tree-1 tree-2)))

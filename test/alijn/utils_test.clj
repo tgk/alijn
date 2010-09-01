@@ -67,35 +67,6 @@
   (is (= '((:a :b :c :d :e))
 	 (chop-using (partial = :stop) [:a :b :c :d :e]))))
 
-(deftest test-undirected-graph
-  (is (= {} (undirected-graph)))
-  (is (= {:a []} (undirected-graph :a)))
-  (is (= {:a [:b], :b [:a :c], :c [:b]} (undirected-graph :a :b :c)))
-  (is (= {:a [], :b []} (undirected-graph :a :stop :b)))
-  (is (= {:a [:b], :b [:a], :c []} (undirected-graph :a :b :stop :stop :c)))
-  (is (= {:a [:b], :b [:a :c], :c [:b :d :e], :d [:c], :e [:c]}
-	 (undirected-graph :a :b :c :d :stop :c :e)))
-  (is (= {:a [:b], :b [:a], :c [:d :e], :d [:c], :e [:c]}
-	 (undirected-graph :a :b :stop :c :d :stop :c :e)))
-  (is (= {:a [:b :d], :b [:a :c], :c [:b :d], :d [:c :a]} 
-	 (undirected-graph :a :b :c :d :a))))
-
-(deftest test-fully-connected-graph
-  (is (same-graph?
-       (fully-connected-graph :a :b)
-       (undirected-graph :a :b :stop :b :a)))
-  (is (same-graph?
-       (fully-connected-graph :a)
-       (undirected-graph :a)))
-  (is (same-graph?
-       (fully-connected-graph :a :b :c)
-       (undirected-graph :a :b :c :a :stop)))
-  (is (same-graph?
-       (fully-connected-graph :a :b :c :d)
-       (undirected-graph :a :b :c :d :a :stop
-			 :a :c :stop
-			 :b :d :stop))))
-
 (deftest test-partition-using-sizes
   (is (= [[:foo] [:bar :baz]] 
 	 (partition-using-sizes [1 2] [:foo :bar :baz])))
@@ -166,31 +137,3 @@
     (is (true?  (matching-elements? same-parity? [1 2 3 4] [5 6 7 8])))
     (is (false? (matching-elements? same-parity? [1 2 3 5] [5 6 7 8])))
     (is (true?  (matching-elements? same-parity? [1 2 3 4] [4 3 2 3])))))
-
-(deftest test-isomorph-trees?
-  (is (isomorph-trees? :a :a))
-  (is (not (isomorph-trees? :a :b)))
-
-  (is (isomorph-trees? [] []))
-
-  (is (isomorph-trees? [:a :b] [:a :b]))
-  (is (isomorph-trees? [:a :a] [:a :a]))
-  (is (isomorph-trees? [:a :b] [:b :a]))
-  (is (not (isomorph-trees? [:a :b] [:a])))
-  (is (not (isomorph-trees? [:a] [])))
-  
-  (is (isomorph-trees? [[:a :b] :c] [:c [:a :b]]))
-  (is (not (isomorph-trees? [[:a :b] :c] [:b [:a :c]])))
-
-  (is (isomorph-trees? [[:a :b] [:c :d]] [[:d :c] [:a :b]]))
-
-  (is (isomorph-trees? '([:a :b] [:c :d]) ['(:d :c) [:a :b]]))
-
-  (is (isomorph-trees? (range 10) (range 10)))
-  (is (not (isomorph-trees? (range 10) (range 9))))
-  (is (not (isomorph-trees? (range 10) (range 1 11))))
-
-  ; Found to fail when used to replace same-pairing? in clique-detection-test
-  (is (not (isomorph-trees? [[:a] [:b]] [[:c] [:a]])))
-
-)
