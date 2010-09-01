@@ -107,9 +107,15 @@
     not-same-underlying-node? 
     (within-distance? threshold distance distance))))
 
-(comment defn correspondance-graph-from-points
+(defn correspondance-graph-from-colored-points
   [threshold points-1 points-2]
-  (correspondance-graph threshold points-1 points-2 distance distance))
+  (new-correspondance-graph
+   points-1 points-2
+   same-color?
+   (combine-predicates
+    (wrapped-edge-predicate not-same-underlying-node?)
+    (wrapped-edge-predicate (within-distance? threshold distance distance)))))
+
 
 ;;;;;;;; SANDBOX END
 

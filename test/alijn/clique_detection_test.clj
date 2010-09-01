@@ -626,3 +626,49 @@
     (is (not (wrapped-pred [a c] [a d])))
     (is (not (wrapped-pred [a c] [a a])))))
 
+; Rewrite so takes 1, 2 or 3 coordinates, defaults to zero
+(defn- red [x] {:elm (Point3d. x 0 0) :color :red})
+(defn- black [x] {:elm (Point3d. x 0 0) :color :black})
+
+(deftest test-correspondance-graph-from-colored-points
+  (let [b1 (black 0), b2 (black 2), r1 (red 4)
+	b3 (black 0), b4 (black 1), r2 (red 4)]
+    (is (same-graph?
+	 (undirected-graph [b1 b3] [r1 r2] :stop [b1 b4] :stop [b2 b3] :stop [b2 b4])
+	 (correspondance-graph-from-colored-points 0 [b1 b2 r1] [b3 b4 r2])))
+    (is (same-graph?
+	 (undirected-graph [r1 r2] [b1 b3] [b2 b4] [r1 r2] [b1 b4] [b2 b3])
+	 (correspondance-graph-from-colored-points 1 [b1 b2 r1] [b3 b4 r2])))
+    (is (same-graph?
+	 (undirected-graph [r1 r2] [b1 b3] [b2 b4] [r1 r2] [b1 b4] [b2 b3] [r1 r2])
+	 (correspondance-graph-from-colored-points 2 [b1 b2 r1] [b3 b4 r2])))
+        (is (same-graph?
+	 (undirected-graph [r1 r2] [b1 b3] [b2 b4] [r1 r2] [b1 b4] [b2 b3] [r1 r2])
+	 (correspondance-graph-from-colored-points 3 [b1 b2 r1] [b3 b4 r2])))))
+
+(deftest test-possible-pairings-from-correspondance-graph-from-colored-points
+  (is (same-pairings?
+       [[[][]]]
+       (possible-pairings 
+	(correspondance-graph-from-colored-points 42 [(black 0)] [(red 0)]))))
+  (let [b1 (black 0), b2 (black 2), r1 (red 4)
+	b3 (black 0), b4 (black 1), r2 (red 4)]
+    (is (same-pairings?
+	 [[[b1 r1] [b3 r2]]
+	  [[b1] [b4]]
+	  [[b2] [b3]]
+	  [[b2] [b4]]]
+	 (possible-pairings
+	  (correspondance-graph-from-colored-points 0 [b1 b2 r1] [b3 b4 r2]))))
+    (is (same-pairings?
+	 [[[b1 b2 r1] [b3 b4 r2]]
+	  [[b1 r1] [b4 r2]]
+	  [[b1 b2] [b4 b3]]]
+	 (possible-pairings
+	  (correspondance-graph-from-colored-points 1 [b1 b2 r1] [b3 b4 r2]))))
+    (is (same-pairings?
+	 [[[b1 b2 r1] [b3 b4 r2]]
+	  [[b1 b2 r1] [b3 b4 r2]]]
+	 (possible-pairings
+	  (correspondance-graph-from-colored-points 2 [b1 b2 r1] [b3 b4 r2]))))))
+  
