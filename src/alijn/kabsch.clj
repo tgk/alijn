@@ -1,6 +1,7 @@
 (ns alijn.kabsch
-  (:use [clj-todo]
-	[alijn math])
+  (:use clj-todo
+	alijn.math)
+  (:require [clojure.contrib.seq :as seq])
   (:import [Jama Matrix]
 	   [javax.vecmath Point3d]))
 
@@ -39,15 +40,12 @@
      [W (sign-matrix A) (.transpose V)])))
 
 ;;; Conversion functions
-; Should be in next clojure.contrib...
-(defn indexed [s] (map vector (iterate inc 0) s))
-
 (defn points-to-matrix 
   "Converts N Point3d to an N x 3 matrix."
   [points]
   (let [N (count points)
 	matrix (Matrix. N 3)]
-    (doseq [[i point] (indexed points)]
+    (doseq [[i point] (seq/indexed points)]
       (.set matrix i 0 (.x point))
       (.set matrix i 1 (.y point))
       (.set matrix i 2 (.z point)))

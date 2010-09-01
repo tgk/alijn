@@ -1,6 +1,8 @@
 (ns alijn.colored-point-alignment
-    (:use [alijn kabsch utils combinatorics clique-detection])
-    (:use [clojure.pprint])
+    (:use 
+     [alijn kabsch utils combinatorics clique-detection]
+     clojure.pprint)
+    (:require [clojure.contrib.seq :as seq])
     (:import [javax.vecmath Point3d]))
 
 ; Algortihms return type:
@@ -37,7 +39,26 @@
    constant-points variable-points))
 
 ; Clique-based algorithm:
+(defn wrap-points 
+  "Wrap points colored by a nested structure as a seq of points
+  with a :color and a :elm entry, where :color is their group number."
+  [nested-points]
+  (apply 
+   concat
+   (for [[color points] (seq/indexed nested-points)]
+     (for [p points] {:elm p :color color}))))
 
+(defn unwrap-points 
+  "Unwrap a seq of points and transform them into a nested vector based on
+  the number in their :color."
+  [colored-points]
+  (if (empty? colored-points)
+    []
+    (let [grouped (group-by :color colored-points)
+	  colors (->> colored-points (map :color) (apply max) inc range)]
+      (for [color colors] 
+	(map :elm (grouped color))))))
+  
 (defn clique-based-point-alignment)
 
 ; Wrapper for both methods

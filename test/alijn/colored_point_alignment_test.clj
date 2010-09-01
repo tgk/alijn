@@ -90,13 +90,24 @@
 
 ;;; Clique based algorithm
 
-(comment deftest test-transform-clique-pairing-to-readable-format
-  (is (= [[[:a] [:x]] [[:b] [:y]]]
-	 (transform-clique-pairing-to-readable-format
-	  [[[:a] [:b]] [[:x] [:y]]])))
-  (is (= [[[:a :b] [:x]] [[:c :d] [:y]]]
-	 (transform-clique-pairing-to-readable-format
-	  [[[:a :b] [:c :d]] [[:x] [:y]]]))))
+(deftest test-wrap-points
+  (is (= [{:elm :a, :color 0} {:elm :b, :color 0}, {:elm :c, :color 1}]
+	 (wrap-points [[:a :b] [:c]])))
+  (is (= [] (wrap-points [])))
+  (is (= [{:elm :a, :color 0} 
+	  {:elm :b, :color 1} {:elm :c, :color 1} 
+	  {:elm :d, :color 2}]
+	 (wrap-points [[:a] [:b :c] [:d]]))))
+
+(deftest test-unwrap-points
+  (is (= [[:a :b] [:c]]
+	 (unwrap-points 
+	  [{:elm :a, :color 0} {:elm :b, :color 0} {:elm :c, :color 1}])))
+  (is (= [] (unwrap-points [])))
+  (is (= [[:a :b] [:c]]
+	 (unwrap-points 
+	  [{:elm :a, :color 0} {:elm :c, :color 1} {:elm :b, :color 0}]))))
+
 
 (comment deftest test-clique-based-point-alignment
   (let [r1 (Point3d. -1  3  0)
