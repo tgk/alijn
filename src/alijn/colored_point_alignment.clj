@@ -50,16 +50,31 @@
 
 (defn unwrap-points 
   "Unwrap a seq of points and transform them into a nested vector based on
-  the number in their :color."
-  [colored-points]
+  their :color."
+  [colors colored-points]
   (if (empty? colored-points)
     []
-    (let [grouped (group-by :color colored-points)
-	  colors (->> colored-points (map :color) (apply max) inc range)]
+    (let [grouped (group-by :color colored-points)]
       (for [color colors] 
-	(map :elm (grouped color))))))
+	(map :elm (get grouped color []))))))
   
-(defn clique-based-point-alignment)
+(defn clique-grouped-pairs [threshold constant-points variable-points]
+  (let [cons-wrapped (wrap-points constant-points)
+	vari-wrapped (wrap-points variable-points)
+	max-color (count constant-points)
+	colors (range max-color)
+	corr-graph (correspondance-graph-from-colored-points 
+		    threshold cons-wrapped vari-wrapped)
+	pairings (possible-pairings corr-graph)]
+    (for [[cons-lineup vari-lineup] pairings]
+      [(unwrap-points colors cons-lineup)
+       (unwrap-points colors vari-lineup)])))
+
+(defn clique-based-point-alignment
+  [threshold constant-points variable-points]
+  (sceleton-point-alignment
+   (partial clique-grouped-pairs threshold)
+   constant-points variable-points))
 
 ; Wrapper for both methods
 ; Multimedthods for threshold vs. no threshold?

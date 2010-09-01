@@ -1,7 +1,8 @@
 (ns alijn.colored-point-alignment-test
   (:use [alijn.colored-point-alignment] :reload-all
 	[clojure.test]
-	clj-todo)
+	clj-todo
+	clojure.pprint)
   (:import [javax.vecmath Point3d]))
 
 (defn within-epsilon [epsilon a b]
@@ -102,14 +103,36 @@
 (deftest test-unwrap-points
   (is (= [[:a :b] [:c]]
 	 (unwrap-points 
+	  [0 1]
 	  [{:elm :a, :color 0} {:elm :b, :color 0} {:elm :c, :color 1}])))
-  (is (= [] (unwrap-points [])))
+  (is (= [] (unwrap-points [] [])))
   (is (= [[:a :b] [:c]]
-	 (unwrap-points 
+	 (unwrap-points
+	  [0 1]
+	  [{:elm :a, :color 0} {:elm :c, :color 1} {:elm :b, :color 0}])))
+  (is (= [[:a :b] [] [:c]]
+	 (unwrap-points
+	  [0 1 2]
+	  [{:elm :a, :color 0} {:elm :c, :color 2} {:elm :b, :color 0}])))
+  (is (= [[:a :b] [:c] []]
+	 (unwrap-points
+	  [0 1 2]
 	  [{:elm :a, :color 0} {:elm :c, :color 1} {:elm :b, :color 0}]))))
 
+(deftest test-clique-grouped-pairs
+  (let [b1 (Point3d. 0 0 0)
+	b2 (Point3d. 2 0 0)
+	r1 (Point3d. 4 0 0)
+	b3 (Point3d. 0 0 0)
+	b4 (Point3d. 1 0 0)
+	r2 (Point3d. 4 0 0)]
+    (is (= [[[[b1] [r1]] [[b3] [r2]]]
+	    [[[b2] [  ]] [[b4] [  ]]]
+	    [[[b2] [  ]] [[b3] [  ]]]
+	    [[[b1] [  ]] [[b4] [  ]]]]
+	   (clique-grouped-pairs 0 [[b1 b2] [r1]] [[b3 b4] [r2]])))))
 
-(comment deftest test-clique-based-point-alignment
+(deftest test-clique-based-point-alignment
   (let [r1 (Point3d. -1  3  0)
 	r2 (Point3d.  3  3  0)
 	b1 (Point3d.  1  2  0)
@@ -124,11 +147,5 @@
        0
        (clique-based-point-alignment 0 colored-points-1 colored-points-2)))
   (is (rmsd= 
-       0
-       (clique-based-point-alignment 1 colored-points-1 colored-points-2)))
-  (is (rmsd= 
        (Math/sqrt (/ (+ 0 0 1 1) 4))
-       (clique-based-point-alignment 2 colored-points-1 colored-points-2)))
-  (is (rmsd= 
-       2
-       (clique-based-point-alignment 3 colored-points-1 colored-points-2)))))
+       (clique-based-point-alignment 2 colored-points-1 colored-points-2)))))

@@ -336,59 +336,6 @@
 	[[:b :c] [:z :y]]]
        (possible-pairings-from-graph-defs [:a :b :stop :c] [:x :y :stop :z]))))
 
-
-(defn same-colored-pairing?
-  [pairings-1 pairings-2]
-  (and
-   (= (count pairings-1) (count pairings-2))
-   (every? (partial apply same-pairing?) (map vector pairings-1 pairings-2))))
-
-(deftest test-same-colored-pairing?
-  (is (same-colored-pairing?
-       [[[] []]] [[[] []]]))
-  (is (same-colored-pairing?
-       [[[] []] [[] []]] [[[] []] [[] []]]))
-  (is (not (same-colored-pairing?
-       [[[:a] [:b]]] [[[] []]])))
-  (is (not (same-colored-pairing?
-       [[[] []]] [[[:a] [:b]]])))
-  (is (not (same-colored-pairing? [[[[:a :b] [:c :e]] [[:i] [:k]]]] nil)))
-  (is (same-colored-pairing? 
-    [[[:a :b :c] [:x :y :z]] [[:u :v] [:i :j]]]
-    [[[:c :b :a] [:z :y :x]] [[:u :v] [:i :j]]]))
-  (is (not 
-       (same-colored-pairing?
-	[[[:a :b :c] [:x :y :z]] [[:u :v] [:i :j]]]
-	[[[:c :b :a] [:x :y :z]] [[:u :v] [:i :j]]]))))
-
-(defn same-multiple-pairings?
-  [pairings-1 pairings-2]
-  (matching-elements? same-colored-pairing? pairings-1 pairings-2))
-
-(deftest test-same-multiple-pairings?
-  (is (same-multiple-pairings?
-       [[[[:a :b] [:x :y]] [[:i] [:u]]]
-	[[[:a :b] [:y :x]] [[:j] [:u]]]]
-       [[[[:b :a] [:x :y]] [[:j] [:u]]]
-	[[[:a :b] [:x :y]] [[:i] [:u]]]]))
-  (is (not       
-       (same-multiple-pairings?
-	[[[[:a :b] [:x :y]] [[:i] [:u]]]
-	 [[[:a :b] [:y :x]] [[:j] [:u]]]]
-	[[[[:a :b] [:x :y]] [[:j] [:u]]]
-	 [[[:a :b] [:x :y]] [[:i] [:u]]]])))
-  (is (not       
-       (same-multiple-pairings?
-	[[[[:a :b] [:x :y]] [[:i] [:u]]]
-	 [[[:a :b] [:y :x]] [[:j] [:u]]]]
-	[[[[:a :b] [:x :y]] [[:j] [:u]]]
-	 [[[:a :b] [:y :x]] [[:i] [:u]] [:f :g] [:n :m]]])))
-  (is (same-multiple-pairings?
-       [[[[:a :b] [:x :y]] [[] []]]
-	[[[:a :b] [:y :x]] [[:j] [:u]]]]
-       [[[[:b :a] [:x :y]] [[:j] [:u]]]
-	[[[:a :b] [:x :y]] [[] []]]])))
-
 (deftest test-same-graph-on-points-nodes
   (is (same-graph?
        (undirected-graph (Point3d. 0 0 0))
