@@ -149,3 +149,16 @@
   (is (rmsd= 
        (Math/sqrt (/ (+ 0 0 1 1) 4))
        (clique-based-point-alignment 2 colored-points-1 colored-points-2)))))
+
+(pprint
+  (let [r1 (Point3d. -1  3  0)
+	r2 (Point3d.  3  3  0)
+	b1 (Point3d.  1  2  0)
+	b2 (Point3d.  1  4  0)
+	r3 (Point3d.  1  3  0)
+	r4 (Point3d.  1  5  0)
+	b3 (Point3d.  0  4  0)
+	b4 (Point3d.  2  4  0)
+	colored-points-1 [[r1 r2] [b1 b2]]
+	colored-points-2 [[r3 r4] [b3 b4]]]
+    (clique-based-point-alignment 1 colored-points-1 colored-points-2)))
