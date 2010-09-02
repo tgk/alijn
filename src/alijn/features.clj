@@ -23,11 +23,51 @@
 
 (comment pprint (parse-features "data/example/phase_supplement.smarts"))
 
-(defn remove-defaults [smarts-strings]
-  (filter #(not (.startsWith % "default")) smarts-strings))
-
 (defn first-word [s]
   (first (.split #" " s)))
+
+(defn parse-smarts-line [line]
+  (let [tokens (str-utils/split line #"\s+")
+	smarts (first tokens)
+	atom-sel-expr (second tokens)
+	atom-sel-expr (if (= atom-sel-expr "point") "point(1)" atom-sel-expr)
+	indexes (->> atom-sel-expr
+		     (re-seq #"\d+")
+		     (map #(Integer/parseInt %))
+		     (map dec))]
+    {:smarts smarts, 
+     :points (if (empty? indexes) :all indexes)}))
+
+(defn parse-smarts-block [block]
+  (if (= 0 (count block)) 
+    [] 
+    (map parse-smarts-line 
+	 (str-utils/split-lines block))))
+
+(defn block-starting-with [keyword s]
+  (let [keyword-idx (.indexOf s (str keyword))
+	tail (.substring s (+ keyword-idx 1 (count keyword)))
+	end-idx (.indexOf tail "\n#")
+	block (if (> end-idx -1) (.substring tail 0 end-idx) tail)]
+    (str-utils/trim block)))
+  
+(defn remove-defaults [smarts-strings]
+  (filter #(not (.startsWith (:smarts %) "default")) smarts-strings))
+
+(defn parse-feature-block [block]
+  {:identifier (block-starting-with "IDENTIFIER" block)
+   :comment (block-starting-with "COMMENT" block)
+   :include (remove-defaults 
+	     (parse-smarts-block (block-starting-with "INCLUDE" block)))
+   :exclude (remove-defaults
+	     (parse-smarts-block (block-starting-with "EXCLUDE" block)))})
+
+(defn split-into-phase-blocks [s]
+  (map 
+   #(apply str (interpose "\n" %))
+   (chop-using (partial = "#FEATURE") (str-utils/split-lines s))))
+
+;;; Old code ;;;
 
 (defn parse-phase-block [block]
   (let [name (-> block rest first (.substring 9) (str-utils/replace " " "-"))
