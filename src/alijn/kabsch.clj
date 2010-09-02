@@ -1,6 +1,5 @@
 (ns alijn.kabsch
-  (:use clj-todo
-	alijn.math)
+  (:use alijn.math)
   (:require [clojure.contrib.seq :as seq])
   (:import [Jama Matrix]
 	   [javax.vecmath Point3d]))

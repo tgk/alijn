@@ -1,5 +1,4 @@
 (ns alijn.io
-  (:use clj-todo)
   (:import 
    [java.io File FileInputStream FileOutputStream FileReader]
    [org.openscience.cdk ChemFile]
@@ -16,7 +15,7 @@
 
 (defn read-molecules 
   "Reads all the molecules from a file. 
-Adapted from http://rguha.net/code/java/"
+  Adapted from http://rguha.net/code/java/"
   [filename]
   (let [reader (->> filename
 		    FileReader.

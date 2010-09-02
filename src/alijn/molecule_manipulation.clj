@@ -1,7 +1,5 @@
 (ns alijn.molecule-manipulation
-  (:use
-   [clj-todo]
-   [alijn math]))
+  (:use alijn.math))
 
 (defn translate-atom! 
   "Performs an inplace translation of the atom."

@@ -1,7 +1,6 @@
 (ns alijn.point-alignment
-  (:use [clj-todo]
-	[alijn combinatorics kabsch utils]
-	[clojure.contrib pprint])
+  (:use [alijn combinatorics kabsch utils]
+	clojure.contrib.pprint)
   (:import [javax.vecmath Point3d]))
 
 ;;; Shiny new code (some untested)

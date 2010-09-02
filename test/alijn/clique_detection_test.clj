@@ -2,8 +2,7 @@
   (:use [alijn.clique-detection] :reload-all)
   (:use [clojure.test]
 	[alijn utils combinatorics graph]
-	clojure.pprint
-	clj-todo)
+	clojure.pprint)
   (:import [javax.vecmath Point3d]))
 
 ;;;; Correspondance graphs

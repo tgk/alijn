@@ -23,6 +23,10 @@ To install in local repository [first fork cdk from github](http://github.com/eg
     ant dist-large
     mvn install:install-file -DgroupId=org.openscience -DartifactId=cdk -Dversion=1.3.5.git -Dpackaging=jar -Dfile=dist/jar/cdk-1.3.5.git.jar
 
+Requires jama-1.0.1.jar (google for it) which can be installed by issuing
+
+    mvn install:install-file -DgroupId=jama -DartifactId=jama -Dversion=1.0.1 -Dpackaging=jar -Dfile=jama-1.0.1.jar
+
 After having installed leiningen and cloned the project, issue the following:
 
     lein deps

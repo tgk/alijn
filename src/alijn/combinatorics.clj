@@ -1,6 +1,5 @@
 (ns alijn.combinatorics
-  (:use [clj-todo]
-	[clojure.contrib.combinatorics]))
+  (:use clojure.contrib.combinatorics))
 
 (defn shorter-permutations 
   "Lazy seq of all permutations of elements in items with
@@ -11,10 +10,6 @@
      concat 
      (map permutations 
 	  (combinations items n)))))
-
-(todo 
- "Should this be pushed to clojure.contrib? 
-Might start with submitting it to mailing list"
 
 (defn all-pairs 
   "Lazy seq of all pairings of elements from the two sequences."
@@ -27,7 +22,6 @@ Might start with submitting it to mailing list"
       (map (partial map vector) 
 	   (repeat seq-1)
 	   (shorter-permutations seq-2 n)))))
-)
 
 (defn all-grouped-pairs
   "See alijn.combinatorics-test for an example usage."

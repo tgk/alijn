@@ -1,13 +1,8 @@
 (ns alijn.utils
-  (:use clj-todo
-	clojure.contrib.combinatorics))
+  (:use clojure.contrib.combinatorics))
 
-(todo
- "Uses [m & ms] along with (cons m ms) to gurantee at least one element.
- Is there a nicer way?"
 (defn same-keys? [m & ms] 
   (->> (cons m ms) (map keys) (map set) (apply =)))
-)
 
 (defn maps-to-vectors [m & ms] 
   (let [ms (cons m ms)]
@@ -18,8 +13,6 @@
 	(cons f vs))
       (throw (new IllegalArgumentException "Maps must have same keys.")))))
 
-(todo
- "Also uses [m & ms] with (cons m ms). Is there a better way?"
 (defn map-on-values 
   "Applies f to the values in the maps and returns a new map with the 
   results."
@@ -29,14 +22,9 @@
 	tuples (apply map vector vs)
 	results (map (partial apply f) tuples)]
     (to-map results)))
-)
 
 (defn map-on-keys [f m]
   (into {} (map (fn [[k v]] [(f k) v]) m)))
-
-(todo
- "This function could be rewritten as a simple usage
-of partition-by. See further down."
 
 (defn chop-using 
   "Chops up a coll using pred. Every time pred is true, a new sequence is started."
@@ -53,8 +41,6 @@ of partition-by. See further down."
 	      remaining (->> coll (drop-while not-pred) (drop-while pred))]
 	  [taken remaining]))
       [[] coll])))))
-  
-)
 
 (defn chop-using-2 [pred coll]
   (->> (partition-by pred coll)

@@ -1,7 +1,6 @@
 (ns alijn.colored-point-alignment-test
   (:use [alijn.colored-point-alignment] :reload-all
 	[clojure.test]
-	clj-todo
 	clojure.pprint)
   (:import [javax.vecmath Point3d]))
 
@@ -150,6 +149,7 @@
        (Math/sqrt (/ (+ 0 0 1 1) 4))
        (clique-based-point-alignment 2 colored-points-1 colored-points-2)))))
 
+(comment
 (pprint
   (let [r1 (Point3d. -1  3  0)
 	r2 (Point3d.  3  3  0)
@@ -162,3 +162,4 @@
 	colored-points-1 [[r1 r2] [b1 b2]]
 	colored-points-2 [[r3 r4] [b3 b4]]]
     (clique-based-point-alignment 1 colored-points-1 colored-points-2)))
+)
