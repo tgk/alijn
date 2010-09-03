@@ -23,8 +23,7 @@
 
 (comment pprint (parse-features "data/example/phase_supplement.smarts"))
 
-(defn first-word [s]
-  (first (.split #" " s)))
+;;; Phase file parsing
 
 (defn parse-smarts-line [line]
   (let [tokens (str-utils/split line #"\s+")
@@ -38,59 +37,41 @@
     {:smarts smarts, 
      :points (if (empty? indexes) :all indexes)}))
 
-(defn parse-smarts-block [block]
-  (if (= 0 (count block)) 
-    [] 
-    (map parse-smarts-line 
-	 (str-utils/split-lines block))))
+(defn is-tag? [line] (.startsWith line "#"))
+(defn tag-to-attribute [tag] (-> tag (.substring 1) .toLowerCase keyword))
+(defn read-tag [line] 
+  (let [[tag & rest] (.split line " ")]
+    [(tag-to-attribute tag) (apply str (interpose " " rest))]))
 
-(defn block-starting-with [keyword s]
-  (let [keyword-idx (.indexOf s (str keyword))
-	tail (.substring s (+ keyword-idx 1 (count keyword)))
-	end-idx (.indexOf tail "\n#")
-	block (if (> end-idx -1) (.substring tail 0 end-idx) tail)]
-    (str-utils/trim block)))
-  
-(defn remove-defaults [smarts-strings]
-  (filter #(not (.startsWith (:smarts %) "default")) smarts-strings))
+(defn update-tag-info [line tag-info]
+  (if (is-tag? line)
+    (let [[tag val] (read-tag line)]
+      (assoc tag-info 
+	tag val
+	:last-tag tag
+	:tag? true))
+    (assoc tag-info :tag? false)))
 
-(defn parse-feature-block [block]
-  {:identifier (block-starting-with "IDENTIFIER" block)
-   :comment (block-starting-with "COMMENT" block)
-   :include (remove-defaults 
-	     (parse-smarts-block (block-starting-with "INCLUDE" block)))
-   :exclude (remove-defaults
-	     (parse-smarts-block (block-starting-with "EXCLUDE" block)))})
+(defn tag-lines [lines]
+  (loop [in-lines lines, out-lines [], tag-info {:tags {}}]
+    (if (empty? in-lines)
+      out-lines
+      (let [[in-line & in-lines] in-lines
+	    tag-info (update-tag-info in-line tag-info)
+	    out-line (assoc tag-info :line in-line)]
+	(recur in-lines, (conj out-lines out-line), tag-info)))))
 
-(defn split-into-phase-blocks [s]
-  (map 
-   #(apply str (interpose "\n" %))
-   (chop-using (partial = "#FEATURE") (str-utils/split-lines s))))
-
-;;; Old code ;;;
-
-(defn parse-phase-block [block]
-  (let [name (-> block rest first (.substring 9) (str-utils/replace " " "-"))
-	[include exclude] (chop-using #(.equals % "#EXCLUDE") (drop 3 block))
-	include (map first-word (remove-defaults include))
-	exclude (map first-word (remove-defaults exclude))]
-    {name [include exclude]}))
-
-(defn parse-phase-features
-  "Parse a phase-type feature file. Ignores default lines (non-SMARTS strings)
-and Custom patterns."
-  [filename]
-  (dissoc 
-   (->> filename
-	slurp
-	str-utils/split-lines
-	(chop-using #(.equals % "#FEATURE"))
-	rest
-	(map parse-phase-block)
-	(apply merge))
-   "Custom"))
-
-(comment pprint (parse-phase-features "data/example/phase_smarts.def"))
+(defn parse-phase-with-tags [filename]
+  (->> filename
+       slurp
+       str-utils/split-lines
+       (filter #(not (.startsWith % "default")))
+       tag-lines
+       (filter (comp not :tag?))
+       (map #(assoc % :smarts (parse-smarts-line (:line %))))
+       (group-by :identifier)
+       (map-on-values (partial group-by :last-tag))
+       (map-on-values (partial map-on-values (partial map :smarts)))))
 
 ;;; Query tools
 
