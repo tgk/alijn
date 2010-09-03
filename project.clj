@@ -7,7 +7,7 @@
 		 [bron-kerbosch "1.0.0-SNAPSHOT"]
 		 [penumbra "0.6.0-SNAPSHOT"]]
   :native-dependencies [[penumbra/lwjgl "2.4.2"]]
-  :dev-dependencies [[native-deps "1.0.3"]
+  :dev-dependencies [[native-deps "1.0.4"]
 		     [lein-run "1.0.0-SNAPSHOT"]
 		     [swank-clojure "1.3.0-SNAPSHOT"]]
   :jvm-opts ["-Xmx1g"]
