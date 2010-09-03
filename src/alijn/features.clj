@@ -75,6 +75,7 @@
 
 ;;; Query tools
 
+; Save
 (defn get-query-tool [smarts-string] (SMARTSQueryTool. smarts-string))
 (def cached-query-tool (memoize get-query-tool))
 (defn find-feature-atoms
@@ -88,12 +89,35 @@ only match a single atom."
 	     (map #(.getAtom molecule %) indices))
 	   (.getUniqueMatchingAtoms query-tool))
       [])))
-
 (defn get-center [atoms]
   "Returns the center of the atoms as a Point3d."
   (let [points (map #(.getPoint3d %) atoms)]
     (vec-center points)))
 
+; Phase query tools
+(defn new-find-features
+  "features is a seq of {:smarts <text> :points <int seq>}.
+  Returns set of Point3ds corresponding to found features using
+  the smarts strings and points to identify important atoms."
+  [molecule features]
+
+;;;;;; TODO : Here is as far as I've got
+
+)
+
+(defn new-find-features 
+  "Extracts all the feature points from the molecule using
+  the feature-defs which are organised as 
+  {name {:include include, :exclude exclude}.
+  Returned features are maps from name to a seq of Point3ds."
+  [molecule feature-defs]
+  (map-on-values  
+   (fn [{include :include, exclude :exclude}]
+     (difference (new-find-features molecule include)
+		 (new-find-features molecule exclude)))
+   feature-defs))
+
+; Remove
 (defn find-features
   "Finds all the features with the given SMARTS strings.
 Returns the center points."
@@ -118,10 +142,3 @@ from the molecule. Returns collection of name -> centers.
 The centers are Point3d objects."
   [features molecule]
   (map-on-values (partial find-and-exclude-features molecule) features))
-
-(comment let [features (parse-phase-features "data/example/phase_smarts.def")
-      molecules (read-molecules "data/example/comt_subset.sdf")]
-  (println)
-  (doseq [molecule molecules]
-    (pprint
-     (feature-groups features molecule))))
