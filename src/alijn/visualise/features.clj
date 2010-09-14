@@ -27,6 +27,5 @@ a view for each molecule containing the molecule and its features.")
 
 (defn test-view [] 
   (find-and-show-features "-p" "data/example/custom_smarts.def"
-			  "data/example/comt_subset.sdf"))
+			  "data/example/comt_ligands.mol2"))
 
-(test-view)
