@@ -4,27 +4,7 @@
   (:require [clojure.contrib.str-utils2 :as str-utils])
   (:import [org.openscience.cdk.smiles.smarts SMARTSQueryTool]))
 
-;;; Parsers
-
-(defn- not-commented? [s]
-  (not= \; (first s)))
-
-(defn parse-features
-  [filename]
-  (->> filename 
-       slurp 
-       str-utils/split-lines
-       (filter not-commented?)
-       (map #(.split #" " %))
-       (map seq)
-       (group-by first)
-       (map-on-values (partial map second))
-       (map-on-values (fn [val] [val []]))))
-
-(comment pprint (parse-features "data/example/phase_supplement.smarts"))
-
 ;;; Phase file parsing
-
 (defn parse-smarts-line [line]
   (let [tokens (str-utils/split line #"\s+")
 	smarts (first tokens)
@@ -69,13 +49,11 @@
        tag-lines
        (filter (comp not :tag?))
        (map #(assoc % :smarts (parse-smarts-line (:line %))))
-       (group-by :identifier)
+       (group-by :comment)
        (map-on-values (partial group-by :last-tag))
        (map-on-values (partial map-on-values (partial map :smarts)))))
 
 ;;; Query tools
-
-; Save
 (defn get-query-tool [smarts-string] (SMARTSQueryTool. smarts-string))
 (def cached-query-tool (memoize get-query-tool))
 (defn find-feature-atoms
@@ -84,28 +62,32 @@ only match a single atom."
   [molecule smarts-string]
   (let [query-tool (cached-query-tool smarts-string)
 	status (.matches query-tool molecule)]
-    (if status
-      (map (fn [indices] 
-	     (map #(.getAtom molecule %) indices))
-	   (.getUniqueMatchingAtoms query-tool))
-      [])))
+    (when status
+      (for [indices (.getUniqueMatchingAtoms query-tool)]
+	(map #(.getAtom molecule %) indices)))))
+
 (defn get-center [atoms]
   "Returns the center of the atoms as a Point3d."
-  (let [points (map #(.getPoint3d %) atoms)]
+  (let [points (map #(.getPoint3d %) atoms)] ; memfn?
     (vec-center points)))
 
-; Phase query tools
+(defn new-find-feature
+  [molecule feature]
+  (set
+   (for [found-atoms (find-feature-atoms molecule (:smarts feature))]
+     (get-center
+      (if (= :all (:points feature))
+	found-atoms
+	(map (partial nth found-atoms) (:points feature)))))))
+
 (defn new-find-features
   "features is a seq of {:smarts <text> :points <int seq>}.
   Returns set of Point3ds corresponding to found features using
   the smarts strings and points to identify important atoms."
   [molecule features]
+  (apply union (map (partial new-find-feature molecule) features)))
 
-;;;;;; TODO : Here is as far as I've got
-
-)
-
-(defn new-find-features 
+(defn new-find-all-features 
   "Extracts all the feature points from the molecule using
   the feature-defs which are organised as 
   {name {:include include, :exclude exclude}.
@@ -116,29 +98,3 @@ only match a single atom."
      (difference (new-find-features molecule include)
 		 (new-find-features molecule exclude)))
    feature-defs))
-
-; Remove
-(defn find-features
-  "Finds all the features with the given SMARTS strings.
-Returns the center points."
-  [molecule smarts-strings]
-  (->>  smarts-strings
-	(map (partial find-feature-atoms molecule))
-	(apply concat)
-	(map get-center)
-	distinct))
-
-(defn find-and-exclude-features
-  "Finds all the features matching the include SMARTS strings,
-but excludes points matching patterns matching the exclude SMARTS strings."
-  [molecule [include exclude]]
-  (let [included (set (find-features molecule include))
-	excluded (set (find-features molecule exclude))]
-    (difference included excluded)))
-   
-(defn feature-groups
-  "Extract the features defined in a {name [include exclude-smarts-strings]} map
-from the molecule. Returns collection of name -> centers.
-The centers are Point3d objects."
-  [features molecule]
-  (map-on-values (partial find-and-exclude-features molecule) features))
