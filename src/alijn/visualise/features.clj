@@ -1,5 +1,5 @@
 (ns alijn.visualise.features
-  (:use [alijn features io molecule-visualisation]
+  (:use [alijn custom-features io molecule-visualisation utils]
 	clojure.contrib.command-line))
 
 (def desc 
@@ -11,21 +11,18 @@ a view for each molecule containing the molecule and its features.")
   find-and-show-features 
   [& args]
   (with-command-line args desc
-    [[phase-file p "A phase feature definition file."]
-     filenames]
-    (let [phase-features (parse-phase-with-tags phase-file)
-	  molecules (read-molecules-from-files filenames)]
-      (println (format "Parsed %d features and %d molecules." 
-		       (count phase-features) (count molecules)))
+    [filenames]
+    (let [molecules (read-molecules-from-files filenames)]
+      (println (format "Parsed %d molecules." (count molecules)))
       (doseq [molecule molecules]
-	(let [grouped-features (new-find-all-features molecule phase-features)
-	      found-features (->> (for [[name centers] grouped-features]
+	(let [grouped-features (find-features molecule)
+	      grouped-features-points (map-on-values (partial map get-point) grouped-features)
+	      found-features (->> (for [[name centers] grouped-features-points]
 				    (map vector (repeat name) centers))
 				  (apply concat)
 				  (apply concat))]
 	  (show-molecules-app [molecule] found-features))))))
 
 (defn test-view [] 
-  (find-and-show-features "-p" "data/example/custom_smarts.def"
-			  "data/example/comt_ligands.mol2"))
+  (find-and-show-features "data/example/comt_ligands.mol2"))
 

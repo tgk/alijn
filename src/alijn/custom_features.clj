@@ -1,7 +1,11 @@
 (ns alijn.custom-features
-  (:import [org.openscience.cdk Atom Bond AtomContainer])
+  (:import [org.openscience.cdk Atom Bond AtomContainer]
+	   [org.openscience.cdk.interfaces IAtom]
+	   [org.openscience.cdk.smiles.smarts SMARTSQueryTool])
   (:use clojure.pprint
-	[alijn combinatorics io]))
+	[alijn math]))
+
+;; Hydrogen donor and acceptor
 
 (comment 
 "Macro solution"
@@ -38,11 +42,35 @@
   (or (is-both-donor-and-acceptor? container atm)
       (and (is-atom? atm "O" "N") (not (connected-to-hydrogen? container atm)))))
 
+;; Aromatic rings
 
+(def ring-tools (map #(SMARTSQueryTool. %) ["a1aaaa1" "a1aaaaa1" "a1aaaaaa1"]))
 
+(defn find-aromatic-rings [container]
+  (apply 
+   concat
+   (for [tool ring-tools]
+     (when (.matches tool container)
+       (for [indices (.getMatchingAtoms tool)]
+	 (map #(.getAtom container %) indices))))))
 
+(defn ring-center [ring-atoms]
+  (let [points (map #(.getPoint3d %) ring-atoms)]
+    (vec-center points)))
 
+;; General feature utilities
 
+(defn get-point [feature]
+  (if (isa? (class feature) IAtom)
+    (.getPoint3d feature)
+    (ring-center feature)))
+
+(defn find-features [molecule]
+  {"donor" (filter (partial is-donor? molecule) (.atoms molecule))
+   "acceptor" (filter (partial is-acceptor? molecule) (.atoms molecule))
+   "aromatic-rings" (find-aromatic-rings molecule)})
+
+;; Charges
 
 (comment
 
