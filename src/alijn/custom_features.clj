@@ -24,19 +24,19 @@
   ([symbol] (fn [atm] (= symbol (.getSymbol atm))))
   ([atm & symbols] (true? (some #((is-atom? %) atm) symbols))))
 
-(defn connected-hydrogen? [container atm] 
+(defn connected-to-hydrogen? [container atm] 
   (true? (some (is-atom? "H") (.getConnectedAtomsList container atm))))
 
 (defn is-both-donor-and-acceptor? [container atm]
-  (and (is-atom? atm "O") (connected-hydrogen? container atm)))
+  (and (is-atom? atm "O") (connected-to-hydrogen? container atm)))
 
 (defn is-donor? [container atm]
   (or (is-both-donor-and-acceptor? container atm)
-      (and (is-atom? atm "S" "N") (connected-hydrogen? container atm))))
+      (and (is-atom? atm "S" "N") (connected-to-hydrogen? container atm))))
 
 (defn is-acceptor? [container atm]
   (or (is-both-donor-and-acceptor? container atm)
-      (and (is-atom? atm "O" "N") (not (connected-hydrogen? container atm)))))
+      (and (is-atom? atm "O" "N") (not (connected-to-hydrogen? container atm)))))
 
 
 
