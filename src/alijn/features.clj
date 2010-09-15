@@ -13,7 +13,8 @@
 	indexes (->> atom-sel-expr
 		     (re-seq #"\d+")
 		     (map #(Integer/parseInt %))
-		     (map dec))]
+		     (map dec)
+		     )]
     {:smarts smarts, 
      :points (if (empty? indexes) :all indexes)}))
 
@@ -59,12 +60,16 @@
 (defn find-feature-atoms
   "Result is a coll of atom collections, even though some features
 only match a single atom."
-  [molecule smarts-string]
+  [molecule smarts-string type-s]
   (let [query-tool (cached-query-tool smarts-string)
 	status (.matches query-tool molecule)]
     (when status
-      (for [indices (.getUniqueMatchingAtoms query-tool)]
-	(map #(.getAtom molecule %) indices)))))
+      (for [indices (.getMatchingAtoms query-tool)]
+	(do
+	  (println "matched " smarts-string type-s)
+	  (doseq [atom (map #(.getAtom molecule %) indices)]
+	    (prn atom))
+	  (map #(.getAtom molecule %) indices))))))
 
 (defn get-center [atoms]
   "Returns the center of the atoms as a Point3d."
@@ -72,9 +77,9 @@ only match a single atom."
     (vec-center points)))
 
 (defn new-find-feature
-  [molecule feature]
+  [molecule feature type-s]
   (set
-   (for [found-atoms (find-feature-atoms molecule (:smarts feature))]
+   (for [found-atoms (find-feature-atoms molecule (:smarts feature) type-s)]
      (get-center
       (if (= :all (:points feature))
 	found-atoms
@@ -84,8 +89,8 @@ only match a single atom."
   "features is a seq of {:smarts <text> :points <int seq>}.
   Returns set of Point3ds corresponding to found features using
   the smarts strings and points to identify important atoms."
-  [molecule features]
-  (apply union (map (partial new-find-feature molecule) features)))
+  [molecule features type-s]
+  (apply union (map #(new-find-feature molecule % type-s) features)))
 
 (defn new-find-all-features 
   "Extracts all the feature points from the molecule using
@@ -95,6 +100,6 @@ only match a single atom."
   [molecule feature-defs]
   (map-on-values  
    (fn [{include :include, exclude :exclude}]
-     (difference (new-find-features molecule include)
-		 (new-find-features molecule exclude)))
+     (difference (new-find-features molecule include "include")
+		 (new-find-features molecule exclude "exclude")))
    feature-defs))
