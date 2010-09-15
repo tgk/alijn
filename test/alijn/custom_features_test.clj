@@ -47,12 +47,12 @@
     (is (not (is-atom? a4 "O")))
     (is (not (is-atom? a5 "H")))
 
-    (is (= 0 (connected-hydrogens-count cont a0)))
-    (is (= 1 (connected-hydrogens-count cont a1)))
-    (is (= 0 (connected-hydrogens-count cont a2)))
-    (is (= 1 (connected-hydrogens-count cont a3)))
-    (is (= 0 (connected-hydrogens-count cont a4)))
-    (is (= 0 (connected-hydrogens-count cont a5)))
+    (is (not (connected-hydrogen? cont a0)))
+    (is (connected-hydrogen? cont a1))
+    (is (not (connected-hydrogen? cont a2)))
+    (is (connected-hydrogen? cont a3))
+    (is (not (connected-hydrogen? cont a4)))
+    (is (not (connected-hydrogen? cont a5)))
     
     (is (not (is-both-donor-and-acceptor? cont a0)))
     (is (is-both-donor-and-acceptor? cont a1))
