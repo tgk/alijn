@@ -4,5 +4,4 @@ lib
 classes
 native
 META-INF
-data/debug
-data/phase
+data

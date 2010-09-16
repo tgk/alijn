@@ -1,4 +1,0 @@
-; SMARTS definitions to supplement the 'default' features from phase.
-; Five-ring and six-rings of aromatic atoms
-Aromatic-Rings-(R) a1aaaa1
-Aromatic-Rings-(R) a1aaaaa1

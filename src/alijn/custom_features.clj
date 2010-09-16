@@ -38,7 +38,7 @@
    concat
    (for [tool ring-tools]
      (when (.matches tool container)
-       (for [indices (.getMatchingAtoms tool)]
+       (for [indices (.getUniqueMatchingAtoms tool)]
 	 (map #(.getAtom container %) indices))))))
 
 (defn ring-center [ring-atoms]
