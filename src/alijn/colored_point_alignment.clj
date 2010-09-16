@@ -76,10 +76,7 @@
    (partial clique-grouped-pairs threshold)
    constant-points variable-points))
 
-; Wrapper for both methods
-; Multimedthods for threshold vs. no threshold?
-; Can always refactor for that, forget for now.
-; Can also use multimethods to accept maps.
+; Main function
 (defn colored-point-alignment
   "Aligns colored points under a common translation and rotation.
 If threhold is false, all constant points of each color are paired
@@ -93,10 +90,9 @@ to the methods described by Willett et. al.
 constant-points and variable-points contain the points grouped 
 by their color. For example, if we have the colors red, green 
 and blue, the vector [[r1, r2] [g], [b1, b2, b3]] corresponds to a 
-set of two blue, one green and three green points.
+set of two blue, one green and three blue points.
 A point is a Point3d object."
   [threshold constant-points variable-points]
-  (if threshold
+  (if (number? threshold)
     (clique-based-point-alignment threshold constant-points variable-points)
     (exhaustive-point-alignment constant-points variable-points)))
-
