@@ -166,15 +166,17 @@
 
 
 ;;; Interface
-(defn show-molecules-app [molecules features]
-  (app/start 
-   {:display display, :reshape reshape, 
+(defn molecules-app [molecules features]
+  [{:display display, :reshape reshape, 
     :mouse-drag mouse-drag, 
     :init init} 
    {:rot-x 0, :rot-y 0,
     :trans-x 0, :trans-y -0.9, :trans-z -30,
     :molecules molecules
-    :features features}))
+    :features features}])
+  
+(defn show-molecules-app [molecules features]
+  (apply app/start (molecules-app molecules features)))
 
 (comment
   show-molecules-app 

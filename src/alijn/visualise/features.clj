@@ -16,7 +16,8 @@ a view for each molecule containing the molecule and its features.")
       (println (format "Parsed %d molecules." (count molecules)))
       (doseq [molecule molecules]
 	(let [grouped-features (find-features molecule)
-	      grouped-features-points (map-on-values (partial map get-point) grouped-features)
+	      grouped-features-points (map-on-values (partial map get-point) 
+						     grouped-features)
 	      found-features (->> (for [[name centers] grouped-features-points]
 				    (map vector (repeat name) centers))
 				  (apply concat)
@@ -25,4 +26,3 @@ a view for each molecule containing the molecule and its features.")
 
 (defn test-view [] 
   (find-and-show-features "data/example/comt_ligands.mol2"))
-

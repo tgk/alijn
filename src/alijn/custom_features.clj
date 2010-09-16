@@ -7,24 +7,11 @@
 
 ;; Hydrogen donor and acceptor
 
-(comment 
-"Macro solution"
-(defmacro create-is-atom? [type]
-  (let [name (symbol (format "is-atom-%s?" type))
-	upper-case-symbol (.toUpperCase type)]
-  `(defn ~name [atm#] (= ~upper-case-symbol (.getSymbol atm#)))))
-
-(create-is-atom? "h")
-(create-is-atom? "c")
-(create-is-atom? "o")
-(create-is-atom? "n")
-(create-is-atom? "s")
-)
-
-; (is-atom? "h") ; returns a fn that can be applied to atoms
-; (is-atom? atm "h") ; generates function and applies
-; (is-atom? atm "o" "n") ; generates functions and returns if any symbol is matched
 (defn is-atom? 
+  "(is-atom? \"h\")  returns a fn that can be applied to atoms
+   (is-atom? atm \"h\")  generates function and applies
+   (is-atom? atm \"o\" \"n\")  generates functions and returns if 
+                               any symbol is matched"
   ([symbol] (fn [atm] (= symbol (.getSymbol atm))))
   ([atm & symbols] (true? (some #((is-atom? %) atm) symbols))))
 
@@ -58,6 +45,14 @@
   (let [points (map #(.getPoint3d %) ring-atoms)]
     (vec-center points)))
 
+;; Charges
+
+(defn is-positive? [charge-limit atom]
+  (>= (.getCharge atom) charge-limit))
+
+(defn is-negative? [charge-limit atom]
+  (<= (.getCharge atom) charge-limit))
+
 ;; General feature utilities
 
 (defn get-point [feature]
@@ -66,34 +61,11 @@
     (ring-center feature)))
 
 (defn find-features [molecule]
-  {"donor" (filter (partial is-donor? molecule) (.atoms molecule))
+  {
+   "donor" (filter (partial is-donor? molecule) (.atoms molecule))
    "acceptor" (filter (partial is-acceptor? molecule) (.atoms molecule))
-   "aromatic-rings" (find-aromatic-rings molecule)})
-
-;; Charges
-
-(comment
-
-(defn charged-atoms [molecule charge-limit]
-  [(filter #(>= (.getCharge %)    charge-limit)  (.atoms molecule))
-   (filter #(<= (.getCharge %) (- charge-limit)) (.atoms molecule))])  
-
-(let [mol (first (read-molecules "data/example/comt_ligands.mol2"))
-      [pos neg] (charged-atoms mol 1)]
-
-;  (prn "atoms:" (filter #(= "C" (.getSymbol %)) (.atoms mol)))
-;  (prn "charges:" (map #(.getFormalCharge %) (.atoms mol)))
-;  (prn "Positivly charged atoms:" (count pos))
-;  (prn "Negativly charged atoms:" (count neg))
-
-  (prn (first (.atoms mol)))
-)
-
-
-;(ChemFileManipulator/getAllAtomContainers (.read mol2-reader (new ChemFile)))
-
-)
-
-
-
+   "aromatic-rings" (find-aromatic-rings molecule)
+   "positive" (filter (partial is-positive?  0.5) (.atoms molecule))
+   "negative" (filter (partial is-negative? -0.5) (.atoms molecule))
+   })
 
