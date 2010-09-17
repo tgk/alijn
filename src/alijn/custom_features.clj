@@ -3,7 +3,7 @@
 	   [org.openscience.cdk.interfaces IAtom]
 	   [org.openscience.cdk.smiles.smarts SMARTSQueryTool])
   (:use clojure.pprint
-	[alijn math]))
+	[alijn math utils]))
 
 ;; Hydrogen donor and acceptor
 
@@ -59,6 +59,9 @@
   (if (isa? (class feature) IAtom)
     (.getPoint3d feature)
     (ring-center feature)))
+
+(defn extract-feature-points [features]
+  (map-on-values (partial map get-point) features))
 
 (defn find-features [molecule]
   {

@@ -81,8 +81,7 @@
 
 (defn draw-features [features]
   (when (> (count features) 0)
-    (let [features (partition 2 features)
-	  names (distinct (map first features))
+    (let [names (keys features)
 	  feature-color (feature-color-fn names)]
       (doseq [[name offset] (zipmap names (iterate (partial + 30) 0))]
 	(let [[r g b] (feature-color name)]
@@ -97,14 +96,15 @@
 	       (draw-lines
 		(vertex 0 (+ 25 offset))
 		(vertex 100 (+ 25 offset))))))))
-      (doseq [[name pos] features]
-	(let [[r g b] (feature-color name)]
-	  (push-matrix
-	   (color r g b 0.5)
-	   (translate (.x pos) (.y pos) (.z pos))
-	   (scale 0.5 0.5 0.5)
-	   (cube)))))))
-    
+      (doseq [[name points] features]
+	(doseq [pos points]
+	  (let [[r g b] (feature-color name)]
+	    (push-matrix
+	     (color r g b 0.5)
+	     (translate (.x pos) (.y pos) (.z pos))
+	     (scale 0.5 0.5 0.5)
+	     (cube))))))))
+  
 
 ;;; Controllers
 

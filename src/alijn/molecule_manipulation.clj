@@ -17,6 +17,7 @@
     (.setPoint3d atom new-point)
     atom))
 
+; Might be deprectaed
 (defn translate-and-rotate-molecule
   "Generates a new molecule that has been first translated using the
 Point3d translation vector and the rotated using the Jama.Matrix."
@@ -26,4 +27,19 @@ Point3d translation vector and the rotated using the Jama.Matrix."
     (doseq [atom atoms] 
       (translate-atom! translation atom)
       (rotate-atom! rotation atom))
+    clone))
+
+(defn translate-rotate-and-translate-molecule
+  "Generates a new molecule that has been first rotated using the 
+  Jama.Matrix and then translated using the Point3d."
+  [^javax.vecmath.Point3d pre-translation 
+   ^Jama.Matrix rotation 
+   ^javax.vecmath.Point3d post-translation 
+   molecule]
+  (let [clone (.clone molecule)
+	atoms (.atoms clone)]
+    (doseq [atom atoms] 
+      (translate-atom! pre-translation atom)
+      (rotate-atom! rotation atom)
+      (translate-atom! post-translation atom))
     clone))
