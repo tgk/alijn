@@ -93,3 +93,11 @@ back to the original structure."
 	(recur 
 	 (rest coll-1)
 	 (remove-first (partial matches? (first coll-1)) coll-2))))))
+
+(defn print-table [rows]
+  (let [col-widths (for [idx (range (count (first rows)))]
+		     (apply max (map #(count (nth % idx)) rows)))
+	fmt-string (apply str (for [width col-widths] (format " %%%ds" (+ 4 width))))]
+    (doseq [row rows]
+      (apply printf fmt-string row)
+      (println))))
