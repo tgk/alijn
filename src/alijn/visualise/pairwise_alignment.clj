@@ -18,8 +18,8 @@ read as a reference and aligns the remaining molecules using features.")
 	  constant-molecule (first molecules)
 	  constant-features (extract-feature-points (find-features constant-molecule))
 	  variable-molecules molecules]
-      (prn "Parsed" (count molecules) "molecules in total.")
-      (prn "Aligning with respect to first.")
+      (println "Parsed" (count molecules) "molecules in total.")
+      (println "Aligning with respect to first.")
       (doseq [variable-molecule variable-molecules]
 	(let [moved-variable (align threshold constant-molecule variable-molecule)]
 	  (show-molecules-app [constant-molecule moved-variable]
