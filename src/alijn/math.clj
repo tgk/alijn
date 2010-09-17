@@ -50,3 +50,9 @@
   (-> (map distance-squared points-1 points-2) 
       average
       Math/sqrt))
+
+(defn molecule-rmsd
+  "Calculates the root mean square deviation between two
+  molecules atoms. Must have same number of atoms."
+  [molecule-1 molecule-2]
+  (rmsd (.atoms molecule-1) (.atoms molecule-2)))
