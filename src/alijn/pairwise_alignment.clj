@@ -4,7 +4,8 @@
 	 utils 
 	 colored-point-alignment 
 	 molecule-manipulation
-	 math]))
+	 math]
+	clojure.pprint))
 
 (defn align 
   "Aligns a pair of molecules using their features.
@@ -23,6 +24,12 @@
 	alignment-result (colored-point-alignment 
 			  threshold 
 			  constant-points variable-points)]
+    (println "points to be aligned from constant")
+    (pprint constant-features-as-points)
+    (println "points to be aligned from variable")
+    (pprint variable-features-as-points)
+    (println "feature rmsd" (:rmsd alignment-result))
+    (pprint alignment-result)
     (translate-rotate-and-translate-molecule 
      (neg (:variable-center alignment-result))
      (:rotation alignment-result)

@@ -132,17 +132,3 @@
      "n1nc[nH]n1                              group   0   1   0   0   1   1.8"))))
 
 
-
-(deftest test-parse-phase-with-tags
-  (is (=
-       {"A"
-	{:exclude 
-	 [{:smarts "smarts-3", :points [0]}],
-	 :include
-	 [{:smarts "smarts-1", :points [0]}
-	  {:smarts "smarts-2", :points :all}]},
-	"D" 
-	{:include 
-	 [{:smarts "smarts-4", :points [0]}]}}
-       (parse-phase-with-tags "data/example/test_smarts.def"))))
-       

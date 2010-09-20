@@ -55,5 +55,7 @@
   "Calculates the root mean square deviation between two
   molecules atoms. Must have same number of atoms."
   [molecule-1 molecule-2]
+  (let [rmsd
   (rmsd (map #(.getPoint3d %) (.atoms molecule-1))
-	(map #(.getPoint3d %) (.atoms molecule-2))))
+	(map #(.getPoint3d %) (.atoms molecule-2)))]
+    (println "molecule rmsd" rmsd) rmsd))

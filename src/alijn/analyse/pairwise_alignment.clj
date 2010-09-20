@@ -22,7 +22,7 @@ table with the results.")
      [success-rmsd "The maximum rmsd for a realignment to be a success." 2.5]
      filenames]
     (let [threshold (when threshold (Double/parseDouble threshold))]
-      (print
+      (print-table
        (cons
 	["target" "avg. success rate" "# ligands"]
 	(for [filename filenames
@@ -32,13 +32,16 @@ table with the results.")
 			    (map (partial 
 				  get-rmsd-of-optimal-alignment 
 				  threshold molecule) 
-				 molecules))
+				 [molecule]
+					;molecules
+				 ))
 		    successes (for [l rmsds] (map #(<= % success-rmsd) l))
-;		    rates (for [l successes] (/ (count (filter true? l)) (count l)))
-;		    avg (str (* 100 (average rates)))
+		    rates (for [l successes] (/ (count (filter true? l)) (count l)))
+		    avg (str (* 100 (average rates)))
 		    ]]
-	  successes
-;	  [name avg (str (count molecules))]
+;	  successes
+;	  rates
+	  [name avg (str (count molecules))]
 ))))))
   
 (def test-file-1 "data/example/carboxypth-a.mol2")
@@ -46,7 +49,9 @@ table with the results.")
 
 
 (defn test-align-and-show []
-  (align-and-show-table "-threshold" "1.0" test-file-1))
+  (align-and-show-table
+  ; "--threshold" "1.1" 
+   test-file-1))
 
 (defn test-align-and-show-no-threshold []
   (align-and-show-table test-file-1))
