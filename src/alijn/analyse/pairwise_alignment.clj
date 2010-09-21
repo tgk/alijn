@@ -35,17 +35,19 @@ table with the results.")
 				 molecules))
 		    successes (for [l rmsds] (map #(<= % success-rmsd) l))
 		    rates (for [l successes] (/ (count (filter true? l)) (count l)))
-		    avg (str (* 100 (average rates)))]]
+		    avg (str (int (* 100 (average rates))))]]
 	  [name avg (str (count molecules))]))))))
   
 (def test-file-1 "data/example/carboxypth-a.mol2")
 (def test-file-2 "data/example/concanavalin.mol2")
+(def test-file-3 "data/grouped/flexs/g-phosphorylase.mol2")
+
 
 
 (defn test-align-and-show []
   (align-and-show-table
-   "--threshold" "0.1" 
-   test-file-1 test-file-2))
+   "--threshold" "1" 
+   test-file-3))
 
 (defn test-align-and-show-no-threshold []
   (align-and-show-table test-file-1))
