@@ -24,12 +24,6 @@
 	alignment-result (colored-point-alignment 
 			  threshold 
 			  constant-points variable-points)]
-    (println "points to be aligned from constant")
-    (pprint constant-features-as-points)
-    (println "points to be aligned from variable")
-    (pprint variable-features-as-points)
-    (println "feature rmsd" (:rmsd alignment-result))
-    (pprint alignment-result)
     (translate-rotate-and-translate-molecule 
      (neg (:variable-center alignment-result))
      (:rotation alignment-result)

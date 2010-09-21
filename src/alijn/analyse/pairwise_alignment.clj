@@ -32,17 +32,11 @@ table with the results.")
 			    (map (partial 
 				  get-rmsd-of-optimal-alignment 
 				  threshold molecule) 
-				 [molecule]
-					;molecules
-				 ))
+				 molecules))
 		    successes (for [l rmsds] (map #(<= % success-rmsd) l))
 		    rates (for [l successes] (/ (count (filter true? l)) (count l)))
-		    avg (str (* 100 (average rates)))
-		    ]]
-;	  successes
-;	  rates
-	  [name avg (str (count molecules))]
-))))))
+		    avg (str (* 100 (average rates)))]]
+	  [name avg (str (count molecules))]))))))
   
 (def test-file-1 "data/example/carboxypth-a.mol2")
 (def test-file-2 "data/example/concanavalin.mol2")
@@ -50,8 +44,8 @@ table with the results.")
 
 (defn test-align-and-show []
   (align-and-show-table
-  ; "--threshold" "1.1" 
-   test-file-1))
+   "--threshold" "0.1" 
+   test-file-1 test-file-2))
 
 (defn test-align-and-show-no-threshold []
   (align-and-show-table test-file-1))

@@ -65,7 +65,11 @@
 	colors (range max-color)
 	corr-graph (correspondance-graph-from-colored-points 
 		    threshold cons-wrapped vari-wrapped)
-	pairings (possible-pairings corr-graph)]
+;	pairings (possible-pairings corr-graph)
+	biggest-pairing (apply max-key (comp count flatten) 
+			       (possible-pairings corr-graph))
+	pairings [biggest-pairing]]
+;    (pprint (possible-pairings corr-graph))
     (for [[cons-lineup vari-lineup] pairings]
       [(unwrap-points colors cons-lineup)
        (unwrap-points colors vari-lineup)])))

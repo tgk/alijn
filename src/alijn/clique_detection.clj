@@ -31,6 +31,10 @@
 (defn not-same-underlying-node?
   [[a u] [b v]]
   (and (not= a b) (not= u v)))
+(comment defn not-same-underlying-colored-node?
+  [[a u] [b v]]
+  )
+
 (defn same-distance? 
   [dist-1 dist-2]
   (fn [[a u] [b v]] (= (dist-1 a b) (dist-2 u v))))
@@ -87,7 +91,7 @@
    points-1 points-2
    same-color?
    (combine-predicates
-    (wrapped-edge-predicate not-same-underlying-node?)
+    not-same-underlying-node?
     (wrapped-edge-predicate (within-distance? threshold distance distance)))))
 
 ; Possible pairings sub routine

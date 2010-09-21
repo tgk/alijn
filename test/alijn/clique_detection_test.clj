@@ -518,3 +518,123 @@
 	 (possible-pairings
 	  (correspondance-graph-from-colored-points 2 [b1 b2 r1] [b3 b4 r2]))))))
   
+
+;;; Error found using flexs dataset
+
+(deftest test-minimal-example
+  (let [a (Point3d. 0 0 0)
+	a-0 {:elm a :color 0}
+	a-1 {:elm a :color 1}
+	colored-points [a-0 a-1]
+	corr-graph (correspondance-graph-from-colored-points 
+		    0.0 colored-points colored-points)
+	oracle-corr-graph (undirected-graph [a-0 a-0] [a-1 a-1])]
+    (is (same-graph? oracle-corr-graph corr-graph)))
+
+  (let [a (Point3d. 0 0 0)
+	b (Point3d. 1 1 1)
+	a-0 {:elm a :color 0}
+	a-1 {:elm a :color 1}
+	b-0 {:elm b :color 0}
+	colored-points [a-0 a-1 b-0]
+	corr-graph (correspondance-graph-from-colored-points 
+		    0.0 colored-points colored-points)
+	oracle-corr-graph (undirected-graph 
+			   [a-0 a-0] [a-1 a-1] [b-0 b-0] [a-0 a-0] :stop
+			   [a-0 b-0] [b-0 a-0] [a-0 b-0])]
+    (is (same-graph? oracle-corr-graph corr-graph))))
+
+
+; Points are from carboxyptd-a/1cbx_kpl_h.mol2
+(comment deftest test-simplified-example-from-flexs
+  (let [a (Point3d. -0.2793, -2.9642, -0.0718)
+	b (Point3d. -2.3723, -2.9332, -0.1578)
+	c (Point3d. 1.3747, -3.3622, -3.0318)
+	e (Point3d. -0.4481333333333335, 
+		    -1.9382000000000006, 
+		    -6.334633333333335)
+	a-0 {:elm a :color 0}
+	b-0 {:elm b :color 0}
+	c-0 {:elm c :color 0}
+	e-2 {:elm e :color 2}
+	a-3 {:elm a :color 3}
+	b-3 {:elm b :color 3}
+	c-3 {:elm c :color 3}
+	colored-points [a-0 b-0 c-0 e-2 a-3 b-3 c-3]
+	corr-graph (correspondance-graph-from-colored-points
+		    0.0 colored-points colored-points)
+	oracle-corr-graph (undirected-graph 
+			   [a-0 a-0] [b-0 b-0] [c-0 c-0] [a-0 a-0] :stop
+			   [a-0 b-0] [b-0 a-0] :stop
+			   [b-0 c-0] [c-0 a-0] :stop
+			   [c-0 a-0] [a-0 c-0] :stop
+			   
+			   [a-3 a-3] [b-3 b-3] [c-3 c-3] [a-3 a-3] :stop
+			   [a-3 b-3] [b-3 a-3] :stop
+			   [b-3 c-3] [c-3 a-3] :stop
+			   [c-3 a-3] [a-3 c-3] :stop
+			   
+			   [a-0 a-0] [e-2 e-2] :stop
+			   [a-0 b-0] [e-2 e-2] :stop
+			   [a-0 c-0] [e-2 e-2] :stop
+			   [b-0 a-0] [e-2 e-2] :stop
+			   [b-0 b-0] [e-2 e-2] :stop
+			   [b-0 c-0] [e-2 e-2] :stop
+			   [c-0 a-0] [e-2 e-2] :stop
+			   [c-0 b-0] [e-2 e-2] :stop
+			   [c-0 c-0] [e-2 e-2] :stop
+
+			   [a-3 a-3] [e-2 e-2] :stop
+			   [a-3 b-3] [e-2 e-2] :stop
+			   [a-3 c-3] [e-2 e-2] :stop
+			   [b-3 a-3] [e-2 e-2] :stop
+			   [b-3 b-3] [e-2 e-2] :stop
+			   [b-3 c-3] [e-2 e-2] :stop
+			   [c-3 a-3] [e-2 e-2] :stop
+			   [c-3 b-3] [e-2 e-2] :stop
+			   [c-3 c-3] [e-2 e-2] :stop
+
+			   [a-0 a-0] [a-3 a-3] :stop
+			   [a-0 b-0] [a-3 b-3] :stop
+			   [a-0 c-0] [a-3 c-3] :stop
+			   [b-0 a-0] [b-3 a-3] :stop
+			   [b-0 b-0] [b-3 b-3] :stop
+			   [b-0 c-0] [b-3 c-3] :stop
+			   [c-0 a-0] [c-3 a-3] :stop
+			   [c-0 b-0] [c-3 b-3] :stop
+			   [c-0 c-0] [c-3 c-3] :stop
+
+			   [a-0 b-0] [b-3 a-3] :stop
+			   [a-0 c-0] [c-3 a-3] :stop
+
+			   [b-0 a-0] [a-3 b-3] :stop
+			   [b-0 c-0] [c-3 b-3] :stop
+
+			   [c-0 a-0] [a-3 c-3] :stop
+			   [c-0 b-0] [b-3 c-0] :stop
+
+			   )]
+    (is (same-graph? oracle-corr-graph corr-graph))))
+
+(comment deftest test-example-from-flexs
+  (let [a (Point3d. -0.2793, -2.9642, -0.0718)
+	b (Point3d. -2.3723, -2.9332, -0.1578)
+	c (Point3d. 1.3747, -3.3622, -3.0318)
+	d (Point3d. 1.7407, -1.3452, -2.0438)
+	e (Point3d. -0.4481333333333335, 
+		    -1.9382000000000006, 
+		    -6.334633333333335)
+	a-0 {:elm a :color 0}
+	b-0 {:elm b :color 0}
+	c-0 {:elm c :color 0}
+	d-0 {:elm d :color 0}
+	e-2 {:elm e :color 2}
+	a-3 {:elm a :color 3}
+	b-3 {:elm b :color 3}
+	c-3 {:elm c :color 3}
+	d-3 {:elm d :color 3}
+	colored-points [a-0 b-0 c-0 d-0 e-2 a-3 b-3 c-3 d-3]
+	corr-graph (correspondance-graph-from-colored-points
+		    0.0 colored-points colored-points)
+	oracle-corr-graph (undirected-graph )]
+    (is (same-graph? oracle-corr-graph corr-graph))))

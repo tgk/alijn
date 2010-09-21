@@ -26,7 +26,7 @@ read as a reference and aligns the remaining molecules using features.")
 			      constant-features))))))
 
 (defn test-diff []
-  (align-and-show "--threshold" "0.1" 
+  (align-and-show "--threshold" "0.0" 
 		  "data/flexs/carboxyptd-a/1cbx_kpl_h.mol2"))
 
 (defn test-align-and-show []

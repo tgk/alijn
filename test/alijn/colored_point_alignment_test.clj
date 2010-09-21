@@ -125,10 +125,7 @@
 	b3 (Point3d. 0 0 0)
 	b4 (Point3d. 1 0 0)
 	r2 (Point3d. 4 0 0)]
-    (is (= [[[[b1] [r1]] [[b3] [r2]]]
-	    [[[b2] [  ]] [[b4] [  ]]]
-	    [[[b2] [  ]] [[b3] [  ]]]
-	    [[[b1] [  ]] [[b4] [  ]]]]
+    (is (= [[[[b1] [r1]] [[b3] [r2]]]]
 	   (clique-grouped-pairs 0 [[b1 b2] [r1]] [[b3 b4] [r2]])))))
 
 (deftest test-clique-based-point-alignment
@@ -151,7 +148,29 @@
 
 ;;; Error discovered on flexs set
 
-(deftest test-error-on-clique-grouped-pairs-from-flexs)
+(deftest test-error-on-clique-grouped-pairs-from-flexs
+  (let [feature-points {"negative"
+			[(Point3d. -0.2793, -2.9642, -0.0718)
+			 (Point3d. -2.3723, -2.9332, -0.1578)
+			 (Point3d. 1.3747, -3.3622, -3.0318)
+			 (Point3d. 1.7407, -1.3452, -2.0438)],
+			"positive" [],
+			"aromatic-rings"
+			[(Point3d. -0.4481333333333335, 
+				   -1.9382000000000006, 
+				   -6.334633333333335)],
+			"acceptor"
+			[(Point3d. -0.2793, -2.9642, -0.0718)
+			 (Point3d. -2.3723, -2.9332, -0.1578)
+			 (Point3d. 1.3747, -3.3622, -3.0318)
+			 (Point3d. 1.7407, -1.3452, -2.0438)],
+			"donor" ()}
+	feature-ks (keys feature-points)
+	feature-points-lists (map feature-points feature-ks)
+	grouped-pairs (clique-grouped-pairs 0.0 
+					    feature-points-lists
+					    feature-points-lists)]
+    (is (= 1 (count grouped-pairs))))) ; 1 is the wrong answer!
 
 (deftest test-error-on-clique-based-point-alignment-from-flexs
   (let [feature-points {"negative"
@@ -172,20 +191,20 @@
 			"donor" ()}
 	feature-ks (keys feature-points)
 	feature-points-lists (map feature-points feature-ks)
-	alignment (clique-based-point-alignment 0.1 
+	alignment (clique-based-point-alignment 0.0 
 						feature-points-lists
 						feature-points-lists)]
     (is (= [[(Point3d. -0.2793, -2.9642, -0.0718)
-	     (Point3d. -2.3723, -2.9332, -0.1578)
 	     (Point3d. 1.3747, -3.3622, -3.0318)
-	     (Point3d. 1.7407, -1.3452, -2.0438)],
+	     (Point3d. 1.7407, -1.3452, -2.0438)
+	     (Point3d. -2.3723, -2.9332, -0.1578)],
 	    []
 	    [(Point3d. -0.4481333333333335, 
 		       -1.9382000000000006, 
 		       -6.334633333333335)],
 	    [(Point3d. -0.2793, -2.9642, -0.0718)
-	     (Point3d. -2.3723, -2.9332, -0.1578)
 	     (Point3d. 1.3747, -3.3622, -3.0318)
-	     (Point3d. 1.7407, -1.3452, -2.0438)],
+	     (Point3d. 1.7407, -1.3452, -2.0438)
+	     (Point3d. -2.3723, -2.9332, -0.1578)],
 	    []]
 	   (:selected-constant alignment)))))
