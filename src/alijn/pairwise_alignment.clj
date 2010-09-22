@@ -11,9 +11,9 @@
   "Aligns a pair of molecules using their features.
   Returns variable-molecule shifted and rotated to
   match features of constant-molecule."
-  [threshold constant-molecule variable-molecule]
-  (let [constant-features (find-features constant-molecule)
-	variable-features (find-features variable-molecule)
+  [threshold constant-molecule variable-molecule charge-limit]
+  (let [constant-features (find-features constant-molecule charge-limit)
+	variable-features (find-features variable-molecule charge-limit)
 	constant-features-as-points (map-on-values (partial map get-point) 
 						   constant-features)
 	variable-features-as-points (map-on-values (partial map get-point)

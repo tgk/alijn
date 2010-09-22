@@ -63,12 +63,12 @@
 (defn extract-feature-points [features]
   (map-on-values (partial map get-point) features))
 
-(defn find-features [molecule]
+(defn find-features [molecule charge-limit]
   {
    "donor" (filter (partial is-donor? molecule) (.atoms molecule))
    "acceptor" (filter (partial is-acceptor? molecule) (.atoms molecule))
    "aromatic-rings" (find-aromatic-rings molecule)
-   "positive" (filter (partial is-positive?  0.5) (.atoms molecule))
-   "negative" (filter (partial is-negative? -0.5) (.atoms molecule))
+   "positive" (filter (partial is-positive?    charge-limit)  (.atoms molecule))
+   "negative" (filter (partial is-negative? (- charge-limit)) (.atoms molecule))
    })
 
