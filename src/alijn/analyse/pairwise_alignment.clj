@@ -14,7 +14,6 @@ molecule is the native binding mode and the remaining are
 conformations. If only one molecule exists for each name they are
 all native conformations that are sought re-aligned.")
 
-(defn molecule-name [molecule] (.get (.getProperties molecule) "cdk:Title"))
 (defn short-name    [molecule] (first (.split (molecule-name molecule) "_")))  
 
 (defn get-best-rmsd 
