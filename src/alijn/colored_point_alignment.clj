@@ -1,7 +1,8 @@
 (ns alijn.colored-point-alignment
     (:use 
      [alijn kabsch utils combinatorics clique-detection]
-     clojure.pprint)
+     clojure.pprint
+     clojure.contrib.profile)
     (:require [clojure.contrib.seq :as seq])
     (:import [javax.vecmath Point3d]))
 
@@ -22,7 +23,9 @@
 	       (select-grouped-pairs constant-points variable-points)]
 	   (let [[flat-constant unflat-constant] (flatten-groups selected-constant)
 		 [flat-variable unflat-variable] (flatten-groups selected-variable)
-		 alignment (kabsch-with-translation flat-constant flat-variable)]
+		 alignment (prof 
+			    :alignment
+			    (kabsch-with-translation flat-constant flat-variable))]
 	     (struct single-alignment-result
 		     (:rmsd alignment)
 		     (:constant-center alignment) 
@@ -63,13 +66,11 @@
 	vari-wrapped (wrap-points variable-points)
 	max-color (count constant-points)
 	colors (range max-color)
-	corr-graph (correspondance-graph-from-colored-points 
-		    threshold cons-wrapped vari-wrapped)
-;	pairings (possible-pairings corr-graph)
-	biggest-pairing (apply max-key (comp count flatten) 
-			       (possible-pairings corr-graph))
+	corr-graph (prof :corr-graph (correspondance-graph-from-colored-points 
+				      threshold cons-wrapped vari-wrapped))
+	biggest-pairing (prof :biggest-pairing (apply max-key (comp count flatten) 
+						      (possible-pairings corr-graph)))
 	pairings [biggest-pairing]]
-;    (pprint (possible-pairings corr-graph))
     (for [[cons-lineup vari-lineup] pairings]
       [(unwrap-points colors cons-lineup)
        (unwrap-points colors vari-lineup)])))
