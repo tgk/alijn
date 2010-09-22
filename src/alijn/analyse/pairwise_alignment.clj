@@ -1,5 +1,5 @@
 (ns alijn.analyse.pairwise-alignment
-  (:use [alijn io custom-features pairwise-alignment math utils]
+  (:use [alijn io features pairwise-alignment math utils]
 	clojure.contrib.command-line))
 
 (defn get-rmsd-of-optimal-alignment

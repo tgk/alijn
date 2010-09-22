@@ -1,6 +1,6 @@
 (ns alijn.pairwise-alignment
   (:use [alijn 
-	 custom-features 
+	 features 
 	 utils 
 	 colored-point-alignment 
 	 molecule-manipulation

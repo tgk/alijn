@@ -1,134 +1,78 @@
 (ns alijn.features-test
   (:use [alijn.features] :reload-all)
   (:use [clojure.test])
-  (:import 
-   [org.openscience.cdk Atom DefaultChemObjectBuilder]
-   [org.openscience.cdk.smiles SmilesParser]
-   [javax.vecmath Point3d]))
+  (:import [org.openscience.cdk Atom Bond AtomContainer]))
 
-(defn dummy-atom 
-  ([point] (Atom. "C" point))
-  ([x y z] (dummy-atom (Point3d. x y z))))
+(deftest hydrogen-donor-and-acceptor
+  (let [a0 (Atom. "H")
+	a1 (Atom. "O")
+	a2 (Atom. "C")
+	a3 (Atom. "S")
+	a4 (Atom. "H")
+	a5 (Atom. "N")
+	
+	b0 (Bond. a0 a1)
+	b1 (Bond. a1 a2)
+	b2 (Bond. a1 a3)
+	b3 (Bond. a3 a4)
+	b4 (Bond. a3 a5)
+	
+	cont (AtomContainer.)]
+    (doto cont
+      
+      (.addAtom a0)
+      (.addAtom a1)
+      (.addAtom a2)
+      (.addAtom a3)
+      (.addAtom a4)
+      (.addAtom a5)
+      
+      (.addBond b0)
+      (.addBond b1)
+      (.addBond b2)
+      (.addBond b3)
+      (.addBond b4))
 
-(def example-features
-     {"hydrogen-bond acceptor" 
-      [["[!$([#6,F,Cl,Br,I,o,s,nX3,#7v5,#15v5,#16v4,#16v6,*+1,*+2,*+3])]"] []],
-      "hydrogen-bond donor" 
-      [["[!$([#6,H0,-,-2,-3])]"] []],
-      "aromatic-5-ring" 
-      [["C1CCCC1"] []]})
+    (is (is-atom? a0 "H"))
+    (is (not (is-atom? a1 "H")))
+    (is (not (is-atom? a2 "H")))
+    (is (not (is-atom? a3 "H")))
+    (is (is-atom? a4 "H"))
+    (is (not (is-atom? a5 "H")))
 
-;;; All tests uses the example-pharmacopohores from alijn.pharmacophore
+    (is (not (is-atom? a0 "O")))
+    (is (is-atom? a1 "O"))
+    (is (not (is-atom? a2 "O")))
+    (is (not (is-atom? a3 "O")))
+    (is (not (is-atom? a4 "O")))
+    (is (not (is-atom? a5 "H")))
 
-;;; Test structures ;;;
-(def smiles-parser (new SmilesParser (DefaultChemObjectBuilder/getInstance)))
-(defn molecule-from-smiles [smiles-string] 
-  (.parseSmiles smiles-parser smiles-string))
+    (is (not (connected-to-hydrogen? cont a0)))
+    (is (connected-to-hydrogen? cont a1))
+    (is (not (connected-to-hydrogen? cont a2)))
+    (is (connected-to-hydrogen? cont a3))
+    (is (not (connected-to-hydrogen? cont a4)))
+    (is (not (connected-to-hydrogen? cont a5)))
+    
+    (is (not (is-both-donor-and-acceptor? cont a0)))
+    (is (is-both-donor-and-acceptor? cont a1))
+    (is (not (is-both-donor-and-acceptor? cont a2)))
+    (is (not (is-both-donor-and-acceptor? cont a3)))
+    (is (not (is-both-donor-and-acceptor? cont a4)))
+    (is (not (is-both-donor-and-acceptor? cont a5)))
+	
+    (is (not (is-donor? cont a0)))
+    (is (is-donor? cont a1))
+    (is (not (is-donor? cont a2)))
+    (is (is-donor? cont a3))
+    (is (not (is-donor? cont a4)))
+    (is (not (is-donor? cont a5)))
 
-; Has three hydrogen acceptors and one 5-ring
-(def pyrethrin 
-     (molecule-from-smiles 
-      "COC(=O)C(\\C)=C\\C1C(C)(C)[C@H]1C(=O)O[C@@H]2C(C)=C(C(=O)C2)CC=CC=C"))
-
-; Has one hydrogen donor
-(def flavopereirin
-     (molecule-from-smiles 
-      "CCc(c1)ccc2[n+]1ccc3c2Nc4c3cccc4"))
-
-; Has two OH that are both donors and acceptors
-(def oenanthotoxin
-     (molecule-from-smiles
-      "CCC[C@@H](O)CC\\C=C\\C=C\\C#CC#C\\C=C\\CO"))
-
-;;;;;;;;;; TESTS ;;;;;;;;;;;;;
-
-;;; Test of feature identifier, find-feature
-(def smarts-hydrogen-acceptor (example-features "hydrogen-bond acceptor"))
-(def smarts-hydrogen-donor    (example-features "hydrogen-bond donor"))
-(def smarts-aromatic-5-ring   (example-features "aromatic-5-ring"))
-
-;;; Test of get-center
-(def epsilon 0.00001)
-
-(defn same-position? [u v] (< (.distance u v) epsilon))
-
-(deftest test-get-center
-  ; Test same-position?
-  (is (same-position? (Point3d. 0 0 0) (Point3d. 0 0 0)))
-  (is (same-position? (Point3d. (- epsilon 0.000001) 0 0) (Point3d. 0 0 0)))
-  (is (not (same-position? (Point3d. (+ 0.000001 epsilon) 0 0) (Point3d. 0 0 0))))
-  ; 1D
-  (is (same-position? (Point3d. 1 2 3) (get-center [(dummy-atom 1 2 3)])))
-  (is (same-position? (Point3d. 1 0 0) (get-center [(dummy-atom 0 0 0) (dummy-atom 2 0 0)])))
-  (is (not (same-position? (Point3d. 10 0 0) (get-center [(dummy-atom 0 0 0) (dummy-atom 2 0 0)]))))
-  (is (same-position? (Point3d. 1 0 0) 
-		      (get-center [(dummy-atom 0 0 0)
-				   (dummy-atom 1 0 0)
-				   (dummy-atom 2 0 0)])))
-  ; 2D
-  (is (same-position? (Point3d. 1 1 0) (get-center [(dummy-atom 0 0 0) (dummy-atom 2 2 0)])))
-  ; 3D
-  (is (same-position? (Point3d. 1 1 1) 
-		      (get-center [(dummy-atom 3 0 0) 
-				   (dummy-atom 0 3 0)
-				   (dummy-atom 0 0 3)])))
-  (is (same-position? (Point3d. 1 1 1) 
-		      (get-center [(dummy-atom 0 0 0) 
-				   (dummy-atom 2 2 2)])))
-  (is (same-position? (Point3d. 1 1 1) 
-		      (get-center [(dummy-atom 0 0 0) 
-				   (dummy-atom 2 2 2)]))))
-
-; Phase parsing
-
-(deftest test-parse-smarts-line
-  (is 
-   (= {:smarts "[NX3][#6](=[NX2,NX3+])[#6]" 
-       :points [2]}
-      (parse-smarts-line 
-       "[NX3][#6](=[NX2,NX3+])[#6]              group(3)   0   1   0   0   1   1.8")))
-  (is
-   (= 
-    {:smarts "[NX2,NX3+]=[#6]([NH;X3])([NH;X3])"
-     :points [0, 2, 3]}
-    (parse-smarts-line
-     "[NX2,NX3+]=[#6]([NH;X3])([NH;X3])       group(1,3,4)   0   1   0   0   1   1.8")))
-  (is
-   (=
-    {:smarts "[#1][C;X2]#[C;X2]"
-     :points [0]}
-    (parse-smarts-line
-     "[#1][C;X2]#[C;X2]                       vector(1)   0   1   -1   0   1   1.8")))
-  (is
-   (=
-    {:smarts "[#1]([NH2;X3,NH3]([#6;X4]))"
-     :points [0]}
-    (parse-smarts-line
-     "[#1]([NH2;X3,NH3]([#6;X4]))             point(1)   0   1   0   0   1   1.8")))
-  (is
-   (=
-    {:smarts "[N;X2](=N-O)[a]"
-     :points [0]}
-    (parse-smarts-line
-     "[N;X2](=N-O)[a]                         vector(1)   0   1   -3   0   1   1.8")))
-  ; With no numbers
-  (is
-   (=
-    {:smarts "[NH2](C(=O)[NH2])"
-     :points [0]}
-    (parse-smarts-line
-     "[NH2](C(=O)[NH2])                       point   0   1   0   0   1   1.8")))
-  (is
-   (=
-    {:smarts "Br"
-     :points :all}
-    (parse-smarts-line
-     "Br                                      group   0   1   0   0   1   1.8")))
-  (is
-   (=
-    {:smarts "n1nc[nH]n1"
-     :points :all}
-    (parse-smarts-line
-     "n1nc[nH]n1                              group   0   1   0   0   1   1.8"))))
+    (is (not (is-acceptor? cont a0)))
+    (is (is-acceptor? cont a1))
+    (is (not (is-acceptor? cont a2)))
+    (is (not (is-acceptor? cont a3)))
+    (is (not (is-acceptor? cont a4)))
+    (is (is-acceptor? cont a5))))
 
 
