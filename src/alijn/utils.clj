@@ -13,16 +13,6 @@
 	(cons f vs))
       (throw (new IllegalArgumentException "Maps must have same keys.")))))
 
-(defn map-on-values 
-  "Applies f to the values in the maps and returns a new map with the 
-  results."
-  [f m & ms]
-  (let [ms (cons m ms)
-	[to-map & vs] (apply maps-to-vectors ms)
-	tuples (apply map vector vs)
-	results (map (partial apply f) tuples)]
-    (to-map results)))
-
 (defn map-on-keys [f m]
   (into {} (map (fn [[k v]] [(f k) v]) m)))
 

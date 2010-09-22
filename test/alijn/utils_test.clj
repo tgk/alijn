@@ -50,15 +50,6 @@
   (is (thrown? IllegalArgumentException (maps-to-vectors {:a :b} {:x :y} {:a :c})))
   (is (thrown? IllegalArgumentException (maps-to-vectors {:a :b} {:a :c} {:x :y}))))
 
-(deftest test-map-on-values
-  (is (= {:foo 3 :bar 4 :baz 42}
-	 (map-on-values inc {:foo 2 :bar 3 :baz 41})))
-  (is (= {:a 5, :b 42}
-	 (map-on-values + {:a 1, :b 2} {:a 4, :b 40})))
-  (is (= {:a 7, :b 50}
-	 (map-on-values + {:a 1, :b 2} {:a 4, :b 40} {:a 2, :b 8}))))
-
-
 (deftest test-chop-using
   (is (= '((0) (2) (4) (6) (8))
 	 (chop-using odd? (range 10))))

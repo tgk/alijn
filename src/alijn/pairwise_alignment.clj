@@ -5,7 +5,8 @@
 	 colored-point-alignment 
 	 molecule-manipulation
 	 math]
-	clojure.pprint))
+	clojure.pprint
+	clojure.contrib.generic.functor))
 
 (defn align 
   "Aligns a pair of molecules using their features.
@@ -14,9 +15,9 @@
   [threshold constant-molecule variable-molecule charge-limit]
   (let [constant-features (find-features constant-molecule charge-limit)
 	variable-features (find-features variable-molecule charge-limit)
-	constant-features-as-points (map-on-values (partial map get-point) 
+	constant-features-as-points (fmap (partial map get-point) 
 						   constant-features)
-	variable-features-as-points (map-on-values (partial map get-point)
+	variable-features-as-points (fmap (partial map get-point)
 						   variable-features)
 	feature-ks (keys constant-features-as-points)
 	constant-points (map constant-features-as-points feature-ks)

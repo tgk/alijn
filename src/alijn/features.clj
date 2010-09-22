@@ -3,7 +3,8 @@
 	   [org.openscience.cdk.interfaces IAtom]
 	   [org.openscience.cdk.smiles.smarts SMARTSQueryTool])
   (:use clojure.pprint
-	[alijn math utils]))
+	clojure.contrib.generic.functor
+	[alijn math]))
 
 ;; Hydrogen donor and acceptor
 
@@ -61,7 +62,7 @@
     (ring-center feature)))
 
 (defn extract-feature-points [features]
-  (map-on-values (partial map get-point) features))
+  (fmap (partial map get-point) features))
 
 (defn find-features [molecule charge-limit]
   {

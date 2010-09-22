@@ -1,10 +1,10 @@
 (ns alijn.graph
-  (:use alijn.utils))
+  (:use clojure.contrib.generic.functor alijn.utils))
 
 (defn same-graph? [graph-1 graph-2]
   "Only works if nodes are exactly the same and graphs are edge maps."
-  (= (map-on-values set graph-1)
-     (map-on-values set graph-2)))
+  (= (fmap set graph-1)
+     (fmap set graph-2)))
 
 (defn undirected-graph 
   "Creates an undirected graph from a sequence of nodes.
