@@ -2,9 +2,10 @@
   (:import [org.openscience.cdk Atom Bond AtomContainer]
 	   [org.openscience.cdk.interfaces IAtom]
 	   [org.openscience.cdk.smiles.smarts SMARTSQueryTool])
-  (:use clojure.pprint
+  (:use alijn.math 
+	clojure.pprint
 	clojure.contrib.generic.functor
-	[alijn math]))
+	clojure.contrib.def))
 
 ;; Hydrogen donor and acceptor
 
@@ -32,12 +33,13 @@
 
 ;; Aromatic rings
 
-(def ring-tools (map #(SMARTSQueryTool. %) ["a1aaaa1" "a1aaaaa1" "a1aaaaaa1"]))
+(def  aromatic-tools (map #(SMARTSQueryTool. %) ["a1aaaa1" "a1aaaaa1" "a1aaaaaa1"]))
+(def aliphatic-tools (map #(SMARTSQueryTool. %) ["A1AAAA1" "A1AAAAA1" "A1AAAAAA1"]))
 
-(defn find-aromatic-rings [container]
+(defn find-rings [tools container]
   (apply 
    concat
-   (for [tool ring-tools]
+   (for [tool tools]
      (when (.matches tool container)
        (for [indices (.getUniqueMatchingAtoms tool)]
 	 (map #(.getAtom container %) indices))))))
@@ -68,8 +70,16 @@
   {
    "donor" (filter (partial is-donor? molecule) (.atoms molecule))
    "acceptor" (filter (partial is-acceptor? molecule) (.atoms molecule))
-   "aromatic-rings" (find-aromatic-rings molecule)
+   "aromatic-rings"  (find-rings aromatic-tools  molecule)
+   "aliphatic-rings" (find-rings aliphatic-tools molecule)
    "positive" (filter (partial is-positive?    charge-limit)  (.atoms molecule))
    "negative" (filter (partial is-negative? (- charge-limit)) (.atoms molecule))
    })
 
+;; gaussian-overlap calcualtions
+(defnk gaussian-overlap 
+  "Calculates the gaussian overlap between two sets of features
+  stored in maps. Each value in the map is a coll of Point3d.
+  Optional arguments are :scale."
+  [features-1 features-2 :scale 0.5]
+  (comment Math/exp (/ (- (Math/pow dist 2)) (Math/pow scale 2))))
