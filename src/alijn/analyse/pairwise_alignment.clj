@@ -49,7 +49,7 @@ all native conformations that are sought re-aligned.")
 	  success-rmsd (Double/parseDouble success-rmsd)]
       (print-table
        (cons
-	["target" "avg. success" "min" "max" "# ligands"]	
+	["target" "avg. success" "min" "max" "ligands"]	
 	(for [filename filenames]
 	  (let [molecules (read-molecules filename)
 		target-name (first (.split (last (.split filename "/")) "\\."))
@@ -62,7 +62,7 @@ all native conformations that are sought re-aligned.")
 		success-rates (fmap #(int (* 100 (/ % (count grouped-ligands)))) 
 				    successes)]
 	    [target-name 
-	     (str (average (vals success-rates)))
+	     (str (int (average (vals success-rates))))
 	     (str (apply min (vals success-rates)))
 	     (str (apply max (vals success-rates)))
 	     (str (count grouped-ligands))]))))))))

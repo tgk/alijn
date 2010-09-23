@@ -20,4 +20,4 @@ a view for each molecule containing the molecule and its features.")
 	  (show-molecules-app [molecule] grouped-features-points))))))
 
 (defn test-view [] 
-  (find-and-show-features "data/grouped/small/immunoglobulin.mol2"))
+  (find-and-show-features "data/grouped/small/g-phosphorylase.mol2"))
