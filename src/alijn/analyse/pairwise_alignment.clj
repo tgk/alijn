@@ -61,7 +61,7 @@ all native conformations that are sought re-aligned.")
 					   grouped-ligands)
 		success-rates (fmap #(int (* 100 (/ % (count grouped-ligands)))) 
 				    successes)
-		feature-counts (map #(count (find-features % charge-limit)) molecules)]
+		feature-counts (map #(count (apply concat (vals (find-features % charge-limit)))) molecules)]
 	    [target-name 
 	     (str (int (average (vals success-rates))))
 	     (str (apply min (vals success-rates)))
