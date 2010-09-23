@@ -1,5 +1,5 @@
 (ns alijn.analyse.pairwise-alignment
-  (:use [alijn io features pairwise-alignment math utils]
+  (:use [alijn io features pairwise-alignment math molecule-utils utils]
 	clojure.contrib.command-line
 	clojure.contrib.generic.functor
 	clojure.contrib.profile

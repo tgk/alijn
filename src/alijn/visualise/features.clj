@@ -1,5 +1,5 @@
 (ns alijn.visualise.features
-  (:use [alijn custom-features io molecule-visualisation utils]
+  (:use [alijn features io molecule-visualisation utils]
 	clojure.contrib.command-line))
 
 (def desc 
@@ -15,9 +15,9 @@ a view for each molecule containing the molecule and its features.")
     (let [molecules (read-molecules-from-files filenames)]
       (println (format "Parsed %d molecules." (count molecules)))
       (doseq [molecule molecules]
-	(let [grouped-features (find-features molecule)
+	(let [grouped-features (find-features molecule 0.25)
 	      grouped-features-points (extract-feature-points grouped-features)]
 	  (show-molecules-app [molecule] grouped-features-points))))))
 
 (defn test-view [] 
-  (find-and-show-features "data/example/comt_ligands.mol2"))
+  (find-and-show-features "data/grouped/small/immunoglobulin.mol2"))
