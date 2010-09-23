@@ -49,7 +49,7 @@ all native conformations that are sought re-aligned.")
 	  success-rmsd (Double/parseDouble success-rmsd)]
       (print-table
        (cons
-	["target" "avg. success" "min" "max" "ligands"]	
+	["target" "avg. success" "min" "max" "ligands" "avg. features" "min" "max"]	
 	(for [filename filenames]
 	  (let [molecules (read-molecules filename)
 		target-name (first (.split (last (.split filename "/")) "\\."))
@@ -60,12 +60,16 @@ all native conformations that are sought re-aligned.")
 		successes (count-successes threshold charge-limit success-rmsd 
 					   grouped-ligands)
 		success-rates (fmap #(int (* 100 (/ % (count grouped-ligands)))) 
-				    successes)]
+				    successes)
+		feature-counts (map #(count (find-features % charge-limit)) molecules)]
 	    [target-name 
 	     (str (int (average (vals success-rates))))
 	     (str (apply min (vals success-rates)))
 	     (str (apply max (vals success-rates)))
-	     (str (count grouped-ligands))]))))))))
+	     (str (count grouped-ligands))
+	     (format "%.2f" (double (average feature-counts)))
+	     (str (apply min feature-counts))
+	     (str (apply max feature-counts))]))))))))
        
 (def test-file-1 "data/example/carboxypth-a.mol2")
 (def test-file-2 "data/example/concanavalin.mol2")
