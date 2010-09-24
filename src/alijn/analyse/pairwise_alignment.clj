@@ -15,24 +15,29 @@ molecule is the native binding mode and the remaining are
 conformations. If only one molecule exists for each name they are
 all native conformations that are sought re-aligned.")
 
-(defn short-name    [molecule] (first (.split (molecule-name molecule) "_")))  
+(defn short-name [molecule] (first (.split (molecule-name molecule) "_")))  
 
 (defn get-best-rmsd 
-  [threshold charge-limit constant-molecule [native-variable & variable-molecules]]
+  [threshold charge-limit alignment-score constant-molecule [native-variable & variable-molecules]]
   (molecule-rmsd
    native-variable
    (align-with-multiple-variable 
-     threshold constant-molecule variable-molecules charge-limit)))
+     threshold constant-molecule variable-molecules charge-limit alignment-score)))
 
 (defn count-successes
-  [threshold charge-limit success-rmsd grouped-ligands]
+  [threshold charge-limit alignment-score success-rmsd grouped-ligands]
   (fmap
    (fn [conformations]
      (let [reference (first conformations)
-	   best-rmsds (map (partial get-best-rmsd threshold charge-limit reference)
+	   best-rmsds (map (partial get-best-rmsd threshold charge-limit alignment-score reference)
 			   (vals grouped-ligands))]
        (count (filter #(<= % success-rmsd) best-rmsds))))
    grouped-ligands))
+
+(def alignment-scores 
+     {"gaussian-overlap" gaussian-overlap-of-alignment
+      "matched-features" number-of-matched-features-in-alignment
+      "rmsd" negative-rmsd-of-alignment})
 
 (defn 
   #^{:doc desc}
@@ -42,10 +47,12 @@ all native conformations that are sought re-aligned.")
   (with-command-line args desc
     [[threshold "The threshold used by the clique detection algorithm." nil]
      [charge-limit "Limit for classifing atom as charged." "0.5"]
+     [alignment-score "The measure to use to judge what a good feature alignment is." "matched-features"] 
      [success-rmsd "The maximum rmsd for a realignment to be a success." "2.5"]
      filenames]
     (let [threshold (when threshold (Double/parseDouble threshold))
 	  charge-limit (Double/parseDouble charge-limit)
+	  alignment-score (alignment-scores alignment-score)
 	  success-rmsd (Double/parseDouble success-rmsd)]
       (print-table
        (cons
@@ -57,7 +64,7 @@ all native conformations that are sought re-aligned.")
 		grouped-ligands (if (apply = 1 (vals (fmap count grouped-ligands))) 
 				  (group-by short-name (concat molecules molecules)) 
 				  grouped-ligands)
-		successes (count-successes threshold charge-limit success-rmsd 
+		successes (count-successes threshold charge-limit alignment-score success-rmsd 
 					   grouped-ligands)
 		success-rates (fmap #(int (* 100 (/ % (count grouped-ligands)))) 
 				    successes)

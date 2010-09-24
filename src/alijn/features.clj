@@ -24,12 +24,10 @@
   (and (is-atom? atm "O") (connected-to-hydrogen? container atm)))
 
 (defn is-donor? [container atm]
-  (or (is-both-donor-and-acceptor? container atm)
-      (and (is-atom? atm "S" "N") (connected-to-hydrogen? container atm))))
+  (and (is-atom? atm "S" "N") (connected-to-hydrogen? container atm)))
 
 (defn is-acceptor? [container atm]
-  (or (is-both-donor-and-acceptor? container atm)
-      (and (is-atom? atm "O" "N") (not (connected-to-hydrogen? container atm)))))
+  (and (is-atom? atm "O" "N") (not (connected-to-hydrogen? container atm))))
 
 ;; Aromatic rings
 
@@ -70,6 +68,7 @@
   {
    "donor" (filter (partial is-donor? molecule) (.atoms molecule))
    "acceptor" (filter (partial is-acceptor? molecule) (.atoms molecule))
+   "donor-and-acceptor" (filter (partial is-both-donor-and-acceptor? molecule) (.atoms molecule))
    "aromatic-rings"  (find-rings aromatic-tools  molecule)
    "aliphatic-rings" (find-rings aliphatic-tools molecule)
    "positive" (filter (partial is-positive?    charge-limit)  (.atoms molecule))
@@ -77,9 +76,28 @@
    })
 
 ;; gaussian-overlap calcualtions
+(defn translate-rotate-translate-feature-points
+  "Takes all the points from a map of feature points and
+  applies the pre-translation, then the rotation and then
+  the post-translation to all of the points.
+  Returns a new map with the altered features.
+  Translations are Point3ds, the rotation is a Matrix."
+  [pre-translation rotation post-translation features]
+  (->> features
+       (fmap (partial map (partial vec-add pre-translation)))
+       (fmap (partial map (partial rotate-point rotation)))
+       (fmap (partial map (partial vec-add post-translation)))))
+
 (defnk gaussian-overlap 
-  "Calculates the gaussian overlap between two sets of features
+  "Calculates the Gaussian overlap between two sets of features
   stored in maps. Each value in the map is a coll of Point3d.
   Optional arguments are :scale."
-  [features-1 features-2 :scale 0.5]
-  (comment Math/exp (/ (- (Math/pow dist 2)) (Math/pow scale 2))))
+  [features-1 features-2 :scale 1.0]
+  (apply 
+   +
+   (flatten
+    (for [feature-name (keys features-1)]
+      (for [point-1 (features-1 feature-name)
+	    point-2 (features-2 feature-name)]
+	(Math/exp (/ (- (Math/pow (distance point-1 point-2) 2))
+		     (Math/pow scale 2))))))))

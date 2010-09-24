@@ -17,8 +17,6 @@
 ; Sceleton alignment method, requires a function for selecting grouped pairs
 (defn sceleton-point-alignment
   [select-grouped-pairs constant-points variable-points]
-  (apply min-key 
-	 :rmsd
 	 (for [[selected-constant selected-variable]
 	       (select-grouped-pairs constant-points variable-points)]
 	   (let [[flat-constant unflat-constant] (flatten-groups selected-constant)
@@ -32,7 +30,7 @@
 		     (:variable-center alignment) 
 		     (:rotation alignment)
 		     selected-constant selected-variable
-		     (unflat-variable (:moved-variable alignment)))))))
+		     (unflat-variable (:moved-variable alignment))))))
 
 ; Exhaustive algorithm:
 (defn exhaustive-point-alignment 
@@ -67,11 +65,8 @@
 	max-color (count constant-points)
 	colors (range max-color)
 	corr-graph (prof :corr-graph (correspondance-graph-from-colored-points 
-				      threshold cons-wrapped vari-wrapped))
-	biggest-pairing (prof :biggest-pairing (apply max-key (comp count flatten) 
-						      (possible-pairings corr-graph)))
-	pairings [biggest-pairing]]
-    (for [[cons-lineup vari-lineup] pairings]
+				      threshold cons-wrapped vari-wrapped))]
+    (for [[cons-lineup vari-lineup] (possible-pairings corr-graph)]
       [(unwrap-points colors cons-lineup)
        (unwrap-points colors vari-lineup)])))
 
@@ -83,7 +78,8 @@
 
 ; Main function
 (defn colored-point-alignment
-  "Aligns colored points under a common translation and rotation.
+  "Error in desc: All are returned at the moment.
+  Aligns colored points under a common translation and rotation.
   If threhold is false, all constant points of each color are paired
   with all variable points of the same color and the pairing resulting 
   in the lowest rmsd is returned. If one color has more points in 
