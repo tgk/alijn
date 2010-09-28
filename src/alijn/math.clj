@@ -1,6 +1,22 @@
 (ns alijn.math
   (:import [javax.vecmath Point3d]))
 
+(defn vec-length [u]
+  (Math/sqrt 
+   (+
+    (Math/pow (.x u) 2)
+    (Math/pow (.y u) 2)
+    (Math/pow (.z u) 2))))
+
+(defn normalised [u]
+  (let [l (vec-length u)
+	clone (.clone u)]
+    (do
+      (set! (.x clone) (/ (.x clone) l))
+      (set! (.y clone) (/ (.y clone) l))
+      (set! (.z clone) (/ (.z clone) l))
+      clone)))
+    
 (defn vec-add 
   "u + v, where u and v are Point3d vectors."
   [u v] (doto (Point3d.) (.add u v)))
