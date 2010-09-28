@@ -125,12 +125,10 @@
   (rotate (:rot-y state) 0 1 0)
   (draw-molecule (:molecule state)))
 
-
 ;;; Interface
 (defn molecules-app [molecule]
   (let [rotation-tree (calculate-rotation-tree molecule)
 	configuration (vec (repeat (:degrees-of-freedom rotation-tree) 0.0))]
-    (pprint (:root-node rotation-tree))
     [{:display display, :reshape reshape, 
       :mouse-drag mouse-drag, 
       :key-type key-type,

@@ -7,8 +7,8 @@
 	clojure.set))
 
 (defstruct rotation-node
-  :root-atom-id
-  :rotation-axis
+  :parent-atom-id
+  :entry-atom-id
   :children
   :atom-ids)
 
@@ -57,7 +57,7 @@
 	      colors (apply merge colors (for [a same-group] {a i}))]
 	  (recur colors (inc i)))))))
 
-(defn build-tree-structure [molecule splitting-bonds atom-colors root-atom group-atom rotation-axis]
+(defn build-tree-structure [molecule splitting-bonds atom-colors root-atom group-atom]
   (let [group-atoms (for [a (.atoms molecule) :when (= (atom-colors group-atom) (atom-colors a))] a)
 	group-atoms-ids (map #(.getAtomNumber molecule %) group-atoms)
 	group-bonds (set (apply concat (for [a group-atoms] (.getConnectedBondsList molecule a))))
@@ -66,14 +66,12 @@
 	children (for [outgoing-bond attached-outgoing
 		       :let [bond-atoms (.atoms outgoing-bond)
 			     [child-root] (filter (set group-atoms) bond-atoms)
-			     other-atom (.getConnectedAtom outgoing-bond child-root)
-			     child-rotation-axis (normalised (vec-sub (.getPoint3d other-atom) 
-								      (.getPoint3d child-root)))]] 
+			     other-atom (.getConnectedAtom outgoing-bond child-root)]] 
 		   (build-tree-structure molecule splitting-bonds atom-colors 
-					 child-root other-atom child-rotation-axis))]
+					 child-root other-atom))]
     (struct rotation-node
 	    (.getAtomNumber molecule root-atom)
-	    rotation-axis
+	    (.getAtomNumber molecule group-atom)
 	    children
 	    group-atoms-ids)))
 
@@ -85,7 +83,7 @@
 	atom-colors (color-atoms molecule splitting-bonds)
 	root-atom (atom-closest-to-center molecule)
 	root-node (build-tree-structure molecule splitting-bonds atom-colors 
-					root-atom root-atom (Point3d. 0 0 0))
+					root-atom root-atom)
 	degrees-of-freedom (count-children root-node)]
     (struct rotation-tree
 	    root-node
@@ -126,22 +124,37 @@
 	      (.get moved-matrix 1 0)
 	      (.get moved-matrix 2 0))))
 
+(defn get-rotation-axis [molecule matrix from-atom-id to-atom-id]
+  (normalised
+   (vec-sub (move-and-translate matrix (.getPoint3d (.getAtom molecule to-atom-id)))
+	    (.getPoint3d (.getAtom molecule from-atom-id)))))
+
 (defn visit-child! [node [angle & configuration] molecule accumulated-matrix]
-  (let [root-point (.getPoint3d (.getAtom molecule (:root-atom-id node)))
-	start-point (translation-matrix root-point)
-	minus-start-point (translation-matrix (neg root-point))
-	local-transformation (.times
-			      start-point
-			      (.times
-			       (rotation-matrix angle (:rotation-axis node))
-			       minus-start-point))
-	accumulated-matrix (.times local-transformation accumulated-matrix)]
+  (let [accumulated-matrix 
+	(if (= (:parent-atom-id node) (:entry-atom-id node))
+	  accumulated-matrix
+	  (let [root-point (.getPoint3d (.getAtom molecule (:parent-atom-id node)))
+		start-point (translation-matrix root-point)
+		minus-start-point (translation-matrix (neg root-point))
+		rotation-axis (get-rotation-axis molecule accumulated-matrix
+						 (:parent-atom-id node) (:entry-atom-id node))
+		local-transformation (.times
+				      start-point
+				      (.times
+				       (rotation-matrix angle rotation-axis)
+				       minus-start-point))]
+	    (.times local-transformation accumulated-matrix)))]
     (doseq [id (:atom-ids node)
 	    :let [a (.getAtom molecule id)
 		  p (.getPoint3d a)]]
       (.setPoint3d a (move-and-translate accumulated-matrix p)))
-    (doseq [child (:children node)]
-      (visit-child! child configuration molecule accumulated-matrix))))
+    (doall
+     (loop [children (:children node)
+	    configuration configuration]
+       (if (seq children)
+	 (let [configuration (visit-child! (first children) configuration molecule accumulated-matrix)]
+	   (recur (rest children) configuration))
+	 configuration)))))
 
 (defn molecule-configuration 
   "Returns a clone of the molecule from rotation-tree
