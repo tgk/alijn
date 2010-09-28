@@ -43,7 +43,7 @@
 	    neighbours (set (map #(.getConnectedAtom % current-atom) legal-bonds))
 	    unvisited-neighbours (difference neighbours result)
 	    result (union result unvisited-neighbours)
-	    queue (into queue unvisited-neighbours)]
+	    queue (concat queue (vec unvisited-neighbours))]
 	(recur result (rest queue))))))
 
 (defn color-atoms [molecule splitting-bond]
