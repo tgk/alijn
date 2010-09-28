@@ -75,6 +75,10 @@
    "negative" (filter (partial is-negative? (- charge-limit)) (.atoms molecule))
    })
 
+(defn steric-features
+  [molecule]
+  {"steric" (filter (comp not (is-atom? "H")) (.atoms molecule))})
+
 ;; gaussian-overlap calcualtions
 (defn translate-rotate-translate-feature-points
   "Takes all the points from a map of feature points and

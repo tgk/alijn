@@ -3,8 +3,10 @@
 	  Jama.Matrix
 	  [org.openscience.cdk Atom Molecule]
 	  org.openscience.cdk.smiles.smarts.SMARTSQueryTool)  
-  (:use alijn.math
+  (:use [alijn math molecule-manipulation]
 	clojure.set))
+
+;;; Data strutures
 
 (defstruct rotation-node
   :parent-atom-id
@@ -78,7 +80,10 @@
 (defn count-children [node]
   (+ (count (:children node)) (apply + (map count-children (:children node)))))
 
-(defn calculate-rotation-tree [molecule]
+(defn calculate-rotation-tree 
+  "Main function for generating rotation tree. The returned rotation tree
+  can also be used on (shifted and rotated) clones of the molecule."
+  [molecule]
   (let [splitting-bonds (rotatable-bonds molecule)
 	atom-colors (color-atoms molecule splitting-bonds)
 	root-atom (atom-closest-to-center molecule)
@@ -90,43 +95,10 @@
 	    degrees-of-freedom	    
 	    molecule)))
 
-;;; Helper methods
-(defn rotation-matrix 
-  "axis is assumed to be normalised."
-  [angle axis]
-  (let [c (Math/cos angle), s (Math/sin angle), omc (- 1 c) ;one minus c
-	x (.x axis), y (.y axis), z (.z axis)
-	xs (* x s), ys (* y s), zs (* z s)
-	xyomc (* x y omc), xzomc (* x z omc), yzomc (* y z omc)]
-    (Matrix. 
-     (double-array
-      [(+ (* x x omc) c)  (+ xyomc zs)       (- xzomc ys)       0
-       (- xyomc zs)       (+ (* y y omc) c)  (+ yzomc xs)       0
-       (+ xzomc ys)       (- yzomc xs)       (+ (* z z omc) c)  0
-       0                  0                  0                  1])
-     4)))
-
-(defn translation-matrix [translation]
-  (doto (Matrix/identity 4 4)
-    (.set 0 3 (.x translation))
-    (.set 1 3 (.y translation))
-    (.set 2 3 (.z translation))))
-
 ;;; Generating a molecule configuration
-(defn move-and-translate [matrix point]
-  (let [point-matrix (doto (Matrix. 4 1)
-		       (.set 0 0 (.x point))
-		       (.set 1 0 (.y point))
-		       (.set 2 0 (.z point))
-		       (.set 3 0 1.0))
-	moved-matrix (.times matrix point-matrix)]
-    (Point3d. (.get moved-matrix 0 0)
-	      (.get moved-matrix 1 0)
-	      (.get moved-matrix 2 0))))
-
 (defn get-rotation-axis [molecule matrix from-atom-id to-atom-id]
   (normalised
-   (vec-sub (move-and-translate matrix (.getPoint3d (.getAtom molecule to-atom-id)))
+   (vec-sub (move-and-translate-point matrix (.getPoint3d (.getAtom molecule to-atom-id)))
 	    (.getPoint3d (.getAtom molecule from-atom-id)))))
 
 (defn visit-child! [node [angle & configuration] molecule accumulated-matrix]
@@ -144,10 +116,8 @@
 				       (rotation-matrix angle rotation-axis)
 				       minus-start-point))]
 	    (.times local-transformation accumulated-matrix)))]
-    (doseq [id (:atom-ids node)
-	    :let [a (.getAtom molecule id)
-		  p (.getPoint3d a)]]
-      (.setPoint3d a (move-and-translate accumulated-matrix p)))
+    (doseq [id (:atom-ids node) :let [a (.getAtom molecule id)]] 
+      (apply-matrix-to-atom! accumulated-matrix a))
     (doall
      (loop [children (:children node)
 	    configuration configuration]

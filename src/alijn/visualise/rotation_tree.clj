@@ -2,11 +2,12 @@
   (:use [penumbra opengl]
 	[penumbra.opengl.core :only [*view*]]
 	[clojure.contrib pprint]
-	[alijn io math rotation-tree])
+	[alijn io math rotation-tree molecule-manipulation])
   (:require [penumbra.app :as app]
 	    [penumbra.text :as text])
   (:import [org.openscience.cdk Molecule Atom Bond]
 	   [javax.vecmath Point3d]
+	   [Jama Matrix]
 	   [java.awt Color]
 	   [org.newdawn.slick.opengl TextureImpl]))
 
@@ -97,6 +98,12 @@
 	:center (assoc state
 		  :trans-z (+ (:trans-z state) (/ dx 10) (/ dy 10)))))
 
+(defn move-molecule [delta-x delta-y delta-z state]
+  (let [translation (vec-add
+		     (Point3d. delta-x delta-y delta-z)
+		     (:translation state))]
+    (assoc state :translation translation)))
+
 (defn update-config [idx delta state]
   (let [configuration (:configuration state)]
     (if (< idx (count configuration))
@@ -105,20 +112,30 @@
       state)))
 
 (defn update-molecule [state]
-  (assoc state :molecule 
-	 (molecule-configuration 
-	  (:rotation-tree state) 
-	  (:configuration state))))
+  (let [molecule (molecule-configuration (:rotation-tree state) (:configuration state))
+	molecule (translate-and-rotate-molecule (:translation state) (Matrix/identity 3 3) molecule)]
+    (assoc state :molecule molecule)))
 
 (def up-keys   ["q" "w" "e" "r" "t" "y" "u" "i" "o"])
 (def down-keys ["a" "s" "d" "f" "g" "h" "j" "k" "l"])
 (def idxs (merge (zipmap up-keys (iterate inc 0)) (zipmap down-keys (iterate inc 0))))
 (def deltas (merge (zipmap up-keys (repeat 0.1)) (zipmap down-keys (repeat -0.1))))
 
+(def translations {"8" [   0  0.1    0]
+		   "2" [   0 -0.1    0]
+		   "4" [-0.1    0    0]
+		   "6" [ 0.1    0    0]
+		   "7" [   0    0 -0.1]
+		   "9" [   0    0  0.1]})
+
 (defn key-type [key state]
-  (let [idx (get idxs key 0)
-	delta (get deltas key 0.0)]
-    (update-molecule (update-config idx delta state))))
+  (cond
+   (idxs key) (let [idx (get idxs key 0)
+		    delta (get deltas key 0.0)]
+		(update-molecule (update-config idx delta state)))
+   (translations key) (let [[delta-x delta-y delta-z] (translations key)]
+			(update-molecule (move-molecule delta-x delta-y delta-z state)))
+   :else state))
 
 (defn display [[delta time] state]
   (rotate (:rot-x state) 1 0 0)
@@ -137,7 +154,8 @@
       :trans-x 0, :trans-y -0.9, :trans-z -30,
       :molecule molecule
       :rotation-tree rotation-tree
-      :configuration configuration}]))
+      :configuration configuration
+      :translation (Point3d. 0 0 0)}]))
   
 (defn show-molecules-app [molecule]
   (apply app/start (molecules-app molecule)))

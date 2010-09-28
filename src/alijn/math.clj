@@ -1,5 +1,6 @@
 (ns alijn.math
-  (:import [javax.vecmath Point3d]))
+  (:import [javax.vecmath Point3d]
+	   [Jama Matrix]))
 
 (defn vec-length [u]
   (Math/sqrt 
@@ -66,4 +67,40 @@
   (-> (map distance-squared points-1 points-2) 
       average
       Math/sqrt))
+
+;;; 4D matrix
+(defn rotation-matrix 
+  "axis is assumed to be normalised.
+  If only axis is given it will be normalised and its magnitude will be
+  used as angle."
+  ([axis] (rotation-matrix (vec-length axis) (normalised axis)))
+  ([angle axis]
+     (let [c (Math/cos angle), s (Math/sin angle), omc (- 1 c) ;one minus c
+	   x (.x axis), y (.y axis), z (.z axis)
+	   xs (* x s), ys (* y s), zs (* z s)
+	   xyomc (* x y omc), xzomc (* x z omc), yzomc (* y z omc)]
+       (Matrix. 
+	(double-array
+	 [(+ (* x x omc) c)  (+ xyomc zs)       (- xzomc ys)       0
+	  (- xyomc zs)       (+ (* y y omc) c)  (+ yzomc xs)       0
+	  (+ xzomc ys)       (- yzomc xs)       (+ (* z z omc) c)  0
+	  0                  0                  0                  1])
+	4))))
+
+(defn translation-matrix [translation]
+  (doto (Matrix/identity 4 4)
+    (.set 0 3 (.x translation))
+    (.set 1 3 (.y translation))
+    (.set 2 3 (.z translation))))
+
+(defn move-and-translate-point [matrix point]
+  (let [point-matrix (doto (Matrix. 4 1)
+		       (.set 0 0 (.x point))
+		       (.set 1 0 (.y point))
+		       (.set 2 0 (.z point))
+		       (.set 3 0 1.0))
+	moved-matrix (.times matrix point-matrix)]
+    (Point3d. (.get moved-matrix 0 0)
+	      (.get moved-matrix 1 0)
+	      (.get moved-matrix 2 0))))
 

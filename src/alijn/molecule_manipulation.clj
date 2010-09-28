@@ -43,3 +43,13 @@ Point3d translation vector and the rotated using the Jama.Matrix."
       (rotate-atom! rotation atom)
       (translate-atom! post-translation atom))
     clone))
+
+;;; 4D
+(defn apply-matrix-to-atom! [matrix a]
+  (.setPoint3d a (move-and-translate-point matrix (.getPoint3d a))))
+
+(defn apply-matrix-to-molecule [matrix molecule]
+  (let [clone (.clone molecule)
+	atoms (.atoms clone)]
+    (doseq [a atoms] (apply-matrix-to-atom! matrix a))
+    clone))
