@@ -11,7 +11,7 @@
   [(Point3d. r-x r-y r-z) (Point3d. t-x t-y t-z)])
 
 ; Calculation of ranges
-(def rotation-ranges (repeat 3 [0 (* 2 Math/PI)]))
+(def rotation-ranges (repeat 3 [(- (* 2 Math/PI)) (* 2 Math/PI)]))
 (defn translation-ranges [molecule]
   (for [coordinate [#(.x (.getPoint3d %))
 		    #(.y (.getPoint3d %))
