@@ -26,12 +26,12 @@
 		(ranges m1) (ranges m2)))) 
 
 ; Objective function
-(defn create-objective-fn [constant-molecule variable-molecule]
+(defn create-objective-fn [charge-limit constant-molecule variable-molecule]
   (let [center (center-of-mass variable-molecule)
 	to-origo-matrix (translation-matrix (neg center))
 	from-origo-matrix (translation-matrix center)
-	constant-features (extract-feature-points (find-features constant-molecule 0.5))
-	variable-features (extract-feature-points (find-features variable-molecule 0.5))]
+	constant-features (extract-feature-points (find-features constant-molecule charge-limit))
+	variable-features (extract-feature-points (find-features variable-molecule charge-limit))]
     (fn [v]
       (let [[rotation translation] (unpack-rotation-and-translation v)
 	    matrix (matrix-product 
@@ -49,9 +49,10 @@
   function and a sequence of ranges to perform optimisation 
   over. 
   Returns moved and rotated copy of variable-molecule."
-  [optimiser constant-molecule variable-molecule]
-  (let [optimal-vector (optimiser 
-			(create-objective-fn constant-molecule variable-molecule) 
+  [charge-limit optimiser constant-molecule variable-molecule]
+  (let [objective-fn (create-objective-fn charge-limit constant-molecule variable-molecule) 
+ 	optimal-vector (optimiser 
+			objective-fn
 			(ranges constant-molecule variable-molecule))
 	[rotation translation] (unpack-rotation-and-translation optimal-vector)
 	center (center-of-mass variable-molecule)
@@ -60,4 +61,10 @@
 		(translation-matrix center)
 		(rotation-matrix rotation)
 		(translation-matrix (neg center)))]
-    (apply-matrix-to-molecule matrix variable-molecule)))
+    {:value (objective-fn optimal-vector)
+     :moved-molecule (apply-matrix-to-molecule matrix variable-molecule)}))
+
+(defn align-with-multiple-variable
+  [charge-limit optimiser constant-molecule variable-molecules]
+  (:moved-molecule
+   (apply max-key :value (map (partial align charge-limit optimiser constant-molecule) variable-molecules))))
