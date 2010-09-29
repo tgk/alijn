@@ -24,24 +24,19 @@ all native conformations that are sought re-aligned.")
 
 (defn short-name [molecule] (first (.split (molecule-name molecule) "_")))  
 
-;;; TODOS!
-;;;; charge limit is ignored
-;;;; impossible to change optimiser
-(def optimiser (de-optimiser 50 0.5 0.75 100))
-
 (defn get-best-rmsd 
-  [charge-limit constant-molecule [native-variable & variable-molecules]]
+  [charge-limit optimiser constant-molecule [native-variable & variable-molecules]]
   (molecule-rmsd
    native-variable
    (align-with-multiple-variable 
      charge-limit optimiser constant-molecule variable-molecules)))
 
 (defn count-successes
-  [charge-limit success-rmsd grouped-ligands]
+  [charge-limit optimiser success-rmsd grouped-ligands]
   (fmap
    (fn [conformations]
      (let [reference (first conformations)
-	   best-rmsds (map (partial get-best-rmsd charge-limit reference)
+	   best-rmsds (map (partial get-best-rmsd charge-limit optimiser reference)
 			   (vals grouped-ligands))]
        (count (filter #(<= % success-rmsd) best-rmsds))))
    grouped-ligands))
@@ -75,7 +70,7 @@ all native conformations that are sought re-aligned.")
 		grouped-ligands (if (apply = 1 (vals (fmap count grouped-ligands))) 
 				  (group-by short-name (concat molecules molecules)) 
 				  grouped-ligands)
-		successes (count-successes charge-limit success-rmsd grouped-ligands)
+		successes (count-successes charge-limit optimiser success-rmsd grouped-ligands)
 		success-rates (fmap #(int (* 100 (/ % (count grouped-ligands)))) 
 				    successes)
 		feature-counts (map #(count (apply concat (vals (find-features % charge-limit)))) molecules)]
