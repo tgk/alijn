@@ -41,10 +41,15 @@
 		    to-origo-matrix)
 	    moved-features (apply-matrix-to-features matrix variable-features)]
 	(let [overlap (gaussian-overlap constant-features moved-features)]
-	  (println "overlap" overlap)
 	  overlap)))))
 
-(defn align [optimiser constant-molecule variable-molecule]
+(defn align 
+  "Aligns two molecules using standard features (no steric).
+  The supplied optimiser should expect to be given an objective 
+  function and a sequence of ranges to perform optimisation 
+  over. 
+  Returns moved and rotated copy of variable-molecule."
+  [optimiser constant-molecule variable-molecule]
   (let [optimal-vector (optimiser 
 			(create-objective-fn constant-molecule variable-molecule) 
 			(ranges constant-molecule variable-molecule))
