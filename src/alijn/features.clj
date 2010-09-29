@@ -92,6 +92,12 @@
        (fmap (partial map (partial rotate-point rotation)))
        (fmap (partial map (partial vec-add post-translation)))))
 
+(defn apply-matrix-to-features
+  "Applies the matrix to all the feature points.
+  The features are assumes to be stored as Point3ds."
+  [matrix features]
+  (fmap (partial map (partial move-and-translate-point matrix)) features))
+
 (defnk gaussian-overlap 
   "Calculates the Gaussian overlap between two sets of features
   stored in maps. Each value in the map is a coll of Point3d.

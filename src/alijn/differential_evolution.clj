@@ -20,7 +20,7 @@
   where the objective-fn takes on a high value."
   [objective-fn
    ranges
-   n, scaling-factor, crossover-rate
+   n scaling-factor crossover-rate
    iterations]
   (let [objective-fn (memoize objective-fn)
 	dim (count ranges)]
@@ -34,3 +34,8 @@
 	(recur 
 	 (inc iteration) 
 	 (map (partial max-key objective-fn) population next-generation)))))))
+
+(defn de-optimiser [n scaling-factor crossover-rate iterations]
+  (fn [objective-fn ranges] 
+    (find-max objective-fn ranges 
+	      n scaling-factor crossover-rate iterations)))

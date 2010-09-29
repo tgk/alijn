@@ -68,6 +68,11 @@
       average
       Math/sqrt))
 
+;;; Matrix operations
+(defn matrix-product 
+  ([m] m)
+  ([m & ms] (.times m (apply matrix-product ms))))
+
 ;;; 4D matrix
 (defn rotation-matrix 
   "axis is assumed to be normalised.

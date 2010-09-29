@@ -44,6 +44,12 @@ Point3d translation vector and the rotated using the Jama.Matrix."
       (translate-atom! post-translation atom))
     clone))
 
+(defn center-of-mass 
+  "Calculates the average position of all atoms in the molecule.
+  Atoms are not weighted."
+  [molecule]
+  (vec-center (map #(.getPoint3d %) (.atoms molecule))))
+
 ;;; 4D
 (defn apply-matrix-to-atom! [matrix a]
   (.setPoint3d a (move-and-translate-point matrix (.getPoint3d a))))
