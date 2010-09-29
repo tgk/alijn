@@ -43,18 +43,21 @@
 	(let [overlap (gaussian-overlap constant-features moved-features)]
 	  overlap)))))
 
-(defn randomise-atom-positions [molecule]
+(defn randomise-atom-orientation [molecule]
   (let [rand-axis-coord (fn [] (- (rand (* 4 Math/PI)) (* 2 Math/PI)))
 	random-rotation (Point3d. (rand-axis-coord) (rand-axis-coord) (rand-axis-coord))
-	random-translation (Point3d. (- (rand) 2) (- (rand) 2) (- (rand) 2))
 	center (center-of-mass molecule)]
     (apply-matrix-to-molecule
      (matrix-product
-      (translation-matrix random-translation)
       (translation-matrix center)
       (rotation-matrix random-rotation)
       (translation-matrix (neg center)))
      molecule)))
+
+(defn move-molecule-center [molecule new-center]
+  (apply-matrix-to-molecule
+   (translation-matrix (vec-sub new-center (center-of-mass molecule)))
+   molecule))
 
 (defn align 
   "Aligns two molecules using standard features (no steric).
@@ -63,7 +66,8 @@
   over. 
   Returns moved and rotated copy of variable-molecule."
   [charge-limit optimiser constant-molecule variable-molecule]
-  (let [variable-molecule (randomise-atom-positions (randomise-atom-positions variable-molecule))
+  (let [variable-molecule (randomise-atom-orientation (randomise-atom-orientation variable-molecule))
+	variable-molecule (move-molecule-center variable-molecule (center-of-mass constant-molecule))
 	objective-fn (create-objective-fn charge-limit constant-molecule variable-molecule) 
  	optimal-vector (optimiser 
 			objective-fn

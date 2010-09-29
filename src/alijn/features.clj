@@ -111,3 +111,23 @@
 	    point-2 (features-2 feature-name)]
 	(Math/exp (/ (- (Math/pow (distance point-1 point-2) 2))
 		     (Math/pow scale 2))))))))
+
+; Functions for avoiding recalculation features for molecules that have been moved, rotated 
+; and given a new configuration
+(defn atom-id-from-atom-features [molecule features]
+  (fmap 
+   (partial 
+    map 
+    (fn [feature] (if (isa? (class feature) IAtom) 
+		    (.getAtomNumber molecule feature)
+		    (map #(.getAtomNumber molecule %) feature))))
+   features))
+
+(defn atom-from-atom-id-features [molecule features]
+  (fmap
+   (partial
+    map
+    (fn [id] (if (integer? id) 
+	       (.getAtom molecule id)
+	       (map #(.getAtom molecule %) id))))
+   features))
