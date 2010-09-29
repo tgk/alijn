@@ -53,9 +53,18 @@ all native conformations that are sought re-aligned.")
   (with-command-line args desc
     [[charge-limit "Limit for classifing atom as charged." "0.5"]
      [success-rmsd "The maximum rmsd for a realignment to be a success." "2.5"]
+     [n "Number of individuals in DE" "50"]
+     [scaling-factor "Scaling factor in DE" "0.5"]
+     [crossover-rate "Crossover rate in DE" "0.75"]
+     [iterations "Iterations in DE" "100"]
      filenames]
     (let [charge-limit (Double/parseDouble charge-limit)
-	  success-rmsd (Double/parseDouble success-rmsd)]
+	  success-rmsd (Double/parseDouble success-rmsd)
+	  n (Integer/parseInt n)
+	  scaling-factor (Double/parseDouble scaling-factor)
+	  crossover-rate (Double/parseDouble crossover-rate)
+	  iterations (Integer/parseInt iterations)
+	  optimiser (de-optimiser n scaling-factor crossover-rate iterations)]
       (print-table
        (cons
 	["target" "avg. success" "min" "max" "ligands" "avg. features" "min" "max"]	
