@@ -11,7 +11,9 @@
 
 (defn normalised [u]
   (let [l (vec-length u)
-	clone (.clone u)]
+	clone (Point3d. u)
+	;clone (.clone u)
+	]
     (do
       (set! (.x clone) (/ (.x clone) l))
       (set! (.y clone) (/ (.y clone) l))
