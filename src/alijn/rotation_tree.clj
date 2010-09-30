@@ -80,7 +80,7 @@
 (defn count-children [node]
   (+ (count (:children node)) (apply + (map count-children (:children node)))))
 
-(defn calculate-rotation-tree 
+(defn calculate-rotation-tree 		
   "Main function for generating rotation tree. The returned rotation tree
   can also be used on (shifted and rotated) clones of the molecule."
   [molecule]

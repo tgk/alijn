@@ -25,22 +25,29 @@ all native conformations that are sought re-aligned.")
 (defn short-name [molecule] (first (.split (molecule-name molecule) "_")))  
 
 (defn get-best-rmsd 
-  [charge-limit 
+  [flexible-dihedral?
+   charge-limit 
    feature-scale steric-scale 
    optimiser constant-molecule [native-variable & variable-molecules]]
   (molecule-rmsd
    native-variable
    (align-with-multiple-variable 
-     charge-limit feature-scale steric-scale optimiser constant-molecule variable-molecules)))
+     flexible-dihedral? 
+     charge-limit 
+     feature-scale steric-scale 
+     optimiser 
+     constant-molecule variable-molecules)))
 
 (defn count-successes
-  [charge-limit 
+  [flexible-dihedral?
+   charge-limit 
    feature-scale steric-scale
    optimiser success-rmsd grouped-ligands]
   (fmap
    (fn [conformations]
      (let [reference (first conformations)
-	   best-rmsds (map (partial get-best-rmsd 
+	   best-rmsds (map (partial get-best-rmsd
+				    flexible-dihedral?
 				    charge-limit 
 				    feature-scale steric-scale
 				    optimiser reference)
@@ -53,7 +60,8 @@ all native conformations that are sought re-aligned.")
   align-and-show-table
   [& args]
   (with-command-line args desc
-    [[charge-limit "Limit for classifing atom as charged." "0.5"]
+    [[rigid-molecule? "Should dihedral angles be flexible or not." nil]
+     [charge-limit "Limit for classifing atom as charged." "0.5"]
      [feature-scale "Scale to be used for Gaussian overlap" "1.0"]
      [steric-scale  "Scale to be used for Gaussian overlap" "0.5"]
      [success-rmsd "The maximum rmsd for a realignment to be a success." "2.5"]
@@ -62,7 +70,8 @@ all native conformations that are sought re-aligned.")
      [crossover-rate "Crossover rate in DE" "0.75"]
      [iterations "Iterations in DE" "100"]
      filenames]
-    (let [charge-limit (Double/parseDouble charge-limit)
+    (let [flexible-dihedral? (not rigid-molecule?)
+	  charge-limit (Double/parseDouble charge-limit)
 	  feature-scale (Double/parseDouble feature-scale)
 	  steric-scale  (Double/parseDouble steric-scale)
 	  success-rmsd (Double/parseDouble success-rmsd)
@@ -71,6 +80,7 @@ all native conformations that are sought re-aligned.")
 	  crossover-rate (Double/parseDouble crossover-rate)
 	  iterations (Integer/parseInt iterations)
 	  optimiser (de-optimiser n scaling-factor crossover-rate iterations)]
+      (println "Using flexible dihedral:" flexible-dihedral?)
       (print-table
        (cons
 	["target" "avg. success" "min" "max" "ligands" "avg. features" "min" "max"]	
@@ -81,7 +91,8 @@ all native conformations that are sought re-aligned.")
 		grouped-ligands (if (apply = 1 (vals (fmap count grouped-ligands))) 
 				  (group-by short-name (concat molecules molecules)) 
 				  grouped-ligands)
-		successes (count-successes 
+		successes (count-successes
+			   flexible-dihedral?
 			   charge-limit 
 			   feature-scale steric-scale
 			   optimiser success-rmsd grouped-ligands)
@@ -104,4 +115,5 @@ all native conformations that are sought re-aligned.")
 (defn test-and-show []
   (align-and-show-table
    "--iterations" "10"
+   "--rigid-molecule"
    test-file-2))
