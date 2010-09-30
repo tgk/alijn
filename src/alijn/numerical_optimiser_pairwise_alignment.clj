@@ -59,8 +59,7 @@
 	     moved-features (extract-feature-points 
 			     (atom-from-atom-id-features moved-molecule variable-features-ids))
 	     moved-steric   (extract-feature-points
-			     (atom-from-atom-id-features moved-molecule variable-steric-ids))
-	     ]
+			     (atom-from-atom-id-features moved-molecule variable-steric-ids))]
 	 (let [overlap (+ (gaussian-overlap constant-features moved-features :scale feature-scale)
 			  (gaussian-overlap constant-steric   moved-steric   :scale steric-scale))]
 	   {:overlap overlap
@@ -94,10 +93,9 @@
    feature-scale steric-scale
    optimiser 
    constant-molecule variable-molecules]
-  (:moved-molecule
-   (apply max-key :value (map (partial 
+  (apply max-key :value (map (partial 
 			       align
 			       flexible-dihedral?
 			       charge-limit 
 			       feature-scale steric-scale
-			       optimiser constant-molecule) variable-molecules))))
+			       optimiser constant-molecule) variable-molecules)))
