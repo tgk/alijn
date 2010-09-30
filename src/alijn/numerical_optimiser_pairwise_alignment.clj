@@ -26,12 +26,17 @@
 		(ranges m1) (ranges m2)))) 
 
 ; Objective function
-(defn create-objective-fn [charge-limit constant-molecule variable-molecule]
+(defn create-objective-fn 
+  [charge-limit 
+   feature-scale steric-scale
+   constant-molecule variable-molecule]
   (let [center (center-of-mass variable-molecule)
 	to-origo-matrix (translation-matrix (neg center))
 	from-origo-matrix (translation-matrix center)
 	constant-features (extract-feature-points (find-features constant-molecule charge-limit))
-	variable-features (extract-feature-points (find-features variable-molecule charge-limit))]
+	variable-features (extract-feature-points (find-features variable-molecule charge-limit))
+	constant-steric (extract-feature-points (steric-features constant-molecule))
+	variable-steric (extract-feature-points (steric-features variable-molecule))]
     (fn [v]
       (let [[rotation translation] (unpack-rotation-and-translation v)
 	    matrix (matrix-product 
@@ -39,25 +44,11 @@
 		    from-origo-matrix
 		    (rotation-matrix rotation)
 		    to-origo-matrix)
-	    moved-features (apply-matrix-to-features matrix variable-features)]
-	(let [overlap (gaussian-overlap constant-features moved-features)]
+	    moved-features (apply-matrix-to-features matrix variable-features)
+	    moved-steric   (apply-matrix-to-features matrix variable-steric)]
+	(let [overlap (+ (gaussian-overlap constant-features moved-features :scale feature-scale)
+			 (gaussian-overlap constant-steric   moved-steric   :scale steric-scale))]
 	  overlap)))))
-
-(defn randomise-atom-orientation [molecule]
-  (let [rand-axis-coord (fn [] (- (rand (* 4 Math/PI)) (* 2 Math/PI)))
-	random-rotation (Point3d. (rand-axis-coord) (rand-axis-coord) (rand-axis-coord))
-	center (center-of-mass molecule)]
-    (apply-matrix-to-molecule
-     (matrix-product
-      (translation-matrix center)
-      (rotation-matrix random-rotation)
-      (translation-matrix (neg center)))
-     molecule)))
-
-(defn move-molecule-center [molecule new-center]
-  (apply-matrix-to-molecule
-   (translation-matrix (vec-sub new-center (center-of-mass molecule)))
-   molecule))
 
 (defn align 
   "Aligns two molecules using standard features (no steric).
@@ -65,10 +56,15 @@
   function and a sequence of ranges to perform optimisation 
   over. 
   Returns moved and rotated copy of variable-molecule."
-  [charge-limit optimiser constant-molecule variable-molecule]
-  (let [variable-molecule (randomise-atom-orientation (randomise-atom-orientation variable-molecule))
+  [charge-limit 
+   feature-scale steric-scale
+   optimiser 
+   constant-molecule variable-molecule]
+  (let [variable-molecule (randomise-molecule-orientation (randomise-molecule-orientation variable-molecule))
 	variable-molecule (move-molecule-center variable-molecule (center-of-mass constant-molecule))
-	objective-fn (create-objective-fn charge-limit constant-molecule variable-molecule) 
+	objective-fn (create-objective-fn charge-limit 
+					  feature-scale steric-scale
+					  constant-molecule variable-molecule) 
  	optimal-vector (optimiser 
 			objective-fn
 			(ranges constant-molecule variable-molecule))
@@ -83,6 +79,13 @@
      :moved-molecule (apply-matrix-to-molecule matrix variable-molecule)}))
 
 (defn align-with-multiple-variable
-  [charge-limit optimiser constant-molecule variable-molecules]
+  [charge-limit 
+   feature-scale steric-scale
+   optimiser 
+   constant-molecule variable-molecules]
   (:moved-molecule
-   (apply max-key :value (map (partial align charge-limit optimiser constant-molecule) variable-molecules))))
+   (apply max-key :value (map (partial 
+			       align 
+			       charge-limit 
+			       feature-scale steric-scale
+			       optimiser constant-molecule) variable-molecules))))

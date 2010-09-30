@@ -1,5 +1,6 @@
 (ns alijn.molecule-manipulation
-  (:use alijn.math))
+  (:use alijn.math)
+  (:import javax.vecmath.Point3d))
 
 (defn translate-atom! 
   "Performs an inplace translation of the atom."
@@ -59,3 +60,20 @@ Point3d translation vector and the rotated using the Jama.Matrix."
 	atoms (.atoms clone)]
     (doseq [a atoms] (apply-matrix-to-atom! matrix a))
     clone))
+
+;;; Using 4D
+(defn randomise-molecule-orientation [molecule]
+  (let [rand-axis-coord (fn [] (- (rand (* 4 Math/PI)) (* 2 Math/PI)))
+	random-rotation (Point3d. (rand-axis-coord) (rand-axis-coord) (rand-axis-coord))
+	center (center-of-mass molecule)]
+    (apply-matrix-to-molecule
+     (matrix-product
+      (translation-matrix center)
+      (rotation-matrix random-rotation)
+      (translation-matrix (neg center)))
+     molecule)))
+
+(defn move-molecule-center [molecule new-center]
+  (apply-matrix-to-molecule
+   (translation-matrix (vec-sub new-center (center-of-mass molecule)))
+   molecule))

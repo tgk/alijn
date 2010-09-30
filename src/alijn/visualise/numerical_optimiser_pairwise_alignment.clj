@@ -22,8 +22,9 @@
       (println (format "Parsed %d molecules." (count molecules)))
       (doseq [variable-molecule (rest molecules)]
 	(let [charge-limit 0.5
-	      optimiser (de-optimiser 50 0.5 0.75 100)
-	      {moved-molecule :moved-molecule} (align charge-limit 
+	      optimiser (de-optimiser 50 0.5 0.75 10)
+	      {moved-molecule :moved-molecule} (align charge-limit
+						      1.0 0.5
 						      optimiser constant-molecule variable-molecule)
 	      grouped-features (find-features moved-molecule charge-limit)
 	      grouped-features-points (extract-feature-points grouped-features)]

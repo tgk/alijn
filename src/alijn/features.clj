@@ -94,7 +94,7 @@
 
 (defn apply-matrix-to-features
   "Applies the matrix to all the feature points.
-  The features are assumes to be stored as Point3ds."
+  The features are assumed to be stored as Point3ds."
   [matrix features]
   (fmap (partial map (partial move-and-translate-point matrix)) features))
 
