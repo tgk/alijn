@@ -24,15 +24,17 @@ molecule is the native binding mode and the remaining are
 conformations. If only one molecule exists for each name they are
 all native conformations that are sought re-aligned.
 Possible optimisers are
- de-n-cr-f
- cma-es")
+ de-n-cr-f     (e.g. de-50-0.75-0.5)
+ cma-es-lambda (e.g. cma-es-9)")
 
 ; Might move to common namespace
 (defn println-fitness-logger [fun-evals best-fitness]
   (println fun-evals best-fitness))
 
 (defn parse-optimiser [fun-eval fitness-logger s]
-  (let [parsers {"cma" (fn [& _] (cma-es-optimiser fun-eval fitness-logger))
+  (let [parsers {"cma" (fn [_ lambda-str] (cma-es-optimiser (Integer/parseInt lambda-str)
+							    fun-eval
+							    fitness-logger))
 		 "de" (fn [n-str cr-str f-str]
 			(de-optimiser (Integer/parseInt n-str)
 				      (Double/parseDouble f-str)
@@ -136,6 +138,6 @@ Possible optimisers are
   (align-and-show-table
    "--fun-eval" "1000"
    ;"--optimiser" "de-10-0.7-0.5"
-   "--optimiser" "cma-es"
+   "--optimiser" "cma-es-9"
    "--rigid-molecule"
    test-file-2))
