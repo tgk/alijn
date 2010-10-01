@@ -3,6 +3,7 @@
 	 io 
 	 features 
 	 differential-evolution 
+	 cma-es
 	 numerical-optimiser-pairwise-alignment 
 	 math 
 	 molecule-utils 
@@ -70,7 +71,7 @@ all native conformations that are sought re-aligned.")
      [n "Number of individuals in DE" "50"]
      [scaling-factor "Scaling factor in DE" "0.5"]
      [crossover-rate "Crossover rate in DE" "0.75"]
-     [iterations "Iterations in DE" "100"]
+     [fun-eval "Function evaluations" "100"]
      filenames]
     (let [flexible-dihedral? (not rigid-molecule?)
 	  charge-limit (Double/parseDouble charge-limit)
@@ -80,8 +81,10 @@ all native conformations that are sought re-aligned.")
 	  n (Integer/parseInt n)
 	  scaling-factor (Double/parseDouble scaling-factor)
 	  crossover-rate (Double/parseDouble crossover-rate)
-	  iterations (Integer/parseInt iterations)
-	  optimiser (de-optimiser n scaling-factor crossover-rate iterations)]
+	  fun-eval (Integer/parseInt fun-eval)
+	  ;optimiser (de-optimiser n scaling-factor crossover-rate fun-eval)
+	  optimiser (cma-es-optimiser fun-eval)
+	  ]
       (println "Using flexible dihedral:" flexible-dihedral?)
       (print-table
        (cons
@@ -120,6 +123,6 @@ all native conformations that are sought re-aligned.")
 
 (defn test-and-show []
   (align-and-show-table
-   "--iterations" "10"
+   "--fun-eval" "10000"
    "--rigid-molecule"
    test-file-2))

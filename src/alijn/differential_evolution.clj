@@ -21,8 +21,9 @@
   [objective-fn
    ranges
    n scaling-factor crossover-rate
-   iterations]
-  (let [objective-fn (memoize objective-fn)
+   fun-evals]
+  (let [iterations (/ fun-evals n)
+	objective-fn (memoize objective-fn)
 	dim (count ranges)]
     (loop [iteration 0
 	   population (initialise-population ranges n)]
@@ -35,7 +36,7 @@
 	 (inc iteration) 
 	 (map (partial max-key objective-fn) population next-generation)))))))
 
-(defn de-optimiser [n scaling-factor crossover-rate iterations]
+(defn de-optimiser [n scaling-factor crossover-rate fun-evals]
   (fn [objective-fn ranges] 
     (find-max objective-fn ranges 
-	      n scaling-factor crossover-rate iterations)))
+	      n scaling-factor crossover-rate fun-evals)))
