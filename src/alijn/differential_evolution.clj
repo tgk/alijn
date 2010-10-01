@@ -21,22 +21,24 @@
   [objective-fn
    ranges
    n scaling-factor crossover-rate
-   fun-evals]
+   fun-evals fitness-logger]
   (let [iterations (/ fun-evals n)
 	objective-fn (memoize objective-fn)
 	dim (count ranges)]
     (loop [iteration 0
 	   population (initialise-population ranges n)]
-    (if (= iteration iterations)
-      (apply max-key objective-fn population)
-      (let [next-generation (map
-			     (partial create-offspring dim scaling-factor crossover-rate population)
-			     population)]
-	(recur 
-	 (inc iteration) 
-	 (map (partial max-key objective-fn) population next-generation)))))))
+      (when fitness-logger (fitness-logger (* iteration n) (apply max (map objective-fn population))))
+      (if (>= iteration iterations)
+	(apply max-key objective-fn population)
+	(let [next-generation (map
+			       (partial create-offspring dim scaling-factor crossover-rate population)
+			       population)]
+	  (recur 
+	   (inc iteration) 
+	   (map (partial max-key objective-fn) population next-generation)))))))
 
-(defn de-optimiser [n scaling-factor crossover-rate fun-evals]
+(defn de-optimiser [n scaling-factor crossover-rate fun-evals fitness-logger]
   (fn [objective-fn ranges] 
     (find-max objective-fn ranges 
-	      n scaling-factor crossover-rate fun-evals)))
+	      n scaling-factor crossover-rate 
+	      fun-evals fitness-logger)))

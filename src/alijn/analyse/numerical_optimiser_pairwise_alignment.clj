@@ -28,13 +28,17 @@ Possible optimisers are
  cma-es")
 
 ; Might move to common namespace
-(defn parse-optimiser [fun-eval s]
-  (let [parsers {"cma" (fn [& _] (cma-es-optimiser fun-eval))
+(defn println-fitness-logger [fun-evals best-fitness]
+  (println fun-evals best-fitness))
+
+(defn parse-optimiser [fun-eval fitness-logger s]
+  (let [parsers {"cma" (fn [& _] (cma-es-optimiser fun-eval fitness-logger))
 		 "de" (fn [n-str cr-str f-str]
 			(de-optimiser (Integer/parseInt n-str)
 				      (Double/parseDouble f-str)
 				      (Double/parseDouble cr-str)
-				      fun-eval))}
+				      fun-eval
+				      fitness-logger))}
 	tokens (.split s "-")]
     (apply (parsers (first tokens)) (rest tokens))))
 
@@ -91,9 +95,8 @@ Possible optimisers are
 	  steric-scale  (Double/parseDouble steric-scale)
 	  success-rmsd (Double/parseDouble success-rmsd)
 	  fun-eval (Integer/parseInt fun-eval)
-	  optimiser (parse-optimiser fun-eval optimiser)]
+	  optimiser (parse-optimiser fun-eval (comment println-fitness-logger) optimiser)]
       (println "Using flexible dihedral:" flexible-dihedral?)
-      (println "Optimiser" optimiser)
       (print-table
        (cons
 	["target" "avg. success" "min" "max" "ligands" "avg. features" "min" "max" "avg. dihedral" "min" "max"]
@@ -131,7 +134,7 @@ Possible optimisers are
 
 (defn test-and-show []
   (align-and-show-table
-   "--fun-eval" "10"
+   "--fun-eval" "1000"
    ;"--optimiser" "de-10-0.7-0.5"
    "--optimiser" "cma-es"
    "--rigid-molecule"
