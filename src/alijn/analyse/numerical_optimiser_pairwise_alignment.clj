@@ -22,7 +22,21 @@ Molecule names are truncated such that 1kcb_h_min becomes 1kcb.
 If a file contains multiple molecules with the same name, the first
 molecule is the native binding mode and the remaining are 
 conformations. If only one molecule exists for each name they are
-all native conformations that are sought re-aligned.")
+all native conformations that are sought re-aligned.
+Possible optimisers are
+ de-n-cr-f
+ cma-es")
+
+; Might move to common namespace
+(defn parse-optimiser [fun-eval s]
+  (let [parsers {"cma" (fn [& _] (cma-es-optimiser fun-eval))
+		 "de" (fn [n-str cr-str f-str]
+			(de-optimiser (Integer/parseInt n-str)
+				      (Double/parseDouble f-str)
+				      (Double/parseDouble cr-str)
+				      fun-eval))}
+	tokens (.split s "-")]
+    (apply (parsers (first tokens)) (rest tokens))))
 
 (defn short-name [molecule] (first (.split (molecule-name molecule) "_")))  
 
@@ -68,9 +82,7 @@ all native conformations that are sought re-aligned.")
      [feature-scale "Scale to be used for Gaussian overlap" "1.0"]
      [steric-scale  "Scale to be used for Gaussian overlap" "0.5"]
      [success-rmsd "The maximum rmsd for a realignment to be a success." "2.5"]
-     [n "Number of individuals in DE" "50"]
-     [scaling-factor "Scaling factor in DE" "0.5"]
-     [crossover-rate "Crossover rate in DE" "0.75"]
+     [optimiser "The optimiser to be used." "de-50-0.75-0.5"]
      [fun-eval "Function evaluations" "100"]
      filenames]
     (let [flexible-dihedral? (not rigid-molecule?)
@@ -78,14 +90,10 @@ all native conformations that are sought re-aligned.")
 	  feature-scale (Double/parseDouble feature-scale)
 	  steric-scale  (Double/parseDouble steric-scale)
 	  success-rmsd (Double/parseDouble success-rmsd)
-	  n (Integer/parseInt n)
-	  scaling-factor (Double/parseDouble scaling-factor)
-	  crossover-rate (Double/parseDouble crossover-rate)
 	  fun-eval (Integer/parseInt fun-eval)
-	  ;optimiser (de-optimiser n scaling-factor crossover-rate fun-eval)
-	  optimiser (cma-es-optimiser fun-eval)
-	  ]
+	  optimiser (parse-optimiser fun-eval optimiser)]
       (println "Using flexible dihedral:" flexible-dihedral?)
+      (println "Optimiser" optimiser)
       (print-table
        (cons
 	["target" "avg. success" "min" "max" "ligands" "avg. features" "min" "max" "avg. dihedral" "min" "max"]
@@ -123,6 +131,8 @@ all native conformations that are sought re-aligned.")
 
 (defn test-and-show []
   (align-and-show-table
-   "--fun-eval" "10000"
+   "--fun-eval" "10"
+   ;"--optimiser" "de-10-0.7-0.5"
+   "--optimiser" "cma-es"
    "--rigid-molecule"
    test-file-2))

@@ -39,4 +39,8 @@
 (defn cma-es-optimiser 
   [fun-evals]
   (fn [objective-fn ranges]
-    (repeatedly-cma-es-minimise fun-evals (comp - objective-fn) ranges)))
+    (repeatedly-cma-es-minimise 
+     fun-evals 
+     #(- 10000 (objective-fn %)) 
+     ;(comp - objective-fn) 
+     ranges)))
