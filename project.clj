@@ -18,6 +18,7 @@
   :jvm-opts ["-Xmx1g"]
   :run-aliases {:features       [alijn.visualise.features find-and-show-features]
 		:pairwise-align [alijn.visualise.pairwise-alignment align-and-show]
-		:analyse-pairwise [alijn.analyse.pairwise-alignment 
-				   align-and-show-table]
+		:analyse-pairwise 
+		[alijn.analyse.numerical-optimiser-pairwise-alignment 
+		 align-and-show-table]
 		:read-molecules [alijn.read-mol-file read-and-print-names]})
