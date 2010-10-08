@@ -2,8 +2,7 @@
   (:use [alijn 
 	 io 
 	 features 
-	 differential-evolution 
-	 cma-es
+	 differential-evolution cma-es monte-carlo
 	 numerical-optimiser-pairwise-alignment 
 	 math 
 	 molecule-utils 
@@ -26,7 +25,8 @@ conformations. If only one molecule exists for each name they are
 all native conformations that are sought re-aligned.
 Possible optimisers are
  de-n-cr-f     (e.g. de-50-0.75-0.5)
- cma-es-lambda (e.g. cma-es-9)")
+ cma-es-lambda (e.g. cma-es-9)
+ monte-carlo")
 
 ; Might move to common namespace
 (defn parse-optimiser [fun-eval s]
@@ -37,7 +37,8 @@ Possible optimisers are
 			(de-optimiser (Integer/parseInt n-str)
 				      (Double/parseDouble f-str)
 				      (Double/parseDouble cr-str)
-				      fun-eval))}
+				      fun-eval))
+		 "monte" (fn [_] (monte-carlo-optimiser fun-eval))}
 	tokens (.split s "-")]
     (apply (parsers (first tokens)) (rest tokens))))
 
@@ -142,7 +143,8 @@ Possible optimisers are
 (defn test-and-show []
   (align-and-show-table
    "--fun-eval" "10"
-   "--optimiser" "de-10-0.7-0.5"
+   ;"--optimiser" "de-10-0.7-0.5"
    ;"--optimiser" "cma-es-9"
+   "--optimiser" "monte-carlo"
    "--rigid-molecule"
    test-file-2))
