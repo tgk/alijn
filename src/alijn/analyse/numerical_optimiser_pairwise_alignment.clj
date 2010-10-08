@@ -146,5 +146,5 @@ Possible optimisers are
    ;"--optimiser" "de-10-0.7-0.5"
    ;"--optimiser" "cma-es-9"
    "--optimiser" "monte-carlo"
-   "--rigid-molecule"
+   ;"--rigid-molecule"
    test-file-2))

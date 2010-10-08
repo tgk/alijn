@@ -37,10 +37,14 @@
 (defn create-objective-fn 
   [objective-fn-params
    constant-molecule variable-molecule]
-  (let [rotation-tree (when (:flexible-dihedral? objective-fn-params) 
-			(calculate-rotation-tree variable-molecule))
+  (let [rotation-tree-constant (when (:flexible-dihedral? objective-fn-params) 
+				 (calculate-rotation-tree constant-molecule))
+	rotation-tree-variable (when (:flexible-dihedral? objective-fn-params) 
+				 (calculate-rotation-tree variable-molecule))
 	d-o-f (if (:flexible-dihedral? objective-fn-params)
-		(:degrees-of-freedom rotation-tree) 0)
+		(+ (:degrees-of-freedom rotation-tree-constant) 
+		   (:degrees-of-freedom rotation-tree-variable))
+		0)
 	center (center-of-mass variable-molecule)
 	to-origo-matrix (translation-matrix (neg center))
 	from-origo-matrix (translation-matrix center)
@@ -60,8 +64,17 @@
 		     (repeat d-o-f dihedral-angle-range))
      :objective-fn
      (fn [v]
-       (let [variable-molecule (if (:flexible-dihedral? objective-fn-params)
-				 (molecule-configuration rotation-tree (drop 6 v))
+       (let [constant-molecule (if (:flexbile-dihedral? objective-fn-params)
+				 (molecule-configuration 
+				  rotation-tree-constant 
+				  (drop 6 v))
+				 constant-molecule)
+	     variable-molecule (if (:flexible-dihedral? objective-fn-params)
+				 (molecule-configuration 
+				  rotation-tree-variable 
+				  (drop 
+				   (+ 6 (:degrees-of-freedom rotation-tree-constant)) 
+				   v))
 				 variable-molecule)
 	     [rotation translation] (unpack-rotation-and-translation (take 6 v))
 	     matrix (matrix-product 
