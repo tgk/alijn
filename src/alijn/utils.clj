@@ -1,5 +1,6 @@
 (ns alijn.utils
-  (:use clojure.contrib.combinatorics))
+  (:use clojure.contrib.combinatorics
+	clojure.contrib.logging))
 
 (defn same-keys? [m & ms] 
   (->> (cons m ms) (map keys) (map set) (apply =)))

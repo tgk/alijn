@@ -1,5 +1,6 @@
 (ns alijn.cma-es
-  (:use clojure.pprint)
+  (:use clojure.pprint
+	clojure.contrib.logging)
   (:import [cma CMAEvolutionStrategy]))
 
 (defn cma-es-minimise 
@@ -30,27 +31,26 @@
 (defn repeatedly-cma-es-minimise
   [lambda 
    max-fun-evals
-   fitness-logger
    objective-fn ranges]
-  (apply 
-   min-key 
-   objective-fn
-   (loop [fun-evals 0
-	  lambda lambda
-	  solutions []]
-     (when (and fitness-logger (seq solutions)) (fitness-logger fun-evals (- (apply min (map objective-fn solutions)))))
-     (if (>= fun-evals max-fun-evals)
-       solutions
-       (let [{add-fun-evals :fun-evals, sol :best}
-	     (cma-es-minimise lambda (- max-fun-evals fun-evals) objective-fn ranges)]
-	 (recur (+ fun-evals add-fun-evals) (* 2 lambda) (conj solutions sol)))))))
+  (let [objective-fn (memoize objective-fn)
+	best (partial apply min-key objective-fn)]
+    (loop [fun-evals 0
+	   lambda lambda
+	   solutions []]
+      (when (> fun-evals 0) 
+	(info (format "cma-es evaluations %d best-fitness %f" 
+		      fun-evals (objective-fn (best solutions)))))
+      (if (>= fun-evals max-fun-evals)
+	(best solutions)
+	(let [{add-fun-evals :fun-evals, sol :best}
+	      (cma-es-minimise lambda (- max-fun-evals fun-evals) objective-fn ranges)]
+	  (recur (+ fun-evals add-fun-evals) (* 2 lambda) (conj solutions sol)))))))
 
 (defn cma-es-optimiser 
-  [lambda fun-evals fitness-logger]
+  [lambda fun-evals]
   (fn [objective-fn ranges]
     (repeatedly-cma-es-minimise 
      lambda
      fun-evals 
-     fitness-logger
      (memoize (comp - objective-fn))
      ranges)))

@@ -1,6 +1,6 @@
 (ns alijn.numerical-optimiser-pairwise-alignment
   (:import javax.vecmath.Point3d)
-  (:use [alijn molecule-manipulation math features rotation-tree]))
+  (:use [alijn molecule-manipulation math features rotation-tree energy]))
 
 ; Packing and unpacking for numerical optimisers
 (defn pack-rotation-and-translation [rotation translation]
@@ -27,26 +27,40 @@
 (def dihedral-angle-range [0 (* 2 Math/PI)])
 
 ; Objective function
-(defn create-objective-fn 
+(defrecord Objective-fn-params
   [flexible-dihedral?
-   charge-limit 
-   feature-scale steric-scale
+   energy-contribution
+   charge-limit
+   feature-scale
+   steric-scale])
+
+(defn create-objective-fn 
+  [objective-fn-params
    constant-molecule variable-molecule]
-  (let [rotation-tree (when flexible-dihedral? (calculate-rotation-tree variable-molecule))
-	d-o-f (if flexible-dihedral? (:degrees-of-freedom rotation-tree) 0)
+  (let [rotation-tree (when (:flexible-dihedral? objective-fn-params) 
+			(calculate-rotation-tree variable-molecule))
+	d-o-f (if (:flexible-dihedral? objective-fn-params)
+		(:degrees-of-freedom rotation-tree) 0)
 	center (center-of-mass variable-molecule)
 	to-origo-matrix (translation-matrix (neg center))
 	from-origo-matrix (translation-matrix center)
-	constant-features (extract-feature-points (find-features constant-molecule charge-limit))
-	constant-steric   (extract-feature-points (steric-features constant-molecule))
+	constant-features (extract-feature-points 
+			   (find-features constant-molecule 
+					  (:charge-limit objective-fn-params)))
+	constant-steric   (extract-feature-points 
+			   (steric-features constant-molecule))
 	variable-features-ids (atom-id-from-atom-features 
-			       variable-molecule (find-features variable-molecule charge-limit))
+			       variable-molecule 
+			       (find-features variable-molecule 
+					      (:charge-limit objective-fn-params)))
 	variable-steric-ids   (atom-id-from-atom-features 
-			       variable-molecule (steric-features variable-molecule))]
-    {:ranges (concat (ranges constant-molecule variable-molecule) (repeat d-o-f dihedral-angle-range))
+			       variable-molecule 
+			       (steric-features variable-molecule))]
+    {:ranges (concat (ranges constant-molecule variable-molecule) 
+		     (repeat d-o-f dihedral-angle-range))
      :objective-fn
      (fn [v]
-       (let [variable-molecule (if flexible-dihedral?
+       (let [variable-molecule (if (:flexible-dihedral? objective-fn-params)
 				 (molecule-configuration rotation-tree (drop 6 v))
 				 variable-molecule)
 	     [rotation translation] (unpack-rotation-and-translation (take 6 v))
@@ -57,12 +71,26 @@
 		     to-origo-matrix)
 	     moved-molecule (apply-matrix-to-molecule matrix variable-molecule)
 	     moved-features (extract-feature-points 
-			     (atom-from-atom-id-features moved-molecule variable-features-ids))
+			     (atom-from-atom-id-features 
+			      moved-molecule variable-features-ids))
 	     moved-steric   (extract-feature-points
-			     (atom-from-atom-id-features moved-molecule variable-steric-ids))]
-	 (let [overlap (+ (gaussian-overlap constant-features moved-features :scale feature-scale)
-			  (gaussian-overlap constant-steric   moved-steric   :scale steric-scale))]
+			     (atom-from-atom-id-features 
+			      moved-molecule variable-steric-ids))]
+	 (let [overlap (+ (gaussian-overlap 
+			   constant-features moved-features 
+			   :scale (:feature-scale objective-fn-params))
+			  (gaussian-overlap 
+			   constant-steric   moved-steric   
+			   :scale (:steric-scale objective-fn-params)))
+	       energy (if (= 0 (:energy-contribution objective-fn-params)) 
+			0 
+			(+ (total-MMFF94-charges! variable-molecule)
+			   (total-MMFF94-charges! constant-molecule)))
+	       fitness (- overlap 
+			  (* (:energy-contribution objective-fn-params) energy))]
 	   {:overlap overlap
+	    :energy energy
+	    :fitness fitness
 	    :moved-molecule moved-molecule})))}))
 
 (defn align 
@@ -71,31 +99,28 @@
   function and a sequence of ranges to perform optimisation 
   over. 
   Returns moved and rotated copy of variable-molecule."
-  [flexible-dihedral?
-   charge-limit 
-   feature-scale steric-scale
+  [objective-fn-params
    optimiser 
    constant-molecule variable-molecule]
-  (let [variable-molecule (randomise-molecule-orientation (randomise-molecule-orientation variable-molecule))
-	variable-molecule (move-molecule-center variable-molecule (center-of-mass constant-molecule))
+  (let [variable-molecule (randomise-molecule-orientation 
+			   (randomise-molecule-orientation 
+			    variable-molecule))
+	variable-molecule (move-molecule-center 
+			   variable-molecule 
+			   (center-of-mass constant-molecule))
 	{objective-fn :objective-fn, ranges :ranges} 
-	(create-objective-fn flexible-dihedral? 
-			     charge-limit 
-			     feature-scale steric-scale
-			     constant-molecule variable-molecule) 
+	(create-objective-fn objective-fn-params constant-molecule variable-molecule) 
  	optimal-vector (optimiser (comp :overlap objective-fn) ranges)
-	{value :overlap, moved-molecule :moved-molecule} (objective-fn optimal-vector)]
-    {:value value, :moved-molecule moved-molecule, :degrees-of-freedom (count ranges)}))
+	{value :fitness, moved-molecule :moved-molecule} (objective-fn optimal-vector)]
+    {:value value
+     :moved-molecule moved-molecule
+     :degrees-of-freedom (count ranges)}))
 
 (defn align-with-multiple-variable
-  [flexible-dihedral?
-   charge-limit 
-   feature-scale steric-scale
+  [objective-fn-params
    optimiser 
    constant-molecule variable-molecules]
-  (apply max-key :value (map (partial 
-			       align
-			       flexible-dihedral?
-			       charge-limit 
-			       feature-scale steric-scale
-			       optimiser constant-molecule) variable-molecules)))
+  (apply 
+   max-key :value 
+   (map (partial align objective-fn-params optimiser constant-molecule) 
+	variable-molecules)))

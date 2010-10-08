@@ -6,7 +6,11 @@
 		 [jama "1.0.1"]
 		 [bron-kerbosch "1.0.0-SNAPSHOT"]
 		 [penumbra "0.6.0-SNAPSHOT"]
-		 [cma-es "1.0"]]
+		 [cma-es "1.0"]
+		 [log4j "1.2.15" :exclusions [javax.mail/mail
+                                              javax.jms/jms
+                                              com.sun.jdmk/jmxtools
+                                              com.sun.jmx/jmxri]]]
   :native-dependencies [[penumbra/lwjgl "2.4.2"]]
   :dev-dependencies [[native-deps "1.0.4"]
 		     [lein-run "1.0.0-SNAPSHOT"]
