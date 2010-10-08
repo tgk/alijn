@@ -106,8 +106,8 @@
 			   :scale (:steric-scale objective-fn-params)))
 	       energy (if (= 0 (:energy-contribution objective-fn-params)) 
 			0 
-			(+ (total-MMFF94-charges! variable-molecule)
-			   (total-MMFF94-charges! constant-molecule)))
+			(+ (steric-overlap variable-molecule)
+			   (steric-overlap constant-molecule)))
 	       fitness (- overlap 
 			  (* (:energy-contribution objective-fn-params) energy))]
 	   {:overlap overlap
