@@ -69,7 +69,8 @@
        (let [constant-molecule (if (:flexbile-dihedral? objective-fn-params)
 				 (molecule-configuration 
 				  rotation-tree-constant 
-				  (drop 6 v))
+				  (take (:degrees-of-freedom rotation-tree-constant) 
+					(drop 6 v)))
 				 constant-molecule)
 	     variable-molecule (if (:flexible-dihedral? objective-fn-params)
 				 (molecule-configuration 
