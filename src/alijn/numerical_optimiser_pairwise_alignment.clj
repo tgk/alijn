@@ -48,11 +48,13 @@
 	center (center-of-mass variable-molecule)
 	to-origo-matrix (translation-matrix (neg center))
 	from-origo-matrix (translation-matrix center)
-	constant-features (extract-feature-points 
-			   (find-features constant-molecule 
-					  (:charge-limit objective-fn-params)))
-	constant-steric   (extract-feature-points 
-			   (steric-features constant-molecule))
+	constant-features-ids (atom-id-from-atom-features 
+			       constant-molecule 
+			       (find-features constant-molecule 
+					      (:charge-limit objective-fn-params)))
+	constant-steric-ids   (atom-id-from-atom-features 
+			       constant-molecule 
+			       (steric-features constant-molecule))
 	variable-features-ids (atom-id-from-atom-features 
 			       variable-molecule 
 			       (find-features variable-molecule 
@@ -76,6 +78,12 @@
 				   (+ 6 (:degrees-of-freedom rotation-tree-constant)) 
 				   v))
 				 variable-molecule)
+	     constant-features (extract-feature-points
+				(atom-from-atom-id-features
+				 constant-molecule constant-features-ids))
+	     constant-steric (extract-feature-points
+			      (atom-from-atom-id-features
+			       constant-molecule constant-steric-ids))
 	     [rotation translation] (unpack-rotation-and-translation (take 6 v))
 	     matrix (matrix-product 
 		     (translation-matrix translation)
