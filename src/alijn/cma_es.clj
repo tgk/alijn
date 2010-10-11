@@ -21,6 +21,7 @@
     (set! (.stopTolFun options) 1.0E-5)
     (set! (.stopTolFunHist options) 1.0E-6)
     (.init cma)
+    (println "max-fun-evals" fun-evals)
     (while (-> cma .stopConditions .isFalse)
 	   (let [fitness (map (comp objective-fn seq) (.samplePopulation cma))]
 	     (.updateDistribution cma (double-array fitness))))
@@ -32,8 +33,7 @@
   [lambda 
    max-fun-evals
    objective-fn ranges]
-  (let [objective-fn (memoize objective-fn)
-	best (partial apply min-key objective-fn)]
+  (let [best (partial apply min-key objective-fn)]
     (loop [fun-evals 0
 	   lambda lambda
 	   solutions []]
@@ -41,7 +41,9 @@
 	(info (format "cma-es evaluations %d best-fitness %f" 
 		      fun-evals (objective-fn (best solutions)))))
       (if (>= fun-evals max-fun-evals)
-	(best solutions)
+	(do
+	  (println "fun-evals:" fun-evals)
+	  (best solutions))
 	(let [{add-fun-evals :fun-evals, sol :best}
 	      (cma-es-minimise lambda (- max-fun-evals fun-evals) objective-fn ranges)]
 	  (recur (+ fun-evals add-fun-evals) (* 2 lambda) (conj solutions sol)))))))

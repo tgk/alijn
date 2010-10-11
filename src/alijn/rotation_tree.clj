@@ -4,7 +4,8 @@
 	  [org.openscience.cdk Atom Molecule]
 	  org.openscience.cdk.smiles.smarts.SMARTSQueryTool)  
   (:use [alijn math molecule-manipulation]
-	clojure.set))
+	clojure.set
+	clojure.contrib.profile))
 
 ;;; Data strutures
 
@@ -132,10 +133,12 @@
   configuration. The number of angles in configuration
   must match the nummer of nodes in the rotation-tree." 
   [rotation-tree configuration]
-  (let [cloned-molecule (.clone (:molecule rotation-tree))
-	initial-matrix (Matrix/identity 4 4)]
-    (visit-child! (:root-node rotation-tree) 
-		  (cons 0 configuration) 
-		  cloned-molecule
-		  initial-matrix)
-    cloned-molecule))
+  (prof
+   :molecule-configuration
+   (let [cloned-molecule (.clone (:molecule rotation-tree))
+	 initial-matrix (Matrix/identity 4 4)]
+     (visit-child! (:root-node rotation-tree) 
+		   (cons 0 configuration) 
+		   cloned-molecule
+		   initial-matrix)
+     cloned-molecule)))

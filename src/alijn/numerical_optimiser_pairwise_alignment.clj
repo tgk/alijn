@@ -1,6 +1,7 @@
 (ns alijn.numerical-optimiser-pairwise-alignment
   (:import javax.vecmath.Point3d)
-  (:use [alijn molecule-manipulation math features rotation-tree energy]))
+  (:use [alijn molecule-manipulation math features rotation-tree energy]
+	clojure.contrib.profile))
 
 ; Packing and unpacking for numerical optimisers
 (defn pack-rotation-and-translation [rotation translation]
@@ -66,6 +67,7 @@
 		     (repeat d-o-f dihedral-angle-range))
      :objective-fn
      (fn [v]
+       (prof :objective-fn
        (let [constant-molecule (if (:flexbile-dihedral? objective-fn-params)
 				 (molecule-configuration 
 				  rotation-tree-constant 
@@ -113,7 +115,7 @@
 	   {:overlap overlap
 	    :energy energy
 	    :fitness fitness
-	    :moved-molecule moved-molecule})))}))
+	    :moved-molecule moved-molecule}))))}))
 
 (defn align 
   "Aligns two molecules using standard features (no steric).
@@ -124,6 +126,8 @@
   [objective-fn-params
    optimiser 
    constant-molecule variable-molecule]
+  (prof 
+   :align
   (let [variable-molecule (randomise-molecule-orientation 
 			   (randomise-molecule-orientation 
 			    variable-molecule))
@@ -132,11 +136,12 @@
 			   (center-of-mass constant-molecule))
 	{objective-fn :objective-fn, ranges :ranges} 
 	(create-objective-fn objective-fn-params constant-molecule variable-molecule) 
- 	optimal-vector (optimiser (comp :overlap objective-fn) ranges)
+	objective-fn (memoize objective-fn)
+ 	optimal-vector (optimiser (comp :fitness objective-fn) ranges)
 	{value :fitness, moved-molecule :moved-molecule} (objective-fn optimal-vector)]
     {:value value
      :moved-molecule moved-molecule
-     :degrees-of-freedom (count ranges)}))
+     :degrees-of-freedom (count ranges)})))
 
 (defn align-with-multiple-variable
   [objective-fn-params

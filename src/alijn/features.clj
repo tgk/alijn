@@ -1,11 +1,13 @@
 (ns alijn.features
   (:import [org.openscience.cdk Atom Bond AtomContainer]
 	   [org.openscience.cdk.interfaces IAtom]
-	   [org.openscience.cdk.smiles.smarts SMARTSQueryTool])
+	   [org.openscience.cdk.smiles.smarts SMARTSQueryTool]
+	   javax.vecmath.Point3d)
   (:use alijn.math 
 	clojure.pprint
 	clojure.contrib.generic.functor
-	clojure.contrib.def))
+	clojure.contrib.def
+	clojure.contrib.profile))
 
 ;; Hydrogen donor and acceptor
 
@@ -103,15 +105,17 @@
   stored in maps. Each value in the map is a coll of Point3d.
   Optional arguments are :scale."
   [features-1 features-2 :scale 1.0]
-  (apply 
-   +
-   (flatten
-    (for [feature-name (keys features-1)]
-      (for [point-1 (features-1 feature-name)
-	    point-2 (features-2 feature-name)]
-	(Math/exp (/ (- (Math/pow (distance point-1 point-2) 2))
-		     (Math/pow scale 2))))))))
-
+  (prof 
+   :gaussian-overlap
+   (apply 
+    +
+    (flatten
+     (for [feature-name (keys features-1)]
+       (for [#^Point3d point-1 (features-1 feature-name)
+	     #^Point3d point-2 (features-2 feature-name)]
+	 (Math/exp (/ (- (Math/pow (.distance point-1 point-2) 2))
+		      (Math/pow scale 2)))))))))
+  
 ; Functions for avoiding recalculation features for molecules that have been moved, rotated 
 ; and given a new configuration
 (defn atom-id-from-atom-features [molecule features]

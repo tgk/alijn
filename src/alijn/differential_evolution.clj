@@ -24,7 +24,6 @@
    n scaling-factor crossover-rate
    fun-evals]
   (let [iterations (/ fun-evals n)
-	objective-fn (memoize objective-fn)
 	best (partial apply max-key objective-fn)
 	dim (count ranges)]
     (loop [iteration 0

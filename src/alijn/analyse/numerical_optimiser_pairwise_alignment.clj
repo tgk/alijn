@@ -82,6 +82,7 @@ Possible optimisers are
      [fun-eval "Function evaluations" "100"]
      [optimiser "The optimiser to be used." "de-50-0.75-0.5"]
      filenames]
+;    (profile
     (let [flexible-dihedral? (not rigid-molecule?)
 	  objective-fn-params (Objective-fn-params. 
 			       flexible-dihedral?
@@ -134,7 +135,7 @@ Possible optimisers are
 	     (str (apply max feature-counts))
 	     (format "%.2f" (double (average dihedral-angle-counts)))
 	     (str (apply min dihedral-angle-counts))
-	     (str (apply max dihedral-angle-counts))])))))))
+	     (str (apply max dihedral-angle-counts))])))))));)
        
 (def test-file-1 "data/grouped/flexs/carboxypth-a.mol2")
 (def test-file-2 "data/grouped/flexs/concanavalin.mol2")

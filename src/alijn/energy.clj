@@ -1,6 +1,9 @@
 (ns alijn.energy
   (:import org.openscience.cdk.charges.MMFF94PartialCharges)
-  (:use clojure.set))
+  (:import [org.openscience.cdk.interfaces IAtom IAtomContainer]
+	   javax.vecmath.Point3d)
+  (:use clojure.set
+	clojure.contrib.profile))
 
 ; MMFF94 force field
 
@@ -41,12 +44,26 @@
       0
       (- cutoff d))))
 
-(defn steric-overlap [molecule]
-  (reduce
-   +
-   (flatten
-    (for [a (.atoms molecule)
-	  :let [p (.getPoint3d a)]]
-      (for [b (far-away-atoms molecule a)
-	    :let [q (.getPoint3d b)]]
-	  (linear-punishment (.distance p q)))))))
+(comment defn steric-overlap [molecule]
+  (prof
+   :steric-overlap
+   (reduce
+    +
+    (flatten
+     (for [a (.atoms molecule)
+	   :let [p (.getPoint3d a)]]
+       (for [b (far-away-atoms molecule a)
+	     :let [q (.getPoint3d b)]]
+	 (linear-punishment (.distance p q))))))))
+
+(defn steric-overlap [#^IAtomContainer molecule]
+  (prof
+   :steric-overlap
+   (reduce
+    +
+    (flatten
+     (for [#^IAtom a (.atoms molecule)
+	   :let [#^Point3d p (.getPoint3d a)]]
+       (for [#^IAtom b (.atoms molecule)
+	     :let [#^Point3d q (.getPoint3d b)]]
+	 (linear-punishment (.distance p q))))))))
