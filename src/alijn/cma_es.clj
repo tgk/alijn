@@ -5,7 +5,7 @@
 
 (defn cma-es-minimise 
   [lambda
-   fun-evals
+   max-evaluations
    objective-fn ranges]
   (let [cma (doto (CMAEvolutionStrategy. (count ranges))
 	      (.readProperties "CMAEvolutionStrategy.properties")
@@ -14,19 +14,20 @@
 	      ; This should probably be derived from the ranges
 	      (.setInitialStandardDeviation 2.0))
 	options (.options cma)
-	parameters (.parameters cma)]
+	parameters (.parameters cma)
+	evaluations (atom 0)
+	objective-fn (memoize (fn [xs] (swap! evaluations inc) (objective-fn xs)))]
     (.setPopulationSize parameters lambda)
-    (set! (.stopMaxFunEvals options) fun-evals)
     (set! (.stopFitness options) Double/NEGATIVE_INFINITY)
     (set! (.stopTolFun options) 1.0E-5)
     (set! (.stopTolFunHist options) 1.0E-6)
     (.init cma)
-    (println "max-fun-evals" fun-evals)
-    (while (-> cma .stopConditions .isFalse)
+    (while (and (-> cma .stopConditions .isFalse)
+		(< @evaluations max-evaluations))
 	   (let [fitness (map (comp objective-fn seq) (.samplePopulation cma))]
 	     (.updateDistribution cma (double-array fitness))))
     (.setFitnessOfMeanX cma (objective-fn (.getMeanX cma)))
-    {:fun-evals (.getCountEval cma)
+    {:fun-evals @evaluations
      :best (seq (.getBestX cma))}))
 
 (defn repeatedly-cma-es-minimise
@@ -37,13 +38,11 @@
     (loop [fun-evals 0
 	   lambda lambda
 	   solutions []]
-      (when (> fun-evals 0) 
+      (comment when (> fun-evals 0) 
 	(info (format "cma-es evaluations %d best-fitness %f" 
 		      fun-evals (objective-fn (best solutions)))))
       (if (>= fun-evals max-fun-evals)
-	(do
-	  (println "fun-evals:" fun-evals)
-	  (best solutions))
+	(best solutions)
 	(let [{add-fun-evals :fun-evals, sol :best}
 	      (cma-es-minimise lambda (- max-fun-evals fun-evals) objective-fn ranges)]
 	  (recur (+ fun-evals add-fun-evals) (* 2 lambda) (conj solutions sol)))))))
@@ -56,3 +55,14 @@
      fun-evals 
      (memoize (comp - objective-fn))
      ranges)))
+
+(defn- example-ranges [n] 
+  (for [i (range n)] [-1 1]))
+
+(def evaluations (atom 0))
+(defn- reset-evaluations []
+  (swap! evaluations (constantly 0)))
+(let [squared (fn [x] (* x x))]
+  (defn- example-objective-fn [xs]
+    (swap! evaluations inc)
+    (reduce + (map squared xs))))
