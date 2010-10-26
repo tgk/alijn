@@ -1,5 +1,6 @@
 (ns alijn.differential-evolution
-  (:use clojure.contrib.logging))
+  (:use alijn.utils
+	clojure.contrib.logging))
 
 (defn initialise-population [ranges n]
   (for [i (range n)]
@@ -23,7 +24,8 @@
    ranges
    n scaling-factor crossover-rate
    fun-evals]
-  (let [iterations (/ fun-evals n)
+  (let [objective-fn (memoize-visible-atom objective-fn)
+	iterations (/ fun-evals n)
 	best (partial apply max-key objective-fn)
 	dim (count ranges)]
     (loop [iteration 0
@@ -31,6 +33,7 @@
       (info (format "de evaluations %d best-fitness %f" 
 		    (* iterations n)
 		    (best population)))
+      (when (= 0 (mod iterations 100)) (reset-mem! objective-fn))
       (if (>= iteration iterations)
 	(best population)
 	(let [next-generation (map

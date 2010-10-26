@@ -136,7 +136,7 @@
 			   (center-of-mass constant-molecule))
 	{objective-fn :objective-fn, ranges :ranges} 
 	(create-objective-fn objective-fn-params constant-molecule variable-molecule) 
-	objective-fn (memoize objective-fn)
+;	objective-fn (memoize-visible-atom objective-fn)
  	optimal-vector (optimiser (comp :fitness objective-fn) ranges)
 	{value :fitness, moved-molecule :moved-molecule} (objective-fn optimal-vector)]
     {:value value

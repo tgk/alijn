@@ -1,5 +1,6 @@
 (ns alijn.cma-es
-  (:use clojure.pprint
+  (:use alijn.utils
+        clojure.pprint
 	clojure.contrib.logging)
   (:import [cma CMAEvolutionStrategy]))
 
@@ -16,7 +17,8 @@
 	options (.options cma)
 	parameters (.parameters cma)
 	evaluations (atom 0)
-	objective-fn (memoize (fn [xs] (swap! evaluations inc) (objective-fn xs)))]
+	objective-fn (memoize-visible-atom 
+		      (fn [xs] (swap! evaluations inc) (objective-fn xs)))]
     (.setPopulationSize parameters lambda)
     (set! (.stopFitness options) Double/NEGATIVE_INFINITY)
     (set! (.stopTolFun options) 1.0E-5)
@@ -53,7 +55,7 @@
     (repeatedly-cma-es-minimise 
      lambda
      fun-evals 
-     (memoize (comp - objective-fn))
+     (comp - objective-fn)
      ranges)))
 
 (defn- example-ranges [n] 
