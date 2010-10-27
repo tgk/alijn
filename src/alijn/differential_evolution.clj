@@ -30,10 +30,7 @@
 	dim (count ranges)]
     (loop [iteration 0
 	   population (initialise-population ranges n)]
-      (info (format "de evaluations %d best-fitness %f" 
-		    (* iterations n)
-		    (best population)))
-      (when (= 0 (mod iterations 100)) (reset-mem! objective-fn))
+      (when (= 0 (mod iteration 25)) (reset-mem! objective-fn))
       (if (>= iteration iterations)
 	(best population)
 	(let [next-generation (map
