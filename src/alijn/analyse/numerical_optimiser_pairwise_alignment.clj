@@ -7,7 +7,8 @@
 	 math 
 	 molecule-utils 
 	 utils
-	 rotation-tree]
+	 rotation-tree
+	 logging]
 	clojure.contrib.command-line
 	clojure.contrib.generic.functor
 	clojure.contrib.profile
@@ -73,7 +74,8 @@ Possible optimisers are
   align-and-show-table
   [& args]
   (with-command-line args desc
-    [[rigid-molecule? "Should dihedral angles be flexible or not." nil]
+    [[logging? "Write fitness to logs when performing optimisations." false]
+     [rigid-molecule? "Should dihedral angles be flexible or not." nil]
      [energy-contribution "What should the energy contribution be scaled with" "0.0"]
      [charge-limit "Limit for classifing atom as charged." "0.5"]
      [feature-scale "Scale to be used for Gaussian overlap" "1.0"]
@@ -83,7 +85,11 @@ Possible optimisers are
      [optimiser "The optimiser to be used." "de-50-0.75-0.5"]
      filenames]
 ;    (profile
-    (let [flexible-dihedral? (not rigid-molecule?)
+    (println "logging?" logging?)
+    (let [logger (if logging? 
+		   (file-logger (format "%s.%d.log" optimiser (rand-int 10000))) 
+		   do-nothing)
+	  flexible-dihedral? (not rigid-molecule?)
 	  objective-fn-params (Objective-fn-params. 
 			       flexible-dihedral?
 			       (Double/parseDouble energy-contribution)
@@ -93,50 +99,51 @@ Possible optimisers are
 	  success-rmsd (Double/parseDouble success-rmsd)
 	  fun-eval (Integer/parseInt fun-eval)
 	  optimiser (parse-optimiser fun-eval optimiser)]
-      (println "Using flexible dihedral:" flexible-dihedral?)
-      (print-table
-       (cons
-	["target" 
-	 "avg. success" "min" "max" 
-	 "ligands" 
-	 "avg. features" "min" "max" 
-	 "avg. dihedral" "min" "max"]
-	(for [filename filenames]
-	  (let [molecules (read-molecules filename)
-		target-name (first (.split (last (.split filename "/")) "\\."))
-		grouped-ligands (group-by short-name molecules)
-		grouped-ligands (if (apply = 1 (vals (fmap count grouped-ligands))) 
-				  (group-by short-name (concat molecules molecules)) 
-				  grouped-ligands)
-		successes (count-successes
-			   objective-fn-params
-			   optimiser success-rmsd grouped-ligands)
-		success-rates (fmap #(int (* 100 (/ % (count grouped-ligands)))) 
-				    successes)
-		feature-counts (map 
-				#(count 
-				  (apply 
-				   concat 
-				   (vals 
-				    (find-features 
-				     % (:charge-limit objective-fn-params))))) 
-				molecules)
-		dihedral-angle-counts (map 
-				       (comp :degrees-of-freedom 
-					     calculate-rotation-tree) 
-				       molecules)]
-	    [target-name 
-	     (str (int (average (vals success-rates))))
-	     (str (apply min (vals success-rates)))
-	     (str (apply max (vals success-rates)))
-	     (str (count grouped-ligands))
-	     (format "%.2f" (double (average feature-counts)))
-	     (str (apply min feature-counts))
-	     (str (apply max feature-counts))
-	     (format "%.2f" (double (average dihedral-angle-counts)))
-	     (str (apply min dihedral-angle-counts))
-	     (str (apply max dihedral-angle-counts))])))))));)
-       
+      (with-logger logger
+	(println "Using flexible dihedral:" flexible-dihedral?)
+	(print-table
+	 (cons
+	  ["target" 
+	   "avg. success" "min" "max" 
+	   "ligands" 
+	   "avg. features" "min" "max" 
+	   "avg. dihedral" "min" "max"]
+	  (for [filename filenames]
+	    (let [molecules (read-molecules filename)
+		  target-name (first (.split (last (.split filename "/")) "\\."))
+		  grouped-ligands (group-by short-name molecules)
+		  grouped-ligands (if (apply = 1 (vals (fmap count grouped-ligands))) 
+				    (group-by short-name (concat molecules molecules)) 
+				    grouped-ligands)
+		  successes (count-successes
+			     objective-fn-params
+			     optimiser success-rmsd grouped-ligands)
+		  success-rates (fmap #(int (* 100 (/ % (count grouped-ligands)))) 
+				      successes)
+		  feature-counts (map 
+				  #(count 
+				    (apply 
+				     concat 
+				     (vals 
+				      (find-features 
+				       % (:charge-limit objective-fn-params))))) 
+				  molecules)
+		  dihedral-angle-counts (map 
+					 (comp :degrees-of-freedom 
+					       calculate-rotation-tree) 
+					 molecules)]
+	      [target-name 
+	       (str (int (average (vals success-rates))))
+	       (str (apply min (vals success-rates)))
+	       (str (apply max (vals success-rates)))
+	       (str (count grouped-ligands))
+	       (format "%.2f" (double (average feature-counts)))
+	       (str (apply min feature-counts))
+	       (str (apply max feature-counts))
+	       (format "%.2f" (double (average dihedral-angle-counts)))
+	       (str (apply min dihedral-angle-counts))
+	       (str (apply max dihedral-angle-counts))]))))))));)
+  
 (def test-file-1 "data/grouped/flexs/carboxypth-a.mol2")
 (def test-file-2 "data/grouped/flexs/concanavalin.mol2")
 (def test-file-3 "data/grouped/flexs/g-phosphorylase.mol2")

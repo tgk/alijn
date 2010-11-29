@@ -1,5 +1,7 @@
 pom.xml
 *jar
+*.log
+*.dat
 lib
 classes
 native

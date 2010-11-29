@@ -1,7 +1,6 @@
 (ns alijn.cma-es
-  (:use alijn.utils
-        clojure.pprint
-	clojure.contrib.logging)
+  (:use [alijn utils logging]
+        clojure.pprint)
   (:import [cma CMAEvolutionStrategy]))
 
 (defn cma-es-minimise 
@@ -27,6 +26,7 @@
     (while (and (-> cma .stopConditions .isFalse)
 		(< @evaluations max-evaluations))
 	   (let [fitness (map (comp objective-fn seq) (.samplePopulation cma))]
+	     (log-fitness "CMA-ES" @evaluations (apply min fitness))
 	     (.updateDistribution cma (double-array fitness))))
     (.setFitnessOfMeanX cma (objective-fn (.getMeanX cma)))
     {:fun-evals @evaluations
@@ -40,9 +40,6 @@
     (loop [fun-evals 0
 	   lambda lambda
 	   solutions []]
-      (comment when (> fun-evals 0) 
-	(info (format "cma-es evaluations %d best-fitness %f" 
-		      fun-evals (objective-fn (best solutions)))))
       (if (>= fun-evals max-fun-evals)
 	(best solutions)
 	(let [{add-fun-evals :fun-evals, sol :best}

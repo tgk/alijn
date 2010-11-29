@@ -12,6 +12,9 @@
 (defn log [s]
   (*logger* s))
 
-(defmacro with-logger [logger body]
+(defn log-fitness [method evaluations fitness]
+  (log (format "%s %d %f" method evaluations fitness)))
+
+(defmacro with-logger [logger & body]
   `(binding [*logger* ~logger]
-     ~body))
+     ~@body))

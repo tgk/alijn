@@ -81,13 +81,20 @@
 (defn count-children [node]
   (+ (count (:children node)) (apply + (map count-children (:children node)))))
 
+(defn atom-from-largest-group [molecule splitting-bonds atom-colors]
+  (let [atoms (.atoms molecule)
+	group-size (fn [a] (count (filter 
+				   #(= (atom-colors a) (atom-colors %)) atoms)))]
+    (apply max-key group-size atoms)))
+
 (defn calculate-rotation-tree 		
   "Main function for generating rotation tree. The returned rotation tree
   can also be used on (shifted and rotated) clones of the molecule."
   [molecule]
   (let [splitting-bonds (rotatable-bonds molecule)
 	atom-colors (color-atoms molecule splitting-bonds)
-	root-atom (atom-closest-to-center molecule)
+	;root-atom (atom-closest-to-center molecule)
+	root-atom (atom-from-largest-group molecule splitting-bonds atom-colors)
 	root-node (build-tree-structure molecule splitting-bonds atom-colors 
 					root-atom root-atom)
 	degrees-of-freedom (count-children root-node)]
