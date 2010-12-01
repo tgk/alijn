@@ -93,5 +93,4 @@
 						    matrices
 						    (rest configurations))]
 			  (cons (first configurations) moved-molecules)))]
-    (println (map :degrees-of-freedom rotation-trees))
     {:ranges ranges, :conformations conformations}))

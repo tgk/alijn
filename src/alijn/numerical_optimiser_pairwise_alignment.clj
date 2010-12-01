@@ -1,31 +1,13 @@
 (ns alijn.numerical-optimiser-pairwise-alignment
   (:import javax.vecmath.Point3d)
-  (:use [alijn molecule-manipulation math features rotation-tree energy]
+  (:use [alijn molecule-manipulation math features rotation-tree energy conformation]
 	clojure.contrib.profile))
 
-; Packing and unpacking for numerical optimisers
-(defn pack-rotation-and-translation [rotation translation]
-  [(.x rotation)    (.y rotation)    (.z rotation)
-   (.x translation) (.y translation) (.z translation)])
-
-(defn unpack-rotation-and-translation [[r-x r-y r-z t-x t-y t-z]]
-  [(Point3d. r-x r-y r-z) (Point3d. t-x t-y t-z)])
-
-; Calculation of ranges
-(def rotation-ranges (repeat 3 [(- (* 2 Math/PI)) (* 2 Math/PI)]))
-(defn translation-ranges [molecule]
-  (for [coordinate [#(.x (.getPoint3d %))
-		    #(.y (.getPoint3d %))
-		    #(.z (.getPoint3d %))]
-	:let [vals (map coordinate (.atoms molecule))
-	      diff (- (apply max vals) (apply min vals))]]
-    [(- diff) diff]))
 (defn ranges 
   ([molecule] (concat rotation-ranges (translation-ranges molecule)))
   ([m1 m2] (map (fn [[m1-min m1-max] [m2-min m2-max]] 
 		  [(min m1-min m2-min) (max m1-max m2-max)])
 		(ranges m1) (ranges m2)))) 
-(def dihedral-angle-range [0 (* 2 Math/PI)])
 
 ; Objective function
 (defrecord Objective-fn-params

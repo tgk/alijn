@@ -2,7 +2,7 @@
   (:use [alijn 
 	 io 
 	 features 
-	 differential-evolution cma-es monte-carlo
+	 optimisers
 	 numerical-optimiser-pairwise-alignment 
 	 math 
 	 molecule-utils 
@@ -26,22 +26,8 @@ conformations. If only one molecule exists for each name they are
 all native conformations that are sought re-aligned.
 Possible optimisers are
  de-n-cr-f     (e.g. de-50-0.75-0.5)
- cma-es-lambda (e.g. cma-es-9)
+ cma-es-lambda (e.g. cma-es-18)
  monte-carlo")
-
-; Might move to common namespace
-(defn parse-optimiser [fun-eval s]
-  (let [parsers {"cma" (fn [_ lambda-str] 
-			 (cma-es-optimiser (Integer/parseInt lambda-str)
-					   fun-eval))
-		 "de" (fn [n-str cr-str f-str]
-			(de-optimiser (Integer/parseInt n-str)
-				      (Double/parseDouble f-str)
-				      (Double/parseDouble cr-str)
-				      fun-eval))
-		 "monte" (fn [_] (monte-carlo-optimiser fun-eval))}
-	tokens (.split s "-")]
-    (apply (parsers (first tokens)) (rest tokens))))
 
 (defn short-name [molecule] (first (.split (molecule-name molecule) "_")))  
 
@@ -76,18 +62,19 @@ Possible optimisers are
   (with-command-line args desc
     [[logging? "Write fitness to logs when performing optimisations." false]
      [rigid-molecule? "Should dihedral angles be flexible or not." nil]
-     [energy-contribution "What should the energy contribution be scaled with" "0.0"]
+     [energy-contribution "What should the energy contribution be scaled with" "0.01"]
      [charge-limit "Limit for classifing atom as charged." "0.5"]
      [feature-scale "Scale to be used for Gaussian overlap" "1.0"]
      [steric-scale  "Scale to be used for Gaussian overlap" "0.5"]
      [success-rmsd "The maximum rmsd for a realignment to be a success." "2.5"]
-     [fun-eval "Function evaluations" "100"]
+     [fun-eval "Function evaluations" "10000"]
      [optimiser "The optimiser to be used." "de-50-0.75-0.5"]
      filenames]
 ;    (profile
     (println "logging?" logging?)
-    (let [logger (if logging? 
-		   (file-logger (format "%s.%d.log" optimiser (rand-int 10000))) 
+    (let [run-number (rand-int 10000)
+	  logger (if logging? 
+		   (file-logger (format "%s.%d.log" optimiser run-number)) 
 		   do-nothing)
 	  flexible-dihedral? (not rigid-molecule?)
 	  objective-fn-params (Objective-fn-params. 
