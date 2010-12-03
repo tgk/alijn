@@ -26,7 +26,7 @@
     (while (and (-> cma .stopConditions .isFalse)
 		(< @evaluations max-evaluations))
 	   (let [fitness (map (comp objective-fn seq) (.samplePopulation cma))]
-	     (log-fitness "CMA-ES" @evaluations (apply min fitness))
+	     (log-fitness "CMA-ES" @evaluations (* -1 (apply min fitness)))
 	     (.updateDistribution cma (double-array fitness))))
     (.setFitnessOfMeanX cma (objective-fn (.getMeanX cma)))
     {:fun-evals @evaluations

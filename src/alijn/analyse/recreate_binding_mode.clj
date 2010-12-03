@@ -17,9 +17,9 @@ optimiser-help))
 	success? (partial > success-rmsd)
 	successes (count (filter success? rmsds))
 	successes-without-stationary (count (filter success? (rest rmsds)))]
-  (format "%.1f (%.1f)" 
-	  (float (/ successes n)) 
-	  (float (/ successes-without-stationary n)))))
+  (format "%.0f (%.0f)" 
+	  (* 100 (float (/ successes n)))
+	  (* 100 (float (/ successes-without-stationary (dec n)))))))
 
 (defn add-to-molecule-name! [molecule s]
   (let [new-name (str (molecule-name molecule) s)]
@@ -54,7 +54,8 @@ optimiser-help))
 	    (let [stationary-molecule (nth molecules i)
 		  movable-molecules (concat (take i molecules) 
 					    (drop (inc i) molecules))
-		  log-filename (format "%s.%d.%s.log"
+		  log-filename (format "%s.%s.%d.%s.log"
+				       optimiser
 				       target-name run-number 
 				       (molecule-name stationary-molecule))		  		  results (with-logger 
 			    (file-logger log-filename)
@@ -62,7 +63,8 @@ optimiser-help))
 			     stationary-molecule movable-molecules 
 			     obj-fn-params 
 			     optimiser-fn))
-		  sdf-filename (format "%s.%d.%s.sdf"
+		  sdf-filename (format "%s.%s.%d.%s.sdf"
+				       optimiser
 				       target-name run-number 
 				       (molecule-name stationary-molecule))
 		  conformations (map :conformation results)]
