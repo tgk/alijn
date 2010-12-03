@@ -37,8 +37,10 @@
 	     (drop (first ns) coll)
 	     (cons (take (first ns) coll) result)))))
 
+(defn unpack-point [[x y z]] (Point3d. x y z))
+
 (defn unpack-n-points [n v]
-  (map (fn [[x y z]] (Point3d. x y z)) (partition-using (repeat n 3) v)))
+  (map unpack-point (partition-using (repeat n 3) v)))
 
 (defn unpack-molecules 
   "Unpacks points for n molecules and one stationary molecule.
@@ -55,6 +57,15 @@
     [(partition-using dihedral-angles-counts dihedral-angles-part)
      (unpack-n-points n translations-part)
      (unpack-n-points n rotations-part)]))
+
+(defn unpack-molecule
+  "Unpacks a single molecule, which can move around in space."
+  [dihedral-angles v]
+  (let [[dihedral-angles translation-part rotation-part] 
+	(partition-using [dihedral-angles 3 3] v)]
+    [dihedral-angles
+     (unpack-point translation-part)
+     (unpack-point rotation-part)]))
      
 (defn move-molecule [translation rotation center molecule]
   (apply-matrix-to-molecule
@@ -93,3 +104,21 @@
 						   (rest configurations))]
 			  (cons (first configurations) moved-molecules)))]
     {:ranges ranges, :conformations conformations}))
+
+; Conformation function for only one molecule
+(defn single-molecule-conformation-fn [molecule]
+  (let [rotation-tree (calculate-rotation-tree molecule)
+	dihedral-angles (:degrees-of-freedom rotation-tree)
+	dihedral-angle-ranges (repeat dihedral-angles dihedral-angle-range)
+	translation-ranges-seq (translation-ranges molecule)
+	center (center-of-mass molecule)
+	conformation (fn [v]
+		       (let [[dihedrals translation rotation] 
+			     (unpack-molecule dihedral-angles v)]
+			 (move-molecule translation rotation center
+					(molecule-configuration rotation-tree
+								dihedrals))))]
+    {:ranges (concat dihedral-angle-ranges 
+		     (translation-ranges molecule)
+		     rotation-ranges)
+     :conformation conformation}))
