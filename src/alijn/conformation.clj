@@ -56,6 +56,15 @@
      (unpack-n-points n translations-part)
      (unpack-n-points n rotations-part)]))
      
+(defn move-molecule [translation rotation center molecule]
+  (apply-matrix-to-molecule
+   (matrix-product 
+    (translation-matrix translation)
+    (translation-matrix center)
+    (rotation-matrix rotation)
+    (translation-matrix (neg center)))
+   molecule))
+    
 
 ; Creating the conformation function
 (defn conformation-fn [stationary-molecule molecules]
@@ -69,28 +78,18 @@
 	ranges (concat dihedral-angle-ranges 
 		       translation-ranges-seq
 		       rotation-ranges-seq )
-	; Matrices for preparing for a rotation
 	centers (map center-of-mass molecules)
-	to-origo-matrices (map #(translation-matrix (neg %)) centers)
-	from-origo-matrices (map translation-matrix centers)
-	; Function for making conformations
 	conformations (fn [v]
 			(let [[dihedrals 
 			       translations 
 			       rotations] (unpack-molecules 
-					   (map :degrees-of-freedom rotation-trees)
-					   v)
+					   (map :degrees-of-freedom rotation-trees) v)
 			       configurations (map molecule-configuration 
 						   rotation-trees dihedrals)
-			       translations (map translation-matrix translations)
-			       rotations (map rotation-matrix rotations)
-			       matrices (map matrix-product 
-					     translations
-					     from-origo-matrices
-					     rotations
-					     to-origo-matrices)
-			       moved-molecules (map apply-matrix-to-molecule
-						    matrices
-						    (rest configurations))]
+			       moved-molecules (map move-molecule 
+						   translations
+						   rotations
+						   centers
+						   (rest configurations))]
 			  (cons (first configurations) moved-molecules)))]
     {:ranges ranges, :conformations conformations}))
