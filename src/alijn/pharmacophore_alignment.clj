@@ -1,5 +1,5 @@
 (ns alijn.pharmacophore-alignment
-  (:use [alijn conformation objective molecule-utils]))
+  (:use [alijn features conformation objective molecule-utils]))
 
 (defn vector-obj-fn 
   [molecule pharmacophore steric obj-fn-params]
@@ -7,7 +7,7 @@
 	 conformation :conformation} (single-molecule-conformation-fn 
 					molecule)
 	 molecule-obj-fn (single-molecule-objective-fn
-			  pharmacophore steric obj-fn-params)
+			  molecule pharmacophore steric obj-fn-params)
 	 obj-fn (fn [v] 
 		  (let [conf (conformation v)
 			fitness (molecule-obj-fn conf)]
@@ -17,12 +17,18 @@
 
 (defn align-molecule-to-pharmacophore
   "Assumes that both pharmacophore and steric are maps to Point3d objects."
-  [pharmacophore
-   steric
+  [pharmacophore-molecules
    molecule
    optimiser
    objective-fn-params]
-  (let [{obj-fn :obj-fn, ranges :ranges} (vector-obj-fn molecule pharmacophore steric 
+  (let [features (extract-feature-points
+		  (apply merge-with concat 
+			 (map #(find-features % (:charge-limit objective-fn-params))
+			      pharmacophore-molecules)))
+	steric (extract-feature-points 
+		(apply merge-with concat
+		       (map steric-features pharmacophore-molecules)))
+	{obj-fn :obj-fn, ranges :ranges} (vector-obj-fn molecule features steric 
 							objective-fn-params)
 	alignment-vector (optimiser (comp :fitness obj-fn) ranges)
 	{conformation :conformation, fitness :fitness} (obj-fn alignment-vector)]

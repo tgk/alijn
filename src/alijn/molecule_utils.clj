@@ -5,6 +5,10 @@
 
 (defn molecule-name [molecule] (.get (.getProperties molecule) "cdk:Title"))
 
+(defn add-to-molecule-name! [molecule s]
+  (let [new-name (str (molecule-name molecule) s)]
+    (.setProperty molecule "cdk:Title" new-name)))
+
 (defn molecule-rmsd
   "Calculates the root mean square deviation between two
   molecules atoms. Must have same number of atoms."
