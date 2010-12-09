@@ -1,5 +1,5 @@
 (ns alijn.features
-  (:import [org.openscience.cdk Atom Bond AtomContainer]
+  (:import [org.openscience.cdk Atom Bond AtomContainer Molecule]
 	   [org.openscience.cdk.interfaces IAtom]
 	   [org.openscience.cdk.smiles.smarts SMARTSQueryTool]
 	   javax.vecmath.Point3d)
@@ -135,3 +135,14 @@
 	       (.getAtom molecule id)
 	       (map #(.getAtom molecule %) id))))
    features))
+
+; Functions for generating fake molecules representing features for later inspection
+(defn molecules-from-features [features]
+  (println "Saw the features" (keys features))
+  (let [element-symbols (zipmap (keys features) ["B" "C" "N" "F" "Al" "Si" "P"])]
+    (for [[name points] features]
+      (let [molecule (Molecule.)]
+	(doseq [point points] 
+	  (.addAtom molecule (Atom. (element-symbols name) point)))
+	(doto molecule
+	  (.setProperty "cdk:Title" (format "feature_%s" name)))))))

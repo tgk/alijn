@@ -122,3 +122,56 @@
 		     (translation-ranges molecule)
 		     rotation-ranges)
      :conformation conformation}))
+
+; Conformation generating function which can also be used for alternating aligner
+; Might change the name
+(defn alternating-aligner-conformation-fn [stationary-molecule molecules]
+  (let [rotation-trees (map calculate-rotation-tree 
+			    (cons stationary-molecule molecules))
+	dihedral-angles (reduce + (map :degrees-of-freedom rotation-trees))
+	dihedral-angle-ranges (repeat dihedral-angles dihedral-angle-range)
+	translation-ranges-seq (apply concat (map translation-ranges molecules))
+	rotation-ranges-seq (apply concat (repeat (count molecules) rotation-ranges))
+	ranges (concat dihedral-angle-ranges 
+		       translation-ranges-seq
+		       rotation-ranges-seq )
+	centers (map center-of-mass molecules)
+	conformations (fn [v]
+			(let [[dihedrals 
+			       translations 
+			       rotations] (unpack-molecules 
+					   (map :degrees-of-freedom rotation-trees) v)
+			       configurations (map molecule-configuration 
+						   rotation-trees dihedrals)
+			       moved-molecules (map move-molecule 
+						   translations
+						   rotations
+						   centers
+						   (rest configurations))]
+			  (cons (first configurations) moved-molecules)))
+	sub-conformations-fn (fn [i initial-vector]
+			       (assert (<= 1 i (count molecules)))
+			       (let [translation-offset (+ dihedral-angles 
+							   (* (dec i) 3))
+				     rotation-offset (+ dihedral-angles
+							(* (count molecules) 3)
+							(* (dec i) 3))
+				     indexes (concat
+					      (range translation-offset 
+						     (+ 3 translation-offset))
+					      (range rotation-offset
+						     (+ 3 rotation-offset)))
+				     full-vector (fn [v]
+						   (apply 
+						    assoc 
+						    (vec initial-vector)
+						    (flatten 
+						     (map vector indexes v))))]
+				 {:sub-ranges (map (fn [v] [(- v 1) (+ v 1)])
+						   (map (vec initial-vector) indexes))
+				  :full-vector full-vector
+				  :sub-conformations (comp conformations 
+							   full-vector)}))]
+  {:ranges ranges
+   :conformations conformations
+   :sub-conformations-fn sub-conformations-fn}))

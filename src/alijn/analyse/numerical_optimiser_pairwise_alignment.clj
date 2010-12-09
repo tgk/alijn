@@ -12,7 +12,8 @@
 	clojure.contrib.command-line
 	clojure.contrib.generic.functor
 	clojure.contrib.profile
-	clojure.pprint)
+	clojure.pprint
+	alijn.analyse.standard-parameters)
   (:import alijn.numerical-optimiser-pairwise-alignment.Objective-fn-params))
 
 (def desc 

@@ -1,5 +1,6 @@
 (ns alijn.analyse.pharmacophore-alignment
   (:use [alijn io logging optimisers pharmacophore-alignment molecule-utils]
+	alijn.analyse.standard-parameters
 	clojure.contrib.command-line))
 
 (def desc 
@@ -16,22 +17,12 @@ optimiser-help))
   #^{:doc desc}
   align
   [& args]
-  (with-command-line args desc
-    [[optimiser "Optimiser to use" "de-50-0.75-0.5"]
-     [fun-eval "Function evaluations" "10000"]
-     [energy-contribution "What should the energy contribution be scaled with" "0.01"]
-     [charge-limit "Limit for classifing atom as charged." "0.5"]
-     [feature-scale "Scale to be used for Gaussian overlap" "1.0"]
-     [steric-scale  "Scale to be used for Gaussian overlap" "0.5"]
-     [fun-eval "Function evaluations" "10000"]
-     [optimiser "The optimiser to be used." "de-50-0.75-0.5"]
-     filenames]
-    (let [obj-fn-params {:energy-contribution (Double/parseDouble energy-contribution)
-			 :charge-limit (Double/parseDouble charge-limit)
-			 :feature-scale (Double/parseDouble feature-scale)
-			 :steric-scale (Double/parseDouble steric-scale)}
-	  optimiser-fn (parse-optimiser (Integer/parseInt fun-eval) optimiser)
-	  run-number (rand-int 10000)]
+  (with-standard-parameters
+    energy-contribution charge-limit feature-scale steric-scale
+    obj-fn-params optimiser optimiser-fn fun-eval 
+    args desc
+    [filenames]
+    (let [run-number (rand-int 10000)]
       (println "run-number " run-number " (used for filenames)")
       (doseq [filename filenames]
 	(let [target-name (first (.split (last (.split filename "/")) "\\."))

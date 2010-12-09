@@ -27,6 +27,7 @@
 	iterations (int (/ fun-evals n))
 	best (partial apply max-key objective-fn)
 	dim (count ranges)]
+;    (println "DE performing" iterations "iterations")
     (loop [iteration 0
 	   population (initialise-population ranges n)]
       (log-fitness "DE" (* iteration n) (objective-fn (best population)))
