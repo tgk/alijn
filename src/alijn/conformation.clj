@@ -167,7 +167,7 @@
 						    (vec initial-vector)
 						    (flatten 
 						     (map vector indexes v))))]
-				 {:sub-ranges (map (fn [v] [(- v 1) (+ v 1)])
+				 {:sub-ranges (map (fn [v] [(- v 0.1) (+ v 0.1)])
 						   (map (vec initial-vector) indexes))
 				  :full-vector full-vector
 				  :sub-conformations (comp conformations 
