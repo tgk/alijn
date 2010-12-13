@@ -48,7 +48,7 @@
 			    best-after-first (count molecules))
 	 best-after-last (post-optimiser 
 			  (comp :fitness obj-fn) 
-			  (map (fn [v] [(- v 0.1) (+ v 0.1)]) best-after-middle))
+			  (map (fn [v] [(- v 0.01) (+ v 0.01)]) best-after-middle))
 	 {best-conformations :conformations} (obj-fn best-after-last)]
     (map (fn [native conformation] 
 	   {:conformation conformation
