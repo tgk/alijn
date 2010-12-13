@@ -44,18 +44,6 @@
       0
       (- cutoff d))))
 
-(comment defn steric-overlap [molecule]
-  (prof
-   :steric-overlap
-   (reduce
-    +
-    (flatten
-     (for [a (.atoms molecule)
-	   :let [p (.getPoint3d a)]]
-       (for [b (far-away-atoms molecule a)
-	     :let [q (.getPoint3d b)]]
-	 (linear-punishment (.distance p q))))))))
-
 (defn steric-overlap [#^IAtomContainer molecule]
   (prof
    :steric-overlap
@@ -65,5 +53,6 @@
      (for [#^IAtom a (.atoms molecule)
 	   :let [#^Point3d p (.getPoint3d a)]]
        (for [#^IAtom b (.atoms molecule)
+	     :when (not= a b)
 	     :let [#^Point3d q (.getPoint3d b)]]
 	 (linear-punishment (.distance p q))))))))

@@ -15,7 +15,7 @@
   `(with-command-line
      ~args
      ~desc
-     ~(concat [[energy-contribution "Energy contribution scale" "0.01"]
+     ~(concat [[energy-contribution "Energy contribution scale" "10"]
 	       [charge-limit "Limit for classifing atom as charged." "0.5"]
 	       [feature-scale "Scale to be used for Gaussian overlap" "1.0"]
 	       [steric-scale  "Scale to be used for Gaussian overlap" "0.5"]
