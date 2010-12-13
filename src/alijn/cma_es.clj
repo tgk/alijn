@@ -11,8 +11,12 @@
 	      (.readProperties "CMAEvolutionStrategy.properties")
 	      (.setInitialX (double-array (map first ranges))
 			    (double-array (map second ranges)))
-	      ; This should probably be derived from the ranges
-	      (.setInitialStandardDeviation 2.0))
+	      (.setInitialStandardDeviation (apply 
+					     min
+					     (map 
+					      (fn [[lo hi]] 
+						(Math/abs (/ (- hi lo) 4)))
+					      ranges))))
 	options (.options cma)
 	parameters (.parameters cma)
 	evaluations (atom 0)
