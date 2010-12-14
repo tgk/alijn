@@ -46,7 +46,8 @@
 	    unvisited-neighbours (filter (comp not seen?) (edges node))
 	    seen? (into seen? unvisited-neighbours)
 	    queue (concat (rest queue) 
-			  (for [neigh unvisited-neighbours] [neigh (inc dist)]))
+			  (for [neigh unvisited-neighbours]
+			    [neigh (inc dist)]))
 	    result (assoc result node dist)]
 	(recur queue result seen?))
       result)))

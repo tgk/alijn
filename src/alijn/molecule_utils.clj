@@ -1,6 +1,7 @@
 (ns alijn.molecule-utils
-  (:use [alijn math])
+  (:use [alijn math graph])
   (:import org.openscience.cdk.isomorphism.AtomMappingTools
+	   [org.openscience.cdk.interfaces IAtom IMolecule]
 	   java.util.HashMap))
 
 (defn molecule-name [molecule] (.get (.getProperties molecule) "cdk:Title"))
@@ -24,13 +25,10 @@
 	      (map #(.getPoint3d %) (.atoms molecule-2)))]
     rmsd))
 
-(defn molecule-rmsd-different-molecules
-  "Calculates the root mean square deviation between two
-  molecules that do not have the same number of atoms.
-  Uses CDKs AtomMappingTools to match atoms."
-  [molecule-1 molecule-2]
-  (let [mapping (AtomMappingTools/mapAtomsOfAlignedStructures
-		 molecule-1 molecule-2 (HashMap.))
-	
-	]
-    mapping))
+(defn atom-neighbours [#^IMolecule molecule #^IAtom a]
+  (seq (.getConnectedAtomsList molecule a)))
+
+(defn edge-distances
+  [#^IMolecule molecule #^IAtom root-atom]
+  (node-distances root-atom
+		  (partial atom-neighbours molecule)))

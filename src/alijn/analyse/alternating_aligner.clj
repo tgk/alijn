@@ -40,6 +40,7 @@ optimiser-help))
     [[success-rmsd "The maximum rmsd for a realignment to be a success." "2.5"]
      filenames]
     (let [run-number (rand-int 10000)]
+      (println "run-number" run-number)
       (doseq [filename filenames]
 	(let [target-name (first (.split (last (.split filename "/")) "\\."))
 	      molecules (read-molecules filename)

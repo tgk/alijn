@@ -3,7 +3,8 @@
   (:import [org.openscience.cdk.interfaces IAtom IAtomContainer]
 	   javax.vecmath.Point3d)
   (:use clojure.set
-	clojure.contrib.profile))
+	clojure.contrib.profile
+	alijn.molecule-utils))
 
 ; MMFF94 force field
 
@@ -44,6 +45,10 @@
       0
       (- cutoff d))))
 
+(defn almost-linear-punishment [d]
+  (let [cutoff 1.5] ; Aangstroem
+    (if (> d cutoff) 0 (+ 10 (- cutoff d)))))
+
 (defn steric-overlap [#^IAtomContainer molecule]
   (prof
    :steric-overlap
@@ -51,8 +56,9 @@
     +
     (flatten
      (for [#^IAtom a (.atoms molecule)
-	   :let [#^Point3d p (.getPoint3d a)]]
+	   :let [#^Point3d p (.getPoint3d a)
+		 dist (edge-distances molecule a)]]
        (for [#^IAtom b (.atoms molecule)
-	     :when (not= a b)
+	     :when (> (dist b) 2)
 	     :let [#^Point3d q (.getPoint3d b)]]
-	 (linear-punishment (.distance p q))))))))
+	 (almost-linear-punishment (.distance p q))))))))
