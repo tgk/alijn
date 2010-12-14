@@ -1,5 +1,6 @@
 (ns alijn.logging
-  (:require [clojure.contrib.duck-streams :as duck-streams]))
+  (:require [clojure.contrib.duck-streams :as duck-streams])
+  (:use alijn.fitness))
 
 (defn do-nothing [& more])
 
@@ -13,7 +14,7 @@
   (*logger* s))
 
 (defn log-fitness [method evaluations fitness]
-  (log (format "%s %d %f" method evaluations fitness)))
+  (log (format "%s %d %s" method evaluations (string-rep fitness))))
 
 (defmacro with-logger [logger & body]
   `(binding [*logger* ~logger]

@@ -49,7 +49,7 @@
   (let [cutoff 1.5] ; Aangstroem
     (if (> d cutoff) 0 (+ 10 (- cutoff d)))))
 
-(defn steric-overlap [#^IAtomContainer molecule]
+(defn steric-clash-energy [#^IAtomContainer molecule]
   (prof
    :steric-overlap
    (reduce

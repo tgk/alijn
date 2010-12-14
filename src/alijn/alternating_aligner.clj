@@ -1,25 +1,51 @@
 (ns alijn.alternating-aligner
-  (:use [alijn conformation objective molecule-utils]))
+  (:use [alijn conformation objective molecule-utils fitness]))
+
+(defrecord AlternatingAlignerFitness 
+  [feature-overlap steric-overlap steric-clash conformations]
+  Fitness
+  (value [this] (+ feature-overlap steric-overlap steric-clash))
+  (string-rep [this] 
+	      (str (value this)
+		   " feat-overlap " feature-overlap
+		   " ster-overlap " steric-overlap
+		   " ster-clash " steric-clash)))
 
 (defn vector-obj-fns
   [stationary-molecule molecules obj-fn-params]
   (let [{ranges :ranges 
 	 conformations :conformations 
-	 sub-conformations :sub-conformations-fn} (alternating-aligner-conformation-fn 
-						   stationary-molecule molecules)
-	 molecules-obj-fn (objective-fn 
-			   (cons stationary-molecule molecules) obj-fn-params)
-	 obj-fn (fn [v] 
-		  (let [confs (conformations v)
-			fitness (molecules-obj-fn confs)]
-		    {:conformations confs, :fitness fitness}))
-	 sub-obj-fn (fn [i v]
-		      (let [{sub-ranges :sub-ranges
-			     full-vector :full-vector
-			     sub-conf :sub-conformations} (sub-conformations i v)]
-			{:obj-fn (comp molecules-obj-fn sub-conf)
-			 :ranges sub-ranges
-			 :full-vector full-vector}))]
+	 sub-conformations :sub-conformations-fn} 
+	(alternating-aligner-conformation-fn 
+	 stationary-molecule molecules)
+	molecules-obj-fn (objective-fn 
+			  (cons stationary-molecule molecules) 
+			  obj-fn-params)
+	obj-fn (fn [v] 
+		 (let [confs (conformations v)
+		       fitness (molecules-obj-fn confs)]
+		   (AlternatingAlignerFitness. 
+		    (:feature-overlap fitness)
+		    (:steric-overlap fitness)
+		    (:steric-clash fitness)
+		    confs)
+	;{:conformations confs, :fitness fitness}
+		   ))
+	sub-obj-fn (fn [i v]
+		     (let [{sub-ranges :sub-ranges
+			    full-vector :full-vector
+			    sub-conf :sub-conformations} 
+			   (sub-conformations i v)]
+		       {:obj-fn (fn [v]
+				  (let [confs (sub-conf v)
+					fitness (molecules-obj-fn confs)]
+				    (AlternatingAlignerFitness. 
+				     (:feature-overlap fitness)
+				     (:steric-overlap fitness)
+				     (:steric-clash fitness)
+				     confs)))
+			:ranges sub-ranges
+			:full-vector full-vector}))]
     {:obj-fn obj-fn
      :ranges ranges
      :sub-obj-fn sub-obj-fn}))
@@ -42,12 +68,12 @@
 	 ranges :ranges
 	 sub-obj-fn :sub-obj-fn} (vector-obj-fns 
 				  stationary-molecule molecules obj-fn-params)
-	 best-after-first (pre-optimiser (comp :fitness obj-fn) ranges)
+	 best-after-first (pre-optimiser obj-fn ranges)
 	 best-after-middle (local-align 
 			    middle-optimiser sub-obj-fn 
 			    best-after-first (count molecules))
 	 best-after-last (post-optimiser 
-			  (comp :fitness obj-fn) 
+			  obj-fn 
 			  (map (fn [v] [(- v 0.01) (+ v 0.01)]) best-after-middle))
 	 {best-conformations :conformations} (obj-fn best-after-last)]
     (map (fn [native conformation] 
