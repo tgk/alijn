@@ -29,8 +29,7 @@
 	    steric-points-maps (map extract-feature-points steric-maps)
 
 	    feature-overlap
-	    (reduce 
-	     +
+	    (combine-gaussian-overlaps
 	     (for [feature-points-1 feature-points-maps
 		   feature-points-2 feature-points-maps
 		   :when (not= feature-points-1 feature-points-2)]
@@ -39,8 +38,7 @@
 		:scale (:feature-scale objective-fn-params))))
 	    
 	    steric-overlap
-	    (reduce 
-	     +
+	    (combine-gaussian-overlaps
 	     (for [steric-points-1 steric-points-maps
 		   steric-points-2 steric-points-maps
 		   :when (not= steric-points-1 steric-points-2)]
@@ -52,13 +50,13 @@
 	    (-
 	     (*
 	      (:energy-contribution objective-fn-params)
-	      (reduce + (map steric-clash-energy molecules))))
-	    
-	    ]
+	      (reduce + (map steric-clash-energy molecules))))]
 	{:feature-overlap feature-overlap
 	 :steric-overlap steric-overlap
 	 :steric-clash steric-clash
-	 :total (+ feature-overlap steric-overlap steric-clash)}))))
+	 :total (+ (:total feature-overlap) 
+		   (:total steric-overlap)
+		   steric-clash)}))))
 
 (defn single-molecule-objective-fn 
   "Creates an (efficient) objective function over the molecule

@@ -107,14 +107,29 @@
   [features-1 features-2 :scale 1.0]
   (prof 
    :gaussian-overlap
-   (apply 
-    +
-    (flatten
-     (for [feature-name (keys features-1)]
-       (for [#^Point3d point-1 (features-1 feature-name)
-	     #^Point3d point-2 (features-2 feature-name)]
-	 (Math/exp (/ (- (Math/pow (.distance point-1 point-2) 2))
-		      (Math/pow scale 2)))))))))
+   (let [scale-squared (Math/pow scale 2)
+	 overlaps (for [feature-name (keys features-1)]
+		    [feature-name
+		     (apply 
+		      +
+		      (for [#^Point3d point-1 (features-1 feature-name)
+			    #^Point3d point-2 (features-2 feature-name)]
+			(Math/exp 
+			 (/ (- (.distanceSquared point-1 point-2))
+			    scale-squared))))])
+	 overlaps-map (into {} overlaps)
+	 total (apply + (vals overlaps-map))]
+     (assoc overlaps-map :total total))))
+
+(defn combine-gaussian-overlaps [overlaps]
+  (apply merge-with + overlaps))
+
+(defn gaussian-overlap-string-rep [overlap]
+  (let [overlap (dissoc overlap :total)
+	ks (sort (keys overlap))
+	entries (map (fn [k] (format "%s %f " k (float (overlap k)))) ks)]
+    (apply str entries)))
+
   
 ; Functions for avoiding recalculation features for molecules that have been moved, rotated 
 ; and given a new configuration

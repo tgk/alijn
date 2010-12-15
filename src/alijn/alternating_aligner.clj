@@ -1,15 +1,18 @@
 (ns alijn.alternating-aligner
-  (:use [alijn conformation objective molecule-utils fitness]))
+  (:use [alijn conformation objective molecule-utils fitness features]))
 
 (defrecord AlternatingAlignerFitness 
   [feature-overlap steric-overlap steric-clash conformations]
   Fitness
-  (value [this] (+ feature-overlap steric-overlap steric-clash))
+  (value [this] (+ (:total feature-overlap) 
+		   (:total steric-overlap) 
+		   steric-clash))
   (string-rep [this] 
 	      (str (value this)
-		   " feat-overlap " feature-overlap
-		   " ster-overlap " steric-overlap
-		   " ster-clash " steric-clash)))
+		   " "
+		   (gaussian-overlap-string-rep feature-overlap)
+		   (gaussian-overlap-string-rep steric-overlap)
+		   "ster-clash " steric-clash)))
 
 (defn vector-obj-fns
   [stationary-molecule molecules obj-fn-params]
