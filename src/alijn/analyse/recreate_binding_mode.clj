@@ -1,5 +1,7 @@
 (ns alijn.analyse.recreate-binding-mode
-  (:use [alijn io multiple-flexible-alignment molecule-utils logging features]
+  (:use [alijn 
+	 io multiple-flexible-alignment 
+	 molecule-utils logging features optimisers]
 	alijn.analyse.standard-parameters
 	clojure.contrib.command-line))
 
@@ -41,7 +43,7 @@ optimiser-help))
 	    (let [stationary-molecule (nth molecules i)
 		  movable-molecules (concat (take i molecules) 
 					    (drop (inc i) molecules))
-		  log-filename (format "%s.%s.%d.%s.log"
+		  log-filename (format "recreate.%s.%s.%d.%s.log"
 				       optimiser
 				       target-name run-number 
 				       (molecule-name stationary-molecule))		  		  results (with-logger 
@@ -50,7 +52,7 @@ optimiser-help))
 			     stationary-molecule movable-molecules 
 			     obj-fn-params 
 			     optimiser-fn))
-		  sdf-filename (format "%s.%s.%d.%s.sdf"
+		  sdf-filename (format "recreate.%s.%s.%d.%s.sdf"
 				       optimiser
 				       target-name run-number 
 				       (molecule-name stationary-molecule))

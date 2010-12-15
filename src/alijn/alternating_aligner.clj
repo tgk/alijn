@@ -31,9 +31,7 @@
 		    (:feature-overlap fitness)
 		    (:steric-overlap fitness)
 		    (:steric-clash fitness)
-		    confs)
-	;{:conformations confs, :fitness fitness}
-		   ))
+		    confs)))
 	sub-obj-fn (fn [i v]
 		     (let [{sub-ranges :sub-ranges
 			    full-vector :full-vector

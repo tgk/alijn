@@ -1,5 +1,20 @@
 (ns alijn.pharmacophore-alignment
-  (:use [alijn features conformation objective molecule-utils]))
+  (:use [alijn 
+	 features conformation objective 
+	 molecule-utils fitness features]))
+
+(defrecord
+  PharmacophoreAlignmentFitness
+  [feature-overlap steric-overlap steric-clash conformation]
+  Fitness
+  (value [this] (+ (:total feature-overlap)
+		   (:total steric-overlap)
+		   steric-clash))
+  (string-rep [this] (str (value this)
+			  " "
+			  (gaussian-overlap-string-rep feature-overlap)
+			  (gaussian-overlap-string-rep steric-overlap)
+			  "ster-clash " steric-clash)))
 
 (defn vector-obj-fn 
   [molecule pharmacophore steric obj-fn-params]
@@ -11,7 +26,11 @@
 	 obj-fn (fn [v] 
 		  (let [conf (conformation v)
 			fitness (molecule-obj-fn conf)]
-		    {:conformation conf, :fitness fitness}))]
+		    (PharmacophoreAlignmentFitness.
+		     (:feature-overlap fitness)
+		     (:steric-overlap fitness)
+		     (:steric-clash fitness)
+		     conf)))]
     {:obj-fn obj-fn
      :ranges ranges}))
 
@@ -23,16 +42,18 @@
    objective-fn-params]
   (let [features (extract-feature-points
 		  (apply merge-with concat 
-			 (map #(find-features % (:charge-limit objective-fn-params))
+			 (map #(find-features 
+				% (:charge-limit objective-fn-params))
 			      pharmacophore-molecules)))
 	steric (extract-feature-points 
 		(apply merge-with concat
 		       (map steric-features pharmacophore-molecules)))
-	{obj-fn :obj-fn, ranges :ranges} (vector-obj-fn molecule features steric 
-							objective-fn-params)
-	alignment-vector (optimiser (comp :fitness obj-fn) ranges)
-	{conformation :conformation, fitness :fitness} (obj-fn alignment-vector)]
-    {:conformation conformation,
-     :fitness fitness,
-     :rmsd-to-native (molecule-rmsd molecule conformation)}))
+	{obj-fn :obj-fn, ranges :ranges} (vector-obj-fn 
+					  molecule features steric 
+					  objective-fn-params)
+	alignment-vector (optimiser obj-fn ranges)
+	fitness (obj-fn alignment-vector)]
+    {:conformation (:conformation fitness),
+     :fitness (value fitness),
+     :rmsd-to-native (molecule-rmsd molecule (:conformation fitness))}))
 						   
