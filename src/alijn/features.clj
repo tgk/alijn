@@ -7,7 +7,8 @@
 	clojure.pprint
 	clojure.contrib.generic.functor
 	clojure.contrib.def
-	clojure.contrib.profile))
+	clojure.contrib.profile)
+  (:use [clojure.contrib.str-utils2 :only [split split-lines]]))
 
 ;; Hydrogen donor and acceptor
 
@@ -75,24 +76,8 @@
    "aliphatic-rings" (find-rings aliphatic-tools molecule)
    "positive" (filter (partial is-positive?    charge-limit)  (.atoms molecule))
    "negative" (filter (partial is-negative? (- charge-limit)) (.atoms molecule))
+   "steric" (filter (comp not (is-atom? "H")) (.atoms molecule))
    })
-
-(defn steric-features
-  [molecule]
-  {"steric" (filter (comp not (is-atom? "H")) (.atoms molecule))})
-
-;; gaussian-overlap calcualtions
-(defn translate-rotate-translate-feature-points
-  "Takes all the points from a map of feature points and
-  applies the pre-translation, then the rotation and then
-  the post-translation to all of the points.
-  Returns a new map with the altered features.
-  Translations are Point3ds, the rotation is a Matrix."
-  [pre-translation rotation post-translation features]
-  (->> features
-       (fmap (partial map (partial vec-add pre-translation)))
-       (fmap (partial map (partial rotate-point rotation)))
-       (fmap (partial map (partial vec-add post-translation)))))
 
 (defn apply-matrix-to-features
   "Applies the matrix to all the feature points.
@@ -100,23 +85,36 @@
   [matrix features]
   (fmap (partial map (partial move-and-translate-point matrix)) features))
 
-(defnk gaussian-overlap 
+(defn parse-feature-parameters [filename]
+  (apply 
+   merge
+   (for [line (split-lines (slurp filename))
+	 :when (not= \# (first line))
+	 :let [[name alpha scale] (split line #"\ +")]]
+     {name {:alpha (Double/parseDouble alpha)
+	    :alpha-squared (Math/pow (Double/parseDouble alpha) 2)
+	    :scale (Double/parseDouble scale)}})))
+
+(defn gaussian-overlap 
   "Calculates the Gaussian overlap between two sets of features
   stored in maps. Each value in the map is a coll of Point3d.
-  Optional arguments are :scale."
-  [features-1 features-2 :scale 1.0]
+  The feature parameters can be read from file using 
+  parse-feature-parameters."
+  [features-1 features-2 feature-parameters]
   (prof 
    :gaussian-overlap
-   (let [scale-squared (Math/pow scale 2)
-	 overlaps (for [feature-name (keys features-1)]
+   (let [overlaps (for [feature-name (keys features-1)]
 		    [feature-name
 		     (apply 
 		      +
 		      (for [#^Point3d point-1 (features-1 feature-name)
 			    #^Point3d point-2 (features-2 feature-name)]
-			(Math/exp 
-			 (/ (- (.distanceSquared point-1 point-2))
-			    scale-squared))))])
+			(*
+			 (:scale (feature-parameters feature-name))
+			 (Math/exp 
+			  (/ (- (.distanceSquared point-1 point-2))
+			     (:alpha-squared 
+			      (feature-parameters feature-name)))))))])
 	 overlaps-map (into {} overlaps)
 	 total (apply + (vals overlaps-map))]
      (assoc overlaps-map :total total))))
@@ -153,7 +151,8 @@
 
 ; Functions for generating fake molecules representing features for later inspection
 (defn molecules-from-features [features]
-  (let [element-symbols (zipmap (keys features) ["B" "C" "N" "F" "Al" "Si" "P"])]
+  (let [element-symbols (zipmap (keys features) 
+				["B" "C" "N" "F" "Al" "Si" "P"])]
     (for [[name points] features]
       (let [molecule (Molecule.)]
 	(doseq [point points] 

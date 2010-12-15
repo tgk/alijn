@@ -2,16 +2,14 @@
   (:use [alijn conformation objective molecule-utils fitness features]))
 
 (defrecord AlternatingAlignerFitness 
-  [feature-overlap steric-overlap steric-clash conformations]
+  [feature-overlap steric-clash conformations]
   Fitness
   (value [this] (+ (:total feature-overlap) 
-		   (:total steric-overlap) 
 		   steric-clash))
   (string-rep [this] 
 	      (str (value this)
 		   " "
 		   (gaussian-overlap-string-rep feature-overlap)
-		   (gaussian-overlap-string-rep steric-overlap)
 		   "ster-clash " steric-clash)))
 
 (defn vector-obj-fns
@@ -29,7 +27,6 @@
 		       fitness (molecules-obj-fn confs)]
 		   (AlternatingAlignerFitness. 
 		    (:feature-overlap fitness)
-		    (:steric-overlap fitness)
 		    (:steric-clash fitness)
 		    confs)))
 	sub-obj-fn (fn [i v]
@@ -42,7 +39,6 @@
 					fitness (molecules-obj-fn confs)]
 				    (AlternatingAlignerFitness. 
 				     (:feature-overlap fitness)
-				     (:steric-overlap fitness)
 				     (:steric-clash fitness)
 				     confs)))
 			:ranges sub-ranges

@@ -1,5 +1,7 @@
 (ns alijn.analyse.alternating-aligner
-  (:use [alijn io optimisers alternating-aligner molecule-utils logging features]
+  (:use [alijn 
+	 io optimisers alternating-aligner 
+	 molecule-utils logging features]
 	alijn.analyse.standard-parameters))
 
 (def desc 
@@ -33,7 +35,7 @@ optimiser-help))
   align
   [& args]
   (with-standard-parameters
-    energy-contribution charge-limit feature-scale steric-scale
+    energy-contribution charge-limit feature-parameters steric-scale
     obj-fn-params optimiser optimiser-fn
     fun-eval 
     args desc 
@@ -75,13 +77,14 @@ optimiser-help))
 			      (concat (cons stationary-molecule 
 					    movable-molecules) 
 				      conformations
-				      (molecules-from-features 
-				       (apply 
-					merge-with concat
-					(map #(extract-feature-points
-					       (find-features 
-						% (:charge-limit obj-fn-params)))
-					     conformations)))))
+;				      (comment molecules-from-features 
+;					       (apply 
+;					merge-with concat
+;					(map #(extract-feature-points
+;					       (find-features 
+;						% (:charge-limit obj-fn-params)))
+;					     conformations)))
+				      ))
 	      (write-sdf-file (format "alternating.%s.%s.%d.%s.phamacophore-model.sdf" 
 				      optimiser target-name run-number
 				      (molecule-name stationary-molecule))

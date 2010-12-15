@@ -62,13 +62,14 @@ optimiser-help))
 			      (concat (cons stationary-molecule 
 					    movable-molecules) 
 				      conformations
-				      (molecules-from-features 
-				       (apply 
-					merge-with concat
-					(map #(extract-feature-points
-					       (find-features 
-						% (:charge-limit obj-fn-params)))
-					     conformations)))))
+;				      (molecules-from-features 
+;				       (apply 
+;					merge-with concat
+;					(map #(extract-feature-points
+;					       (find-features 
+;						% (:charge-limit obj-fn-params)))
+;					     conformations)))
+				      ))
 	      (write-sdf-file (format "%s.%s.%d.%s.phamacophore-model.sdf" 
 				      optimiser target-name run-number
 				      (molecule-name stationary-molecule))

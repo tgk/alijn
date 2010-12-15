@@ -5,30 +5,27 @@
 
 (defrecord
   PharmacophoreAlignmentFitness
-  [feature-overlap steric-overlap steric-clash conformation]
+  [feature-overlap steric-clash conformation]
   Fitness
   (value [this] (+ (:total feature-overlap)
-		   (:total steric-overlap)
 		   steric-clash))
   (string-rep [this] (str (value this)
 			  " "
 			  (gaussian-overlap-string-rep feature-overlap)
-			  (gaussian-overlap-string-rep steric-overlap)
 			  "ster-clash " steric-clash)))
 
 (defn vector-obj-fn 
-  [molecule pharmacophore steric obj-fn-params]
+  [molecule pharmacophore obj-fn-params]
   (let [{ranges :ranges, 
 	 conformation :conformation} (single-molecule-conformation-fn 
 					molecule)
 	 molecule-obj-fn (single-molecule-objective-fn
-			  molecule pharmacophore steric obj-fn-params)
+			  molecule pharmacophore obj-fn-params)
 	 obj-fn (fn [v] 
 		  (let [conf (conformation v)
 			fitness (molecule-obj-fn conf)]
 		    (PharmacophoreAlignmentFitness.
 		     (:feature-overlap fitness)
-		     (:steric-overlap fitness)
 		     (:steric-clash fitness)
 		     conf)))]
     {:obj-fn obj-fn
@@ -45,11 +42,8 @@
 			 (map #(find-features 
 				% (:charge-limit objective-fn-params))
 			      pharmacophore-molecules)))
-	steric (extract-feature-points 
-		(apply merge-with concat
-		       (map steric-features pharmacophore-molecules)))
 	{obj-fn :obj-fn, ranges :ranges} (vector-obj-fn 
-					  molecule features steric 
+					  molecule features 
 					  objective-fn-params)
 	alignment-vector (optimiser obj-fn ranges)
 	fitness (obj-fn alignment-vector)]

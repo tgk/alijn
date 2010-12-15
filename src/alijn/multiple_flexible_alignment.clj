@@ -3,16 +3,14 @@
 
 (defrecord 
   MultipleFlexibleAlignmentFitness
-  [feature-overlap steric-overlap steric-clash conformations]
+  [feature-overlap steric-clash conformations]
   Fitness
   (value [this] (+ (:total feature-overlap) 
-		   (:total steric-overlap) 
 		   steric-clash))
   (string-rep [this] 
 	      (str (value this)
 		   " "
 		   (gaussian-overlap-string-rep feature-overlap)
-		   (gaussian-overlap-string-rep steric-overlap)
 		   "ster-clash " steric-clash)))
 
 (defn vector-obj-fn 
@@ -27,7 +25,6 @@
 		       fitness (molecule-obj-fn confs)]
 		   (MultipleFlexibleAlignmentFitness. 
 		    (:feature-overlap fitness)
-		    (:steric-overlap fitness)
 		    (:steric-clash fitness)
 		    confs)))]
     {:obj-fn obj-fn
