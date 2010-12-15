@@ -1,4 +1,5 @@
-(ns alijn.monte-carlo)
+(ns alijn.monte-carlo
+  (:use alijn.fitness))
 
 (defn sample [ranges]
   (map 
@@ -7,7 +8,7 @@
 
 (defn monte-carlo-optimiser
   [max-fun-evals]
-  (fn [objective-fn ranges]
+  (fn [fitness-fn ranges]
     (apply 
-     max-key objective-fn 
+     max-key (comp value fitness-fn)
      (repeatedly max-fun-evals (partial sample ranges)))))

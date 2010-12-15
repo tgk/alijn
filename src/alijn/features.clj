@@ -153,7 +153,6 @@
 
 ; Functions for generating fake molecules representing features for later inspection
 (defn molecules-from-features [features]
-  (println "Saw the features" (keys features))
   (let [element-symbols (zipmap (keys features) ["B" "C" "N" "F" "Al" "Si" "P"])]
     (for [[name points] features]
       (let [molecule (Molecule.)]
