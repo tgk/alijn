@@ -2,8 +2,8 @@
 donor               1.0   1.0
 acceptor            1.0   1.0
 donor-and-acceptor  1.0   1.0
-aromatic-rings      1.0   2.0
-aliphatic-rings     1.0   2.0
+aromatic-rings      1.0   5.0
+aliphatic-rings     1.0   5.0
 positive            1.0   1.0
 negative            1.0   1.0
-steric              0.5   1.0
+steric              0.5   0.1
