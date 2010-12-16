@@ -9,7 +9,7 @@
   Additional cmdspec are as in with-command-line.
   cmspec definitions can not use energy-contribution, charge-limit, 
   feature-scale, steric-scale, fun-eval or optimiser."
-  [energy-contribution charge-limit feature-parameters steric-scale 
+  [energy-contribution charge-limit feature-parameters  
    obj-fn-params optimiser optimiser-fn fun-eval
    args desc cmdspec body]
   `(with-command-line
@@ -19,7 +19,6 @@
 	       [charge-limit "Limit for classifing atom as charged." "0.5"]
 	       [feature-parameters "Feature parameters file" 
 		"feature.parameters"]
-	       [steric-scale  "Scale to be used for Gaussian overlap" "0.5"]
 	       [fun-eval "Function evaluations" "10000"]
 	       [optimiser "The optimiser to be used." "de-50-0.75-0.5"]]
 	      cmdspec)
@@ -27,8 +26,7 @@
 			   (Double/parseDouble ~energy-contribution)
 			   :charge-limit (Double/parseDouble ~charge-limit)
 			   :feature-parameters 
-			   (parse-feature-parameters ~feature-parameters)
-			   :steric-scale (Double/parseDouble ~steric-scale)}
+			   (parse-feature-parameters ~feature-parameters)}
 	   ~fun-eval (Integer/parseInt ~fun-eval)
 	   ~optimiser-fn (parse-optimiser ~fun-eval ~optimiser)]
        ~body)))

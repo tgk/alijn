@@ -35,7 +35,7 @@ optimiser-help))
   align
   [& args]
   (with-standard-parameters
-    energy-contribution charge-limit feature-parameters steric-scale
+    energy-contribution charge-limit feature-parameters 
     obj-fn-params optimiser optimiser-fn
     fun-eval 
     args desc 

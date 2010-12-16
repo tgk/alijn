@@ -29,7 +29,7 @@ optimiser-help))
   count-successes
   [& args]
   (with-standard-parameters
-    energy-contribution charge-limit feature-scale steric-scale
+    energy-contribution charge-limit feature-scale 
     obj-fn-params optimiser optimiser-fn fun-eval 
     args desc 
     [[success-rmsd "The maximum rmsd for a realignment to be a success." "2.5"]
