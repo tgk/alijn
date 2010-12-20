@@ -33,8 +33,10 @@ optimiser-help))
     obj-fn-params optimiser optimiser-fn fun-eval 
     args desc 
     [[success-rmsd "The maximum rmsd for a realignment to be a success." "2.5"]
+     [max-iter-pr-point "Maximum evaluations for nm in one point." "100"]
      filenames]
-    (let [run-number (rand-int 10000)]
+    (let [run-number (rand-int 10000)
+	  max-iter-pr-point (Integer/parseInt max-iter-pr-point)]
       (println "run-number " run-number " (used for filenames)")
       (doseq [filename filenames]
 	(let [target-name (first (.split (last (.split filename "/")) "\\."))
@@ -51,7 +53,7 @@ optimiser-help))
 				(file-logger log-filename)
 				(nelder-mead-align 
 				 (cons stationary-molecule movable-molecules)
-				 fun-eval
+				 fun-eval max-iter-pr-point
 				 obj-fn-params))
 		  sdf-filename (format "nelder-mead.%s.%s.%d.%s.sdf"
 				       optimiser

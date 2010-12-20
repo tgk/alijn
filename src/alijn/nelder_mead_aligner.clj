@@ -37,7 +37,8 @@
   (value [this] fitness)
   (string-rep [this] (str fitness)))
 
-(defn nelder-mead-align [molecules max-iter objective-fn-params]
+(defn nelder-mead-align [molecules max-iter max-iter-pr-point 
+			 objective-fn-params]
   (let [randomised-molecules (randomise-molecules molecules)
 	center (center-of-mass (first randomised-molecules))
 	centered-molecules (map 
@@ -60,7 +61,8 @@
 	    obj-fn (objective-fn shifted-translations objective-fn-params)
 	    fitness (comp - :total obj-fn conformations)
 	    [minimum min-vector used-iter] 
-	    (nm-minimise fitness start step-sizes 1e-4 (- max-iter iters))
+	    (nm-minimise fitness start step-sizes 1e-4 
+			 (min (- max-iter iters) max-iter-pr-point))
 	    value (- minimum)
 	    iters (+ iters used-iter)
 	    [best-configuration best-value] (if (or (= best-value :no-value) 
