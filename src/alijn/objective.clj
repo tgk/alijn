@@ -1,5 +1,6 @@
 (ns alijn.objective
-  (:use [alijn features energy]))
+  (:use [alijn features energy]
+	clojure.contrib.profile))
 
 (defn objective-fn 
   "Creates an (efficient) objective function over the molecules,

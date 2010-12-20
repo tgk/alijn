@@ -1,6 +1,6 @@
 (ns alijn.features
   (:import [org.openscience.cdk Atom Bond AtomContainer Molecule]
-	   [org.openscience.cdk.interfaces IAtom]
+	   [org.openscience.cdk.interfaces IAtom IMolecule]
 	   [org.openscience.cdk.smiles.smarts SMARTSQueryTool]
 	   javax.vecmath.Point3d)
   (:use alijn.math 
@@ -131,7 +131,7 @@
   
 ; Functions for avoiding recalculation features for molecules that have been moved, rotated 
 ; and given a new configuration
-(defn atom-id-from-atom-features [molecule features]
+(defn atom-id-from-atom-features [#^IMolecule molecule features]
   (fmap 
    (partial 
     map 
@@ -140,7 +140,7 @@
 		    (map #(.getAtomNumber molecule %) feature))))
    features))
 
-(defn atom-from-atom-id-features [molecule features]
+(defn atom-from-atom-id-features [#^IMolecule molecule features]
   (fmap
    (partial
     map
@@ -151,7 +151,8 @@
 
 ; Functions for generating fake molecules representing features for later inspection
 (defn molecules-from-features [features]
-  (let [element-symbols (zipmap (keys features) 
+  (let [features (dissoc features "steric")
+	element-symbols (zipmap (keys features) 
 				["B" "C" "N" "F" "Al" "Si" "P"])]
     (for [[name points] features]
       (let [molecule (Molecule.)]

@@ -1,6 +1,6 @@
-(ns alijn.analyse.recreate-binding-mode
+(ns alijn.analyse.nelder-mead-aligner
   (:use [alijn 
-	 io multiple-flexible-alignment 
+	 io nelder-mead-aligner
 	 molecule-utils logging features optimisers]
 	alijn.analyse.standard-parameters
 	clojure.contrib.command-line))
@@ -8,7 +8,7 @@
 (def desc 
      (str
 "Examines if the native binding mode of a set of molecules can
-be recreated using multiple flexible alignment.
+be recreated using a Nelder Mead aligner.
 Each input molecule file corresponds to a target, and the
 ligands in each file are assumed to be in their native 
 binding mode.
@@ -26,7 +26,7 @@ optimiser-help))
 
 (defn
   #^{:doc desc}
-  count-successes
+  align
   [& args]
   (with-standard-parameters
     energy-contribution charge-limit feature-scale 
@@ -43,37 +43,39 @@ optimiser-help))
 	    (let [stationary-molecule (nth molecules i)
 		  movable-molecules (concat (take i molecules) 
 					    (drop (inc i) molecules))
-		  log-filename (format "recreate.%s.%s.%d.%s.log"
-				       optimiser
-				       target-name run-number 
-				       (molecule-name stationary-molecule))		  		  results (with-logger 
-			    (file-logger log-filename)
-			    (multiple-flexible-align 
-			     stationary-molecule movable-molecules 
-			     obj-fn-params 
-			     optimiser-fn))
-		  sdf-filename (format "recreate.%s.%s.%d.%s.sdf"
+		  log-filename (format "nelder-mead.%s.%s.%d.%s.log"
 				       optimiser
 				       target-name run-number 
 				       (molecule-name stationary-molecule))
-		  conformations (map :conformation results)]
-	      (doseq [conf conformations] (add-to-molecule-name! conf "_conformation"))
+		  [confs val] (with-logger 
+				(file-logger log-filename)
+				(nelder-mead-align 
+				 (cons stationary-molecule movable-molecules)
+				 fun-eval
+				 obj-fn-params))
+		  sdf-filename (format "nelder-mead.%s.%s.%d.%s.sdf"
+				       optimiser
+				       target-name run-number 
+				       (molecule-name stationary-molecule))]
+	      (doseq [conf confs] (add-to-molecule-name! conf "_conformation"))
 	      (write-sdf-file sdf-filename 
 			      (concat (cons stationary-molecule 
 					    movable-molecules) 
-				      conformations
+				      confs
 				      (molecules-from-features 
 				       (apply 
 					merge-with concat
 					(map #(extract-feature-points
 					       (find-features 
 						% (:charge-limit obj-fn-params)))
-					     conformations)))))
-	      (write-sdf-file (format "%s.%s.%d.%s.phamacophore-model.sdf" 
-				      optimiser target-name run-number
-				      (molecule-name stationary-molecule))
-			      conformations)
-	      (println target-name 
+					     confs)))))
+	      (comment 
+		write-sdf-file (format "%s.%s.%d.%s.phamacophore-model.sdf" 
+				       optimiser target-name run-number
+				       (molecule-name stationary-molecule))
+		confs)
+	      (println target-name (molecule-name stationary-molecule) "done")
+	      (comment println target-name 
 		       (molecule-name stationary-molecule) 
 		       (count-success (map :rmsd-to-native results)
 				      (Double/parseDouble success-rmsd))))))))))

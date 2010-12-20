@@ -1,10 +1,13 @@
 (ns alijn.monte-carlo
-  (:use alijn.fitness))
+  (:use alijn.fitness
+	clojure.contrib.profile))
 
 (defn sample [ranges]
-  (map 
-   (fn [[lo hi]] (+ (rand (- hi lo)) lo))
-   ranges))
+  (prof
+   :sample
+   (map 
+    (fn [[lo hi]] (+ (rand (- hi lo)) lo))
+    ranges)))
 
 (defn monte-carlo-optimiser
   [max-fun-evals]

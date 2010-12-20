@@ -20,24 +20,14 @@
   (reduce + (map #(.getProperty % "MMFF94charge") (.atoms molecule))))
 
 ; Simple linear clash
+(defn atom-to-atom-mapping [molecule-1 molecule-2]
+  (zipmap (.atoms molecule-1) (.atoms molecule-2)))
 
-(defn atom-bond-distances 
-  "Returns a map with atom bond distance to every other atom in molecule."
-  [molecule a]
-  (loop [queue (conj clojure.lang.PersistentQueue/EMPTY a)
-	 distance {a 0}]
-    (if (empty? queue)
-      distance
-      (let [unvisited (difference (set (.getConnectedAtomsList molecule (peek queue)))
-				  (set (keys distance)))]
-	(recur (into (pop queue) unvisited)
-	       (apply merge distance (for [c unvisited] 
-				       {c (inc (distance (peek queue)))})))))))
+(defn replace-keys-and-vals [m replace]
+  (into {} (for [[k vs] m] [(replace k) (map replace vs)])))
 
-(defn far-away-atoms 
-  "Returns all atoms further away than three bonds."
-  [molecule a]
-  (for [[k dist] (atom-bond-distances molecule a) :when (>= dist 3)] k))  
+(defn replace-keys [m replace]
+  (into {} (for [[k v] m] [(replace k) v])))
 
 (defn linear-punishment [d]
   (let [cutoff 3.3] ; Aangstroem
@@ -51,14 +41,15 @@
 
 (defn steric-clash-energy [#^IAtomContainer molecule]
   (prof
-   :steric-overlap
+   :steric-clash
    (reduce
     +
     (flatten
      (for [#^IAtom a (.atoms molecule)
 	   :let [#^Point3d p (.getPoint3d a)
-		 dist (edge-distances molecule a)]]
+		 dist (prof :edge-distance (edge-distances molecule a))]]
        (for [#^IAtom b (.atoms molecule)
 	     :when (> (dist b) 2)
 	     :let [#^Point3d q (.getPoint3d b)]]
 	 (almost-linear-punishment (.distance p q))))))))
+

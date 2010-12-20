@@ -6,6 +6,7 @@
 		 [org.openscience/cdk "1.3.5.git"]
 		 [jama "1.0.1"]
 		 [bron-kerbosch "1.0.0-SNAPSHOT"]
+		 [flanagan "1.0.0"]
 		 [penumbra "0.6.0-SNAPSHOT"]
 		 [cma-es "1.0"]
 		 [log4j "1.2.15" :exclusions [javax.mail/mail

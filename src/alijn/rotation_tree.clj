@@ -149,3 +149,9 @@
 		   cloned-molecule
 		   initial-matrix)
      cloned-molecule)))
+
+(defn random-angle [] (* 2 Math/PI (rand)))
+(defn random-configuration [rotation-tree]
+  (molecule-configuration 
+   rotation-tree
+   (repeatedly (:degrees-of-freedom rotation-tree) random-angle)))

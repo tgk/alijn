@@ -1,11 +1,12 @@
 (ns alijn.alternating-aligner
-  (:use [alijn conformation objective molecule-utils fitness features]))
+  (:use [alijn conformation objective molecule-utils fitness features]
+	clojure.contrib.profile))
 
 (defrecord AlternatingAlignerFitness 
   [feature-overlap steric-clash conformations]
   Fitness
-  (value [this] (+ (:total feature-overlap) 
-		   steric-clash))
+  (value [this] (prof :value (+ (:total feature-overlap) 
+				steric-clash)))
   (string-rep [this] 
 	      (str (value this)
 		   " "
@@ -24,7 +25,7 @@
 			  obj-fn-params)
 	obj-fn (fn [v] 
 		 (let [confs (conformations v)
-		       fitness (molecules-obj-fn confs)]
+		       fitness (prof :fitness (molecules-obj-fn confs))]
 		   (AlternatingAlignerFitness. 
 		    (:feature-overlap fitness)
 		    (:steric-clash fitness)

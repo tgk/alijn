@@ -31,13 +31,9 @@
 	   ~optimiser-fn (parse-optimiser ~fun-eval ~optimiser)]
        ~body)))
 
-(comment
-(pprint (with-standard-parameters
-	  ec charge-limit fs ss
-	  foo bar bar-fn baz
-	  ["--charge-limit" "42.0" "foobar.mol2" "baz.mol2"]
-	  "Foo"
-	  [[success-rmsd "When rmsd to native is below this, it is a success." "2.5"]
-	   filenames]
-	  (cons foo filenames)))
-)
+(defn default-obj-fn-params []
+  (with-standard-parameters
+    ec cl fp 
+    obj-fn-params o of fe
+    [] "" [ignored]
+    obj-fn-params))
